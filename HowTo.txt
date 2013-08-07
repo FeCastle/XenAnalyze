@@ -1,0 +1,152 @@
+yum install libvirt
+yum install python-virtinst
+
+((( Need to build virt-manager )))
+http://wiki.xen.org/wiki/RHEL6_Xen4_Tutorial#Using_libvirt_and_virt-manager_with_Xen
+
+virt-install -l http://download.fedoraproject.org/pub/fedora/linux/releases/15/Fedora/x86_64 --ram 1024 --disk /var/lib/libvirt/images/f15.img --name F15
+
+yum install postgresql-contrib
+[root@Wall-eve ~]# pgbench --version
+pgbench (PostgreSQL) 8.4.13
+
+[root@Wall-eve ~]# su - postgres
+-bash-4.1$ echo $PGDATA
+/var/lib/pgsql/data
+
+initdb
+ SHARED_BUFFERS="256MB"
+ WAL_BUFFERS="16MB"
+ CHECKPOINT_SEGMENTS="16"
+ echo \# Changes for pgbench testing >> $PGDATA/postgresql.conf
+ echo shared_buffers=$SHARED_BUFFERS >> $PGDATA/postgresql.conf
+ echo wal_buffers=$WAL_BUFFERS >> $PGDATA/postgresql.conf
+ echo checkpoint_segments=$CHECKPOINT_SEGMENTS >> $PGDATA/postgresql.conf
+ pg_ctl start -l $PGLOG
+
+--- Create DB and data with scaling factor of 10 ---
+ createdb pgbench
+ pgbench -i -s 10 pgbench
+
+ pgbench -T 30 -j 2 -S -c 4 pgbench
+
+CLIENTS="2 4 8 16 32"
+ for c in $CLIENTS; do
+   pgbench -T 30 -S -c $c pgbench
+ done
+
+
+[root@Wall-eve ~]# xm info
+host                   : Wall-eve.cs.pdx.edu
+release                : 2.6.39
+version                : #2 SMP Mon Jul 29 12:18:13 PDT 2013
+machine                : x86_64
+nr_cpus                : 16
+nr_nodes               : 2
+cores_per_socket       : 4
+threads_per_core       : 2
+cpu_mhz                : 2261
+hw_caps                : bfebfbff:28100800:00000000:00003b40:009ce3bd:00000000:00000001:00000000
+virt_caps              : hvm hvm_directio
+total_memory           : 12278
+free_memory            : 11087
+free_cpus              : 0
+xen_major              : 4
+xen_minor              : 2
+xen_extra              : .0
+xen_caps               : xen-3.0-x86_64 xen-3.0-x86_32p hvm-3.0-x86_32 hvm-3.0-x86_32p hvm-3.0-x86_64 
+xen_scheduler          : credit
+xen_pagesize           : 4096
+platform_params        : virt_start=0xffff800000000000
+xen_changeset          : unavailable
+xen_commandline        : dom0_mem=1024M,max:1024M loglvl=all guest_loglvl=all
+cc_compiler            : gcc (GCC) 4.4.7 20120313 (Red Hat 4.4.7-3)
+cc_compile_by          : root
+cc_compile_domain      : cs.pdx.edu
+cc_compile_date        : Tue Jul 23 11:56:30 PDT 2013
+xend_config_format     : 4
+
+
+[root@Wall-eve ~]# free
+             total       used       free     shared    buffers     cached
+Mem:        805696     467416     338280          0      24296     254068
+-/+ buffers/cache:     189052     616644
+Swap:      6160380          0    6160380
+
+--- Need to start Virtual network First ---
+http://libvirt.org/sources/virshcmdref/html/sect-net-create.html
+
+Aug  6 16:46:57 Wall-eve libvirtd: 16:46:57.766: error : virRunWithHook:933 : internal error'/sbin/iptables --table nat --insert POSTROUTING --source 192.168.1.0/255.255.255.0 ! --destnation 192.168.1.0/255.255.255.0 --out-interface em1 --jump MASQUERADE' exited with non-zerostatus 3 and signal 0: iptables v1.4.7: can't initialize iptables table `nat': Table does no exist (do you need to insmod?)#012Perhaps iptables or your kernel needs to be upgraded.#012
+Aug  6 16:46:57 Wall-eve libvirtd: 16:46:57.767: error : networkAddMasqueradingIptablesRules675 : failed to add iptables rule to enable masquerading to 'em1'#012: Invalid argument
+
+ /sbin/iptables --table nat --insert POSTROUTING --source 192.168.1.0/255.255.255.0 ! --destination 192.168.1.0/255.255.255.0 --out-interface em1 --jump MASQUERADE
+iptables v1.4.7: can't initialize iptables table `nat': Table does not exist (do you need to insmod?)
+Perhaps iptables or your kernel needs to be upgraded.
+----- Need to rebuild kernel with IP NAT Enabled (M) -------
+----- See .config file  
+------    CONFIG_IP_NF_MASQUERADE
+From the Xen wiki:
+
+Error: Device 0 (vif) could not be connected. Hotplug scripts not working.
+This problem is often caused by not having "xen-netback" driver loaded in dom0 kernel.
+
+The hotplug scripts are located in /etc/xen/scripts by default, and are labeled with the prefix vif-*. Those scripts log to /var/log/xen/xen-hotplug.log, and more detailed information can be found there.
+
+http://wiki.xensource.com/xenwiki/XenCommonProblems#head-f75dde47e11dbf9bfd8fca200917316babb654eb
+
+[root@Wall-eve ~]# cat /tmp/xenNet.xml
+<network>
+  <name>xenNet</name>
+  <uuid>969a1ff3-e314-4431-beef-5b5f08d943b5</uuid>
+  <forward mode='nat' dev="em1"/>
+  <bridge name='virbr0' stp='on' delay='0' />
+  <ip address='192.168.1.1' netmask='255.255.255.0'>
+    <dhcp>
+      <range start='192.168.1.100' end='192.168.1.254' />
+    </dhcp>
+  </ip>
+</network>
+
+[root@Wall-eve ~]# virsh net-create /tmp/xenNet.xml
+[root@Wall-eve ~]# virsh net-list
+Name                 State      Autostart
+-----------------------------------------
+xenNet               active     no      
+
+(Install Method #1 Over the network)
+virt-install -d -n TestVM1 -r 2048 --vcpus=1 --disk /var/lib/libvirt/images/TestVM1.img,size=8 --nographics -p -l "http://mirror.centos.org/centos/6/os/x86_64" --network="network=xenNet" --extra-args="text console=com1 utf8 console=hvc0"
+libvirtError: POST operation failed: xend_post: error from xen daemon: (xend.err 'Device 0 (vif) could not be connected. Hotplug scripts not working.')
+	[2013-08-07 13:17:00 20876] DEBUG (DevController:139) Waiting for devices vif.
+	[2013-08-07 13:17:00 20876] DEBUG (DevController:144) Waiting for 0.
+	[2013-08-07 13:17:00 20876] DEBUG (DevController:628) hotplugStatusCallback /local/domain/0/backend/vif/19/0/hotplug-status.
+	[2013-08-07 13:18:40 20876] ERROR (SrvBase:88) Request wait_for_devices failed.
+
+
+(Install Method #2 Download and Build image)
+http://xen.pablolibo.com/doku.php
+
+http://wiki.xen.org/wiki/Xen_Configuration_File_Options
+[root@Wall-eve images]# cat CentOS6_64.cfg
+	kernel = "/boot_xen/vmlinuz-2.6.39.4.x86_64" 
+	ramdisk = "/boot_xen/System.map-2.6.39.4.x86_64" 
+	root = "/dev/xvda ro"
+	name = "centos6_64" 
+	memory = "1024" # 1Gb ram
+	disk = [ 'file:/var/lib/xen/root.img,xvda,w', 'file:/var/lib/xen/swap.img,xvdb,w']
+	vif = ['mac=00:16:3e:de:ad:be, bridge=xenbr1',]
+	vcpus=1
+	on_reboot = 'destroy'
+	on_crash = 'destroy'
+
+ xm create CentOS6_64.cfg
+       Error: Device 0 (vif) could not be connected. Hotplug scripts not working.
+
+[root@Wall-eve images]# xl create -c CentOS6_64.cfg
+	Parsing config from CentOS6_64.cfg
+	libxl: error: libxl_device.c:858:device_backend_callback: unable to disconnect device with path /local/domain/0/backend/vif/22/0
+	libxl: error: libxl_create.c:1096:domcreate_attach_pci: unable to add nic devices
+	libxl: error: libxl_device.c:858:device_backend_callback: unable to disconnect device with path /local/domain/0/backend/vif/22/0
+	libxl: error: libxl.c:1465:devices_destroy_cb: libxl__devices_destroy failed for 22
+
+((( This will work if you remove the vif )))
+
