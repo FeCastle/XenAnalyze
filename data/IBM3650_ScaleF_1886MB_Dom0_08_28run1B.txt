@@ -1,0 +1,53 @@
+Testing with Scale Factor of 50
+CHECKPOINT
+tps = 7659.757805 (including connections establishing)
+tps = 7670.316862 (excluding connections establishing)
+     relname      |  reltuples  |  size  
+------------------+-------------+--------
+ pgbench_accounts | 4.99998e+06 | 640 MB
+(1 row)
+
+Testing with Scale Factor of 75
+CHECKPOINT
+tps = 7568.868958 (including connections establishing)
+tps = 7579.750019 (excluding connections establishing)
+     relname      |  reltuples  |  size  
+------------------+-------------+--------
+ pgbench_accounts | 7.49999e+06 | 961 MB
+(1 row)
+
+Testing with Scale Factor of 100
+CHECKPOINT
+tps = 1764.488530 (including connections establishing)
+tps = 1767.043591 (excluding connections establishing)
+     relname      |  reltuples  |  size   
+------------------+-------------+---------
+ pgbench_accounts | 9.99998e+06 | 1281 MB
+(1 row)
+
+Testing with Scale Factor of 125
+CHECKPOINT
+tps = 834.596173 (including connections establishing)
+tps = 835.769856 (excluding connections establishing)
+     relname      | reltuples |  size   
+------------------+-----------+---------
+ pgbench_accounts |  1.25e+07 | 1601 MB
+(1 row)
+
+Testing with Scale Factor of 150
+CHECKPOINT
+tps = 580.317756 (including connections establishing)
+tps = 581.401848 (excluding connections establishing)
+     relname      | reltuples |  size   
+------------------+-----------+---------
+ pgbench_accounts |   1.5e+07 | 1921 MB
+(1 row)
+
+Testing with Scale Factor of 175
+CHECKPOINT
+tps = 951.252117 (including connections establishing)
+tps = 952.422871 (excluding connections establishing)
+Testing with Scale Factor of 200
+CHECKPOINT
+tps = 399.646710 (including connections establishing)
+tps = 400.362959 (excluding connections establishing)

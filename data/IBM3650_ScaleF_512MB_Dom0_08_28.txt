@@ -1,0 +1,131 @@
+-bash-4.1$ /tmp/getScaleFactor
+Testing with Scale Factor of 5
+CHECKPOINT
+starting vacuum...end.
+tps = 5528.265064 (including connections establishing)
+tps = 5535.987908 (excluding connections establishing)
+     relname      | reltuples | size  
+------------------+-----------+-------
+ pgbench_accounts |    500000 | 64 MB
+(1 row)
+
+Testing with Scale Factor of 10
+CHECKPOINT
+starting vacuum...end.
+tps = 4469.536164 (including connections establishing)
+tps = 4478.984897 (excluding connections establishing)
+     relname      | reltuples |  size  
+------------------+-----------+--------
+ pgbench_accounts |     1e+06 | 128 MB
+(1 row)
+
+Testing with Scale Factor of 15
+CHECKPOINT
+starting vacuum...end.
+tps = 434.060419 (including connections establishing)
+tps = 434.668185 (excluding connections establishing)
+     relname      | reltuples |  size  
+------------------+-----------+--------
+ pgbench_accounts |   1.5e+06 | 192 MB
+(1 row)
+
+Testing with Scale Factor of 20
+CHECKPOINT
+starting vacuum...end.
+tps = 402.733057 (including connections establishing)
+tps = 403.587154 (excluding connections establishing)
+     relname      | reltuples |  size  
+------------------+-----------+--------
+ pgbench_accounts |     2e+06 | 256 MB
+(1 row)
+
+Testing with Scale Factor of 25
+CHECKPOINT
+starting vacuum...end.
+tps = 356.243091 (including connections establishing)
+tps = 356.953759 (excluding connections establishing)
+     relname      |  reltuples  |  size  
+------------------+-------------+--------
+ pgbench_accounts | 2.49999e+06 | 320 MB
+(1 row)
+
+ting with Scale Factor of 30
+CHECKPOINT
+starting vacuum...end.
+tps = 324.800633 (including connections establishing)
+tps = 325.370450 (excluding connections establishing)
+     relname      |  reltuples  |  size  
+------------------+-------------+--------
+ pgbench_accounts | 2.99998e+06 | 384 MB
+(1 row)
+
+Testing with Scale Factor of 35
+CHECKPOINT
+starting vacuum...end.
+tps = 327.475548 (including connections establishing)
+tps = 328.148925 (excluding connections establishing)
+     relname      |  reltuples  |  size  
+------------------+-------------+--------
+ pgbench_accounts | 3.50004e+06 | 448 MB
+(1 row)
+
+Testing with Scale Factor of 40
+CHECKPOINT
+starting vacuum...end.
+tps = 306.963866 (including connections establishing)
+tps = 307.587261 (excluding connections establishing)
+     relname      | reltuples |  size  
+------------------+-----------+--------
+ pgbench_accounts |     4e+06 | 512 MB
+(1 row)
+
+Testing with Scale Factor of 45
+CHECKPOINT
+starting vacuum...end.
+tps = 311.906807 (including connections establishing)
+tps = 312.576423 (excluding connections establishing)
+     relname      |  reltuples  |  size  
+------------------+-------------+--------
+ pgbench_accounts | 4.49999e+06 | 576 MB
+(1 row)
+
+Testing with Scale Factor of 50
+CHECKPOINT
+starting vacuum...end.
+tps = 304.535187 (including connections establishing)
+tps = 305.165759 (excluding connections establishing)
+     relname      | reltuples |  size  
+------------------+-----------+--------
+ pgbench_accounts |     5e+06 | 640 MB
+(1 row)
+
+[root@barbaro testData]# xm info
+host                   : barbaro.mydomain.com
+release                : 3.4.54-8.el6.centos.alt.x86_64
+version                : #1 SMP Tue Jul 23 17:29:30 UTC 2013
+machine                : x86_64
+nr_cpus                : 4
+nr_nodes               : 1
+cores_per_socket       : 4
+threads_per_core       : 1
+cpu_mhz                : 2133
+hw_caps                : bfebfbff:28100800:00000000:00003b40:009ce3bd:00000000:00000001:00000000
+virt_caps              : hvm
+total_memory           : 2037
+free_memory            : 1500
+free_cpus              : 0
+xen_major              : 4
+xen_minor              : 2
+xen_extra              : .2-23.el6
+xen_caps               : xen-3.0-x86_64 xen-3.0-x86_32p hvm-3.0-x86_32 hvm-3.0-x86_32p hvm-3.0-x86_64 
+xen_scheduler          : credit
+xen_pagesize           : 4096
+platform_params        : virt_start=0xffff800000000000
+xen_changeset          : unavailable
+xen_commandline        : dom0_mem=512M,max:512M loglvl=all guest_loglvl=all
+cc_compiler            : gcc (GCC) 4.4.7 20120313 (Red Hat 4.4.7-3)
+cc_compile_by          : mockbuild
+cc_compile_domain      : centos.org
+cc_compile_date        : Thu Jul 18 13:42:23 UTC 2013
+xend_config_format     : 4
+x

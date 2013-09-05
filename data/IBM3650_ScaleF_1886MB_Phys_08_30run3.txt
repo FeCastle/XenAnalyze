@@ -1,0 +1,280 @@
+processor	: 0
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 26
+model name	: Intel(R) Xeon(R) CPU           E5506  @ 2.13GHz
+stepping	: 5
+microcode	: 0xf
+cpu MHz		: 1596.000
+cache size	: 4096 KB
+physical id	: 0
+siblings	: 4
+core id		: 0
+cpu cores	: 4
+apicid		: 0
+initial apicid	: 0
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 11
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf pni dtes64 monitor ds_cpl vmx est tm2 ssse3 cx16 xtpr pdcm dca sse4_1 sse4_2 popcnt lahf_lm dtherm tpr_shadow vnmi flexpriority ept vpid
+bogomips	: 4266.65
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 40 bits physical, 48 bits virtual
+power management:
+
+processor	: 1
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 26
+model name	: Intel(R) Xeon(R) CPU           E5506  @ 2.13GHz
+stepping	: 5
+microcode	: 0xf
+cpu MHz		: 1596.000
+cache size	: 4096 KB
+physical id	: 0
+siblings	: 4
+core id		: 1
+cpu cores	: 4
+apicid		: 2
+initial apicid	: 2
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 11
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf pni dtes64 monitor ds_cpl vmx est tm2 ssse3 cx16 xtpr pdcm dca sse4_1 sse4_2 popcnt lahf_lm dtherm tpr_shadow vnmi flexpriority ept vpid
+bogomips	: 4266.65
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 40 bits physical, 48 bits virtual
+power management:
+
+processor	: 2
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 26
+model name	: Intel(R) Xeon(R) CPU           E5506  @ 2.13GHz
+stepping	: 5
+microcode	: 0xf
+cpu MHz		: 1596.000
+cache size	: 4096 KB
+physical id	: 0
+siblings	: 4
+core id		: 2
+cpu cores	: 4
+apicid		: 4
+initial apicid	: 4
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 11
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf pni dtes64 monitor ds_cpl vmx est tm2 ssse3 cx16 xtpr pdcm dca sse4_1 sse4_2 popcnt lahf_lm dtherm tpr_shadow vnmi flexpriority ept vpid
+bogomips	: 4266.65
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 40 bits physical, 48 bits virtual
+power management:
+
+processor	: 3
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 26
+model name	: Intel(R) Xeon(R) CPU           E5506  @ 2.13GHz
+stepping	: 5
+microcode	: 0xf
+cpu MHz		: 1596.000
+cache size	: 4096 KB
+physical id	: 0
+siblings	: 4
+core id		: 3
+cpu cores	: 4
+apicid		: 6
+initial apicid	: 6
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 11
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf pni dtes64 monitor ds_cpl vmx est tm2 ssse3 cx16 xtpr pdcm dca sse4_1 sse4_2 popcnt lahf_lm dtherm tpr_shadow vnmi flexpriority ept vpid
+bogomips	: 4266.65
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 40 bits physical, 48 bits virtual
+power management:
+
+MemTotal:        1912352 kB
+MemFree:           69524 kB
+Buffers:            5044 kB
+Cached:          1645440 kB
+SwapCached:        30408 kB
+Active:           822124 kB
+Inactive:         865612 kB
+Active(anon):     123088 kB
+Inactive(anon):   158692 kB
+Active(file):     699036 kB
+Inactive(file):   706920 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+SwapTotal:       4095996 kB
+SwapFree:        3973768 kB
+Dirty:                16 kB
+Writeback:             0 kB
+AnonPages:         10384 kB
+Mapped:            43312 kB
+Shmem:            244528 kB
+Slab:             106840 kB
+SReclaimable:      53128 kB
+SUnreclaim:        53712 kB
+KernelStack:        1920 kB
+PageTables:        13492 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:     5052172 kB
+Committed_AS:     660480 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:      275276 kB
+VmallocChunk:   34359451312 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:         0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+DirectMap4k:       12288 kB
+DirectMap2M:     2076672 kB
+Testing with Scale Factor of 5
+CHECKPOINT
+tps = 29912.864789 (including connections establishing)
+tps = 29932.569949 (excluding connections establishing)
+     relname      | reltuples | size  
+------------------+-----------+-------
+ pgbench_accounts |    500000 | 64 MB
+(1 row)
+
+Testing with Scale Factor of 10
+CHECKPOINT
+tps = 25251.924502 (including connections establishing)
+tps = 25268.521277 (excluding connections establishing)
+     relname      | reltuples |  size  
+------------------+-----------+--------
+ pgbench_accounts |     1e+06 | 128 MB
+(1 row)
+
+Testing with Scale Factor of 15
+CHECKPOINT
+tps = 28525.844134 (including connections establishing)
+tps = 28544.453870 (excluding connections establishing)
+     relname      | reltuples |  size  
+------------------+-----------+--------
+ pgbench_accounts |   1.5e+06 | 192 MB
+(1 row)
+
+Testing with Scale Factor of 20
+CHECKPOINT
+tps = 25960.369034 (including connections establishing)
+tps = 25977.310977 (excluding connections establishing)
+     relname      | reltuples |  size  
+------------------+-----------+--------
+ pgbench_accounts |     2e+06 | 256 MB
+(1 row)
+
+Testing with Scale Factor of 25
+CHECKPOINT
+tps = 24631.762029 (including connections establishing)
+tps = 24647.860209 (excluding connections establishing)
+     relname      |  reltuples  |  size  
+------------------+-------------+--------
+ pgbench_accounts | 2.50002e+06 | 320 MB
+(1 row)
+
+Testing with Scale Factor of 30
+CHECKPOINT
+tps = 28939.750680 (including connections establishing)
+tps = 28958.175185 (excluding connections establishing)
+     relname      |  reltuples  |  size  
+------------------+-------------+--------
+ pgbench_accounts | 3.00002e+06 | 384 MB
+(1 row)
+
+Testing with Scale Factor of 35
+CHECKPOINT
+tps = 30022.850050 (including connections establishing)
+tps = 30043.022636 (excluding connections establishing)
+     relname      |  reltuples  |  size  
+------------------+-------------+--------
+ pgbench_accounts | 3.50004e+06 | 448 MB
+(1 row)
+
+Testing with Scale Factor of 40
+CHECKPOINT
+tps = 28929.894295 (including connections establishing)
+tps = 28948.544297 (excluding connections establishing)
+     relname      |  reltuples  |  size  
+------------------+-------------+--------
+ pgbench_accounts | 4.00001e+06 | 512 MB
+(1 row)
+
+Testing with Scale Factor of 45
+CHECKPOINT
+tps = 26456.653199 (including connections establishing)
+tps = 26473.948282 (excluding connections establishing)
+     relname      |  reltuples  |  size  
+------------------+-------------+--------
+ pgbench_accounts | 4.50002e+06 | 576 MB
+(1 row)
+
+Testing with Scale Factor of 50
+CHECKPOINT
+tps = 29324.390812 (including connections establishing)
+tps = 29343.091161 (excluding connections establishing)
+     relname      |  reltuples  |  size  
+------------------+-------------+--------
+ pgbench_accounts | 4.99998e+06 | 640 MB
+(1 row)
+
+Testing with Scale Factor of 75
+CHECKPOINT
+tps = 24524.115038 (including connections establishing)
+tps = 24538.809322 (excluding connections establishing)
+     relname      | reltuples |  size  
+------------------+-----------+--------
+ pgbench_accounts |   7.5e+06 | 961 MB
+(1 row)
+
+Testing with Scale Factor of 100
+CHECKPOINT
+tps = 4864.495663 (including connections establishing)
+tps = 4867.657114 (excluding connections establishing)
+     relname      | reltuples |  size   
+------------------+-----------+---------
+ pgbench_accounts |     1e+07 | 1281 MB
+(1 row)
+
+Testing with Scale Factor of 125
+CHECKPOINT
+tps = 1362.964872 (including connections establishing)
+tps = 1363.864944 (excluding connections establishing)
+     relname      | reltuples |  size   
+------------------+-----------+---------
+ pgbench_accounts |  1.25e+07 | 1601 MB
+(1 row)
+
+Testing with Scale Factor of 150
+CHECKPOINT
+tps = 703.666905 (including connections establishing)
+tps = 704.125658 (excluding connections establishing)
+     relname      | reltuples |  size   
+------------------+-----------+---------
+ pgbench_accounts |   1.5e+07 | 1921 MB
+(1 row)
+
+Testing with Scale Factor of 175
+CHECKPOINT
+tps = 843.078942 (including connections establishing)
+tps = 844.054312 (excluding connections establishing)
+Testing with Scale Factor of 200
+CHECKPOINT
+tps = 586.152942 (including connections establishing)
+tps = 586.538822 (excluding connections establishing)
