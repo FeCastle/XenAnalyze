@@ -1,0 +1,22 @@
+##########################################################################
+##
+## dd_write
+## 
+##  This file reads and writes data to/from disk...
+##########################################################################
+DD=/bin/dd
+BS=256k
+COUNT=3000
+TMPDIR=/tmp/ddout/
+mkdir -p ${TMPDIR}
+i=1
+while true
+do
+	echo ---- write to output file ----
+	$DD if=/dev/zero of=${TMPDIR}${i} bs=${BS} count=${COUNT}
+	echo ---- read from input file ---
+	$DD if=${TMPDIR}${i} of=/dev/zero bs=${BS} count=${COUNT}
+	rm ${TMPDIR}${i} 
+	let i=i+1
+done
+

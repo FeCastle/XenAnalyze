@@ -1,0 +1,58 @@
+Since the system workload, and available resources will continually change, and it is difficult to predict a constant workload across multiple virtual systems, data centers will need the ability to profile and analyze virtual environments.  Application and system profiling tools are available but require manual analysis of the data and possibly detailed knowledge above that of a traditional system administrator, in order to arrive at a probable conclusion.   
+
+\indent Prior to Xenoprof, it was not possible to read hardware performance counters from the guest OS perspective \cite{menon, du2}.  However, Xenoprof does not analyze the results or draw any conclusions about the counters.  For example, in \cite{tickoo} it is shown that there are 'invisible' resources such as the shared LLC cache, and show that scheduling CPU intensive VMs on the same socket but different cores will result in significant degradation.  Conversely an I/O intensive application with a CPU intensive application on the same configuration will run with little interference.  Where if this I/O and CPU load runs on the same CPU the I/O intensive application will perform optimally, but will significantly degrade the CPU intensive application due to multiple interrupts to read the data from the virtual controller.
+
+\indent This project will add the following contributions for virtualization:
+\begin{enumerate}
+\item Define the layers of abstraction in various virtual environments.
+\item Define the system resources which attributes to application problem from I/O, memory, or CPU problems.
+\item Identify the counters, metrics, and envirement at each layer which contributes to I/O contention.
+\item Dynamically analyze runtime interference and identify layer for database applications which experiences I/O contention at different layers.
+\item Introduce \emph{disk pinning} similar to core pinning (assigning a guest OS to a specific core), where separate physical disks are assigned to individual virtual servers under a constant load.  
+\end{enumerate}
+
+\subsection{Abstraction Layers}
+In order to find the cause of a problem application, the first step needs to isolate the problem to a specific layer.  If an application is degraded, it could be a problem with the applicaiton, OS, or hardware.  In a virtual environment, the hypervisor also needs to be considered as a cause of the problem.  
+\newline
+\begin{tabular}{ l p{5cm} }
+  layer & definition \\
+  \hline
+  Application & Includes all code running in user space on a guest machine, inluding the system runtime libraries. \\
+  OS & Includes all kernel code and device drivers. \\
+  Virtual Guest & An external virtual system. \\
+  Hypervisor & The hypervisor and VMM to manage the guest domains. \\
+  Hardare & Physical hardware. \\
+\end{tabular}
+
+\subsection{Physical and Virtual Resources}
+In order to determine the actual cause of the performance problem the next step is to identify the resource which is the most influential to the performance problem.  If the problem is in the Guest OS, then the resource would be a virtual resource.  The goal is to determine if the application is bound by Memory, I/O, or CPU.  In other words, adding \emph{additional} either Memory, I/O, or CPU would improve application performance.  
+\newline
+
+\begin{tabular}{ l p{5cm} }
+  Resource & Definition \\
+  \hline
+  Disk I/O & The application is spending more time than normal for Disk I/O. \\
+  Network I/O & The application is spending more time than normal for Network I/O. \\
+  CPU & The application is spending excessive time computing. \\
+  Memory & The application is requesting more memory or requires additional swappping. \\
+\end{tabular}
+
+\subsection{Detecting I/O Interference}
+It has been demonstrated that I/O is a major contributor to significant degradation in a virtual enviroment.  Normally, the goal of the OS is to delay, cache, and merge physical I/O requests.  However, if the \emph{working set} for a heavy I/O application like a database exceeds the available memory of the application, the application becomes I/O bound and caching in memory becomes less effective.
+At each layer data and statistics need to be collected to determine why the application may be degraded.
+\newline
+
+\begin{tabular}{ l p{5cm} }
+  Layer & Counter \\
+  \hline
+  Application & BytesRead/s BytesWritten/s. \\
+  OS & sar virtual I/O and Paging. \\
+  Virtual Guest & Hypervisor moitors other guests \\
+  Hypervisor & sar physical I/O and Paging. \\
+  Hardare & Physical hardware measures IOPS. \\
+\end{tabular}
+
+\indent At each layer the analysis tool will need to create a baseline of statistics to track performance counters at various intervals.
+
+\subsection{Disk Pinning}
+Disk pinning may be a substitute for multiple I/O bound guest appliations running in a virtual system.  Several papers have demonstrated the effects of core pinning or \emph{core affinity} for CPU bound applications.  This can reduce the load on the hypervisor scheduler and prevent cache contention.  Similarly a single I/O bound guest may use a single disk excessivley causing performance problems on external guests.  RAID systems have been used to improve performance for database applications.  By increasing the number of physical spindles, multiple random disk seeks can occur concurrently.  By setting physical disks to specific virtual guests, we can reduce I/O interference from multiple guests.

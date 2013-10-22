@@ -1,0 +1,25 @@
+A large US corportation, with over 10,000 employees and 200 franchises had a custom application for a retail business that sold and serviced merchandise.  A suite of applications which had been specifically written for this business consisted of a core inventory, service, accounting, and several other add-on services.  The OS consisted of Redhat based Linux with 2.6.18 kernel, Postgresql 8.3.6, and Apache 2.2.3 The hardware had 40 CPU cores (4 sockets 10 cores each) and 256 GB of RAM with a high end RAID SAN used for the data store.  At most times during the business day the system would run with less than 60\% total CPU and would cache nearly all data inside active RAM.   The system ran optimally for several months in this configuration, and was hosted in a data center.
+
+\indent At some point the customer and data center decided to virtualize the application to add disaster recover and save power.  After several weeks the end users started to complain and enter trouble tickets about slow response times in the web server.  Application developers and support quickly found issues and developed fixes.   Usually these fixes were to reduce the number or reads or writes to some file in the filesystem.  However, after each fix, sometimes days later, a new problem would show up.  Eventually the database engineers and system engineers began examining the recurring problems.
+
+\indent The symptom was that sometimes the system would go into a state where all 32 cores would go to 100\% CPU time, multiple threads would go to a “D state” \footnote{A procees in the D state is neither running nor sleeping.  It is "Uninterruptable sleep (usually IO)"} , and multiple processess would just not complete.   The additional CPU time was shown to be in \emph{System Time} and multiple tools confirmed this.  Memory and IO used on the guest and host server were consistent, and engineers monitoring the SAN did not see any latencies or problems measuring disk IO.  Sometimes this would only last a few seconds and sometimes it would last for hours. At some points the \emph{strace} output of the Apache process hang for several seconds on a simple system call to \emph{open}, \emph{lseek}, and \emph{write}.
+
+\begin{figure}
+%\begin{Verbatim}[frame=single]
+\begin{Verbatim}
+12:46:02 open("…", O_WRONLY|O_CREAT|O_TRUNC
+12:46:16 fstat64(61, {st_mode=S_IFREG|0666 
+12:46:16 lseek(61, 0, SEEK_CUR) = 0 
+12:46:24 write(61, "O:6_"..., 8192) = 8192 
+12:46:24 write(61, "R1339 "..., 8192) = 819 
+12:46:24 write(61, "ct "..., 8192) = 8192 
+12:46:31 write(61, "cription "..., 8192) =  
+12:46:31 write(61, ";s:11 "..., 8192) = 8192 
+12:46:31 write(61, "7:for "..., 3288) = 3288 
+12:46:31 close(61) = 0
+\end{Verbatim}
+\label{fig:syscalls}
+\caption{\emph{strace} shows system calls to open, lseek, and write take up to 14 seconds to complete}
+\end{figure}
+
+\indent Looking at statistics in the VMM showed exactly what was noticed on the guest.  High CPU usage, but from the point of view of the VMM, there was no difference between guest time and kernel time and appeared as though there was a misbehaving guest application or guest kernel.  However, no symptoms appeared until the application was virtualized.  The guest was unable to perform profiling with hardware coutners on this version of the hypervisor \cite{serebrin} to see if there was a kernel bug.  Was there a bug or misconfiguration in the application, guest OS, hypervisor, or hardware?  Or was there just too much overhead from virtualization during peak usage?

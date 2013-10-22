@@ -1,0 +1,195 @@
+processor	: 0
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 26
+model name	: Intel(R) Xeon(R) CPU           E5506  @ 2.13GHz
+stepping	: 5
+cpu MHz		: 2133.482
+cache size	: 4096 KB
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 11
+wp		: yes
+flags		: fpu de tsc msr pae cx8 sep cmov pat clflush mmx fxsr sse sse2 ss ht syscall nx lm up rep_good aperfmperf unfair_spinlock pni ssse3 cx16 sse4_1 sse4_2 popcnt hypervisor lahf_lm dts
+bogomips	: 4266.96
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 40 bits physical, 48 bits virtual
+power management:
+
+MemTotal:         501436 kB
+MemFree:          339852 kB
+Buffers:            8264 kB
+Cached:            72196 kB
+SwapCached:            0 kB
+Active:            29604 kB
+Inactive:          64736 kB
+Active(anon):      14320 kB
+Inactive(anon):    24056 kB
+Active(file):      15284 kB
+Inactive(file):    40680 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+SwapTotal:       1015800 kB
+SwapFree:        1015800 kB
+Dirty:                44 kB
+Writeback:             0 kB
+AnonPages:         13920 kB
+Mapped:            30564 kB
+Shmem:             24500 kB
+Slab:              56132 kB
+SReclaimable:      10084 kB
+SUnreclaim:        46048 kB
+KernelStack:         600 kB
+PageTables:         2752 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:     1266516 kB
+Committed_AS:     360812 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:        1944 kB
+VmallocChunk:   34359725676 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:         0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+DirectMap4k:      524288 kB
+DirectMap2M:           0 kB
+Testing with Scale Factor of 5
+CHECKPOINT
+tps = 6000.454381 (including connections establishing)
+tps = 6008.421646 (excluding connections establishing)
+     relname      | reltuples | size  
+------------------+-----------+-------
+ pgbench_accounts |    500000 | 64 MB
+(1 row)
+
+Testing with Scale Factor of 10
+CHECKPOINT
+tps = 5882.410927 (including connections establishing)
+tps = 5890.356959 (excluding connections establishing)
+     relname      | reltuples |  size  
+------------------+-----------+--------
+ pgbench_accounts |     1e+06 | 128 MB
+(1 row)
+
+Testing with Scale Factor of 15
+CHECKPOINT
+tps = 5667.536729 (including connections establishing)
+tps = 5675.474516 (excluding connections establishing)
+     relname      | reltuples |  size  
+------------------+-----------+--------
+ pgbench_accounts |   1.5e+06 | 192 MB
+(1 row)
+
+Testing with Scale Factor of 20
+CHECKPOINT
+tps = 2165.930980 (including connections establishing)
+tps = 2168.781842 (excluding connections establishing)
+     relname      | reltuples |  size  
+------------------+-----------+--------
+ pgbench_accounts |     2e+06 | 256 MB
+(1 row)
+
+Testing with Scale Factor of 25
+CHECKPOINT
+tps = 1158.730846 (including connections establishing)
+tps = 1160.348084 (excluding connections establishing)
+     relname      |  reltuples  |  size  
+------------------+-------------+--------
+ pgbench_accounts | 2.49999e+06 | 320 MB
+(1 row)
+
+Testing with Scale Factor of 30
+CHECKPOINT
+tps = 773.115786 (including connections establishing)
+tps = 774.372647 (excluding connections establishing)
+     relname      |  reltuples  |  size  
+------------------+-------------+--------
+ pgbench_accounts | 2.99999e+06 | 384 MB
+(1 row)
+
+Testing with Scale Factor of 35
+CHECKPOINT
+tps = 620.884691 (including connections establishing)
+tps = 622.058158 (excluding connections establishing)
+     relname      |  reltuples  |  size  
+------------------+-------------+--------
+ pgbench_accounts | 3.49996e+06 | 448 MB
+(1 row)
+
+Testing with Scale Factor of 40
+CHECKPOINT
+tps = 533.427318 (including connections establishing)
+tps = 534.307109 (excluding connections establishing)
+     relname      | reltuples |  size  
+------------------+-----------+--------
+ pgbench_accounts |     4e+06 | 512 MB
+(1 row)
+
+Testing with Scale Factor of 45
+CHECKPOINT
+tps = 511.339084 (including connections establishing)
+tps = 512.463379 (excluding connections establishing)
+     relname      |  reltuples  |  size  
+------------------+-------------+--------
+ pgbench_accounts | 4.49999e+06 | 576 MB
+(1 row)
+
+Testing with Scale Factor of 50
+CHECKPOINT
+tps = 455.102344 (including connections establishing)
+tps = 456.147952 (excluding connections establishing)
+     relname      |  reltuples  |  size  
+------------------+-------------+--------
+ pgbench_accounts | 4.99998e+06 | 640 MB
+(1 row)
+
+Testing with Scale Factor of 75
+CHECKPOINT
+tps = 354.656101 (including connections establishing)
+tps = 355.410842 (excluding connections establishing)
+     relname      |  reltuples  |  size  
+------------------+-------------+--------
+ pgbench_accounts | 7.49999e+06 | 961 MB
+(1 row)
+
+Testing with Scale Factor of 100
+CHECKPOINT
+tps = 333.304456 (including connections establishing)
+tps = 333.848897 (excluding connections establishing)
+     relname      | reltuples |  size   
+------------------+-----------+---------
+ pgbench_accounts |     1e+07 | 1281 MB
+(1 row)
+
+Testing with Scale Factor of 125
+CHECKPOINT
+tps = 343.120065 (including connections establishing)
+tps = 343.625202 (excluding connections establishing)
+     relname      | reltuples |  size   
+------------------+-----------+---------
+ pgbench_accounts |  1.25e+07 | 1601 MB
+(1 row)
+
+Testing with Scale Factor of 150
+CHECKPOINT
+tps = 326.012697 (including connections establishing)
+tps = 326.681796 (excluding connections establishing)
+     relname      | reltuples |  size   
+------------------+-----------+---------
+ pgbench_accounts |   1.5e+07 | 1921 MB
+(1 row)
+
+Testing with Scale Factor of 175
+CHECKPOINT
+tps = 326.131347 (including connections establishing)
+tps = 326.771923 (excluding connections establishing)
+Testing with Scale Factor of 200
+CHECKPOINT
+tps = 294.534863 (including connections establishing)
+tps = 295.032062 (excluding connections establishing)

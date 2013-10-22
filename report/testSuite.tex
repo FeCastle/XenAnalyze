@@ -1,0 +1,36 @@
+We outline the experiments used to measure the performance and characterize the ability to analyze performance issues in the guest applications and OS (DomU), hypervisor (Dom0), and hardware.  In each test, the “highest level” of the stack is reported as a problem.  For example: if either the OS or Application can change, the Application layer is responsible to conform to the OS. 
+\newline
+Application ->  Guest OS -> Host OS / Hypervisor -> Physical Hardware
+\newline
+For generating a typical I/O load on the system PostgreSQL will be used as a database, and PGbench from the Postgres contrib package is used to generate a consistent workload.  PGbench creates a TPC-B similar style workload and calculates transactions per second.   Additionally PGreplay can record and playback (faster or slower) the same set of benchmark transactions.  PGreplay allows us to simulate host systems that are not running at 100\% capacity.  
+\newline
+All experiments are going to be performed primarily on:
+\todo[inline]{Make this a table}
+Small:  IBM x3650 Quad Core single Socket with 2GB Ram
+Virtualization:  Dell PowerEdge T410 with dual quadcore Xeon processors and 256Kb L2 cache and 8MB shared L3 cache.  
+Virtual Cluster:   Multiple small or medium servers clustered together with SAN storage server.
+
+Each node will have the following software installed:
+\todo[inline]{Make this a table}
+Hyperviser 
+Xen 4.2
+Dom0 	                   
+CentOS 6.2   (Kernel 3.4)
+PostgreSQL 8.4
+DomU (Guests)       
+CentOS 6.2   (Kernel 2.6.39)
+
+\todo[inline]{Why are we using PostgreSQL and PGbench - OLTP,}
+
+\subsection{Detecting Memory and I/O contention}
+In this experiment we are a small virtual system: an IBM x3650 single socket quad core Intel Xeon CPU.   This machine runs CentOS 6.4 with a Xen configured kernel at 3.4.54 for Domain 0, and the Xen 4.2 hypervisor complied and packaged as part of the CentOS add on packages.   In this case Only the Dom0 is used and 3 separate memory configurations are used to show the difference between a system configured with 512MB, 1024MB, and 2048MB of ram.
+
+\todo[inline]{Add Chart}
+\indent In this chart we can see that when the DB size is around 50\% of the virtual memory available, the queries resposnse time drops significantly and the system is now bound by the I/O time and swapping pages from disk to memory.   The size of the postgres database is increased in order to find where the “working set” can fit into main memory.    There is a significant drop in performance when the virtual system moves from a Memory Bound application to a Disk I/O Bound application.
+
+\subsection{Virtual Interference}
+Here we run 3 configurations to show the overhead in moving from a physical server to a virtual server.   We use 3 different configutaions.  All 3 configurations use all available resources 4 CPU cores and 2 GB Ram.    There is a significant performance drop when changing from a virtual system to a physical system when the system is bound by memory.   However, when the system is bound by Disk I/O there is little performance penalty.    Interestingly even though the physical system achieves about a 4x performance improvement over the virtual system, it degrades to a similar performance at the same DB size ~1024MB (about 50\% of available ram).
+
+\todo[inline]{Figure :  Due to the significant performance change DomU was created with an additional 2GB of ram available in Dom0.  Although this additional ram slightly delayed when the system became I/O bound it did not help with}
+
+
