@@ -14,5 +14,15 @@ System virtualization is a way for a data center to reduce cost and power by ove
 
 \indent The problem this introduces is in performing profiling and analysis of this additional layer of abstraction.  The hypervisor, or Virtual Machine Manager, adds to the already complex existing layers (Application, OS, and Hardware) one must analyze when an application performs sub-optimally.  How can a system administrator determine if the problem is in the application, OS, hypervisor, hardware, or an unrelated guest virtual machine on the same physical host system?  In a traditional environment there can be 'interference' \cite{paul}or ‘system noise' caused by these layers, which attributes to poor application performance.  The hypervisor as well as multiple other guest virtual machines which compete for system resources add to this outside interference, which is undetectable from a guest VM, and therefore undetectable by the guest applications.
 
-\indent Utilizing current profiling tools and measuring changes in system runtime data in the guests and VMM we are able to determine the layer of the complex software stack that attributes to a sub-optimal running application in a virtual environment.  Additionally, we can determine which system resource (memory, CPU, or IO) needs to be modified or is used inefficiently.
+\indent This paper we show that using existing profiling tools and measuring changes in system runtime data in the guests and VMM we are now able to determine the layer of the complex software stack that attributes to a sub-optimal running application in a virtual environment.  Additionally, we can determine which system resource (memory, CPU, or IO) needs to be modified or is used inefficiently.
+
+\indent This project will add the following contributions for virtualization:
+\begin{enumerate}
+\item Define the layers of abstraction in various virtual environments.
+\item Define the system resources which attributes to application problem from I/O, memory, or CPU problems.
+\item Framework to Identify the counters, metrics, and envirement at each layer which contributes to I/O contention.
+\item Example tool which dynamically analyzes runtime interference and identifies the layer which experiences I/O contention.
+\item Introduce \emph{disk pinning} for virtualization where separate physical disks are assigned to individual virtual servers.
+\end{enumerate}
+
 

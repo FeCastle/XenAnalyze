@@ -37,6 +37,47 @@ In order to determine the actual cause of the performance problem the next step 
   Memory & The application is requesting more memory or requires additional swappping. \\
 \end{tabular}
 
+\newline 
+The following tools are available to collect data:
+\begin{tabular}{ l l p{5cm} }
+  Resource & Tool & Description \\
+  \hline
+  Disk I/O & sar -d & Shows the time the disk was busy, reads and writes per second, wait queue, and service time(seek time). \\
+  Uniform Memory & vmstat -a & Active and Inactive page statistics \\
+  Uniform Memory & vmstat -s & Virtual Memory table \\
+  NUMA Memory & zoneinfo & /proc/zoneinfo \\
+  CPU & ps -o <FMT> & Real, system, and clock time \\
+\end{tabular}
+
+\begin{comment}
+       To see every process with a user-defined format:
+          ps -eo pid,tid,class,rtprio,ni,pri,psr,pcpu,stat,wchan:14,comm
+          ps axo stat,euid,ruid,tty,tpgid,sess,pgrp,ppid,pid,pcpu,comm
+          ps -eo pid,tt,user,fname,tmout,f,wchan
+
+PROCESS STATE CODES
+       Here are the different values that the s, stat and state output
+       specifiers (header "STAT" or "S") will display to describe the state of
+       a process:
+       D    uninterruptible sleep (usually IO)
+       R    running or runnable (on run queue)
+       S    interruptible sleep (waiting for an event to complete)
+       T    stopped, either by a job control signal or because it is being
+            traced.
+       W    paging (not valid since the 2.6.xx kernel)
+       X    dead (should never be seen)
+       Z    defunct ("zombie") process, terminated but not reaped by its
+            parent.
+      For BSD formats and when the stat keyword is used, additional
+       characters may be displayed:
+       <    high-priority (not nice to other users)
+       N    low-priority (nice to other users)
+       L    has pages locked into memory (for real-time and custom IO)
+       s    is a session leader
+       l    is multi-threaded (using CLONE_THREAD, like NPTL pthreads do)
+       +    is in the foreground process group.
+\end{comment}
+
 \subsection{Detecting I/O Interference}
 It has been demonstrated that I/O is a major contributor to significant degradation in a virtual enviroment.  Normally, the goal of the OS is to delay, cache, and merge physical I/O requests.  However, if the \emph{working set} for a heavy I/O application like a database exceeds the available memory of the application, the application becomes I/O bound and caching in memory becomes less effective.
 At each layer data and statistics need to be collected to determine why the application may be degraded.
