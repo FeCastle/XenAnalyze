@@ -1,3 +1,4 @@
+#!/bin/bash
 #########################################################################
 ## getScaleFactor
 ##
@@ -7,19 +8,38 @@
 ## For details on the technical details from this script see:
 ##    http://www.westnet.com/~gsmith/content/postgresql/pgbench-scaling.htm
 ##
+## sudo apt-get install postgresql-9.1
 ## 
 ## Author:  Deron Jensen
 ## Date:    08/01/2013
 ## Email:   deron@cs.pdx.edu, fecastle@gmail.com
 ##
 #########################################################################
+DBNAME=pgbench
 CLIENTS=8   # Set clients at 2x CPUs
-for SCALEFACTOR in 5 10 15 20 25 30 35 40 45 50; do
-    echo "Testing with Scale Factor of $SCALEFACTOR"
-    pgbench -i -s $SCALEFACTOR pgbench 2> /dev/null
-    vacuumdb --analyze pgbench
-    psql -d pgbench -c "checkpoint;"
-    pgbench -T 30 -c $CLIENTS -S pgbench | grep tps
-    psql -d pgbench -c "SELECT relname, reltuples, pg_size_pretty(relpages * 8192) as size from PG_class WHERE relname='pgbench_accounts';"
-done
+PGHOST=localhost
+PGUSER=postgres
+export PGHOST PGUSER
 
+function setup {
+	psql -d $DBNAME -c "checkpoint;" 2>/dev/null
+	if [ $? != '0' ]; then
+		echo "Creating DB $DBNAME"
+		createdb $DBNAME 2>/dev/null
+		if [ $? != '0' ]; then
+			echo "Unable to create DB"
+			exit 1
+		fi
+	fi
+}
+
+setup
+#for SCALEFACTOR in 5 10 15 20 25 30 35 40 45 50; do
+for SCALEFACTOR in 5; do
+    echo "Testing with Scale Factor of $SCALEFACTOR"
+    pgbench -i -s $SCALEFACTOR $DBNAME 2> /dev/null
+    vacuumdb --analyze $DBNAME
+    psql -d $DBNAME -c "checkpoint;"
+    $DBNAME -T 30 -c $CLIENTS -S $DBNAE | grep tps
+    psql -d $DBNAME -c "SELECT relname, reltuples, pg_size_pretty(relpages * 8192) as size from PG_class WHERE relname='pgbench_accounts';"
+done
