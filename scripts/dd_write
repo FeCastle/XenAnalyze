@@ -1,3 +1,4 @@
+#!/bin/bash
 ##########################################################################
 ##
 ## dd_write
@@ -12,11 +13,12 @@ mkdir -p ${TMPDIR}
 i=1
 while true
 do
-	echo ---- write to output file ----
-	$DD if=/dev/zero of=${TMPDIR}${i} bs=${BS} count=${COUNT}
-	echo ---- read from input file ---
-	$DD if=${TMPDIR}${i} of=/dev/zero bs=${BS} count=${COUNT}
+	FILE=${TMPDIR}${i}
+	echo ---- $i read/write file ${FILE} ----
+	$DD if=/dev/zero of=${FILE} bs=${BS} count=${COUNT}
+	$DD if=${FILE} of=/dev/zero bs=${BS} count=${COUNT}
 	rm ${TMPDIR}${i} 
 	let i=i+1
+	sleep 1
 done
 

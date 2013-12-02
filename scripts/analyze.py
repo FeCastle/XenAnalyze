@@ -24,6 +24,8 @@ import sys
 import psutil
 import time
 
+from diskIO import DiskIO
+
 doDebug = True
 #############################################################################
 #for key in pinfo:
@@ -46,6 +48,8 @@ doDebug = True
 numTop = 5
 prevIOProcs = {}
 curIOProcs = {}
+objDiskIO = DiskIO()
+
 def diffIO (old, new): return new - old
 
 def doProcess():
@@ -62,9 +66,9 @@ def doProcess():
 				else:
 					prevIOProcs[p.pid] = curIOProcs[p.pid]
 				curIOProcs[p.pid] = [readBytes, writeBytes]
-				# print "Current:  ", curIOProcs[p.pid]
-				# print "Previous: ", prevIOProcs[p.pid]
-				print p.name, ": ", map(diffIO, prevIOProcs[p.pid], curIOProcs[p.pid])
+				print "Current:  ", curIOProcs[p.pid]
+				print "Previous: ", prevIOProcs[p.pid]
+				print p.name, ": ", map (diffIO, prevIOProcs[p.pid], curIOProcs[p.pid])
 
 def printDebug(msg):
 	if (doDebug == True):
@@ -92,18 +96,17 @@ def doSwap():
 	print swapMem
 
 def doDiskIO():
-	printDebug ("Starting Disk IO.")
-	# Return system disk I/O statistics as a namedtuple:
-	global diskIO
-	diskIO = psutil.disk_io_counters(perdisk=True)
-	print diskIO
+	global objDiskIO
+	psutilDiskIO = psutil.disk_io_counters(perdisk=False)
+	objDiskIO.addRW(psutilDiskIO.read_bytes, psutilDiskIO.write_bytes)
+	objDiskIO.pDiskIO()
 
 def doAllSys():
 	# doCPU()
 	# doVirtMem()
 	# doSwap()
-	# doDiskIO()
-	doProcess()
+	# doProcess()
+	doDiskIO()
 
 ######################## MAIN ####################################
 if __name__ == '__main__':
