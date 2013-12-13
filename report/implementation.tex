@@ -1,18 +1,18 @@
 Since the system workload, and available resources will continually change, and it is difficult to predict a constant workload across multiple virtual systems, data centers will need the ability to profile and analyze virtual environments.  Application and system profiling tools are available but require manual analysis of the data and possibly detailed knowledge above that of a traditional system administrator, in order to arrive at a probable conclusion.   
 
-\indent Prior to Xenoprof, it was not possible to read hardware performance counters from the guest OS perspective \cite{menon, du2}.  However, Xenoprof does not analyze the results or draw any conclusions about the counters.  For example, in \cite{tickoo} it is shown that there are 'invisible' resources such as the shared LLC cache, and show that scheduling CPU intensive VMs on the same socket but different cores will result in significant degradation.  Conversely an I/O intensive application with a CPU intensive application on the same configuration will run with little interference.  Where if this I/O and CPU load runs on the same CPU the I/O intensive application will perform optimally, but will significantly degrade the CPU intensive application due to multiple interrupts to read the data from the virtual controller.
+\indent Prior to Xenoprof, it was not possible to read hardware performance counters from the guest OS perspective \cite{menon, du2}.  However, Xenoprof does not analyze the results or draw any conclusions about the counters.  For example, in \cite{tickoo} it is shown that there are 'invisible' resources such as the shared LLC cache, and show that scheduling CPU intensive VMs on the same socket but different cores will result in significant degradation.  Conversely an I/O intensive application with a CPU intensive application on the same configuration will run with little interference.  If this I/O and CPU load runs on the same CPU the I/O intensive application will perform optimally, but will significantly degrade the CPU intensive application due to multiple interrupts to read the data from the virtual controller.
 
 \indent This project will add the following contributions for virtualization:
 \begin{enumerate}
 \item Define the layers of abstraction in various virtual environments.
-\item Define the system resources which attributes to application problem from I/O, memory, or CPU problems.
+\item Define the system resources needed for optimal application performance.
 \item Identify the counters, metrics, and envirement at each layer which contributes to I/O contention.
 \item Dynamically analyze runtime interference and identify layer for database applications which experiences I/O contention at different layers.
 \item Introduce \emph{disk pinning} similar to core pinning (assigning a guest OS to a specific core), where separate physical disks are assigned to individual virtual servers under a constant load.  
 \end{enumerate}
 
 \subsection{Abstraction Layers}
-In order to find the cause of a problem application, the first step needs to isolate the problem to a specific layer.  If an application is degraded, it could be a problem with the applicaiton, OS, or hardware.  In a virtual environment, the hypervisor also needs to be considered as a cause of the problem.  
+In order to find the cause of a problem application, the first should isolate the problem to a specific layer.  If an application is degraded, it could be a problem with the applicaiton, OS, or hardware.  In a virtual environment, the hypervisor or unrelated guest also need to be considered as a cause of the problem.  
 \newline
 \begin{tabular}{ l p{5cm} }
   layer & definition \\
@@ -37,12 +37,12 @@ In order to determine the actual cause of the performance problem the next step 
   Memory & The application is requesting more memory or requires additional swappping. \\
 \end{tabular}
 
-\newline 
 The following tools are available to collect data:
 \begin{tabular}{ l l p{5cm} }
   Resource & Tool & Description \\
   \hline
   Disk I/O & sar -d & Shows the time the disk was busy, reads and writes per second, wait queue, and service time(seek time). \\
+  Disk I/O & ioping & monitor I/O latency in real time. Similar to 'ping'\cite{oping}\\
   Uniform Memory & vmstat -a & Active and Inactive page statistics \\
   Uniform Memory & vmstat -s & Virtual Memory table \\
   NUMA Memory & zoneinfo & /proc/zoneinfo \\
