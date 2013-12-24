@@ -5,9 +5,9 @@ Since the system workload, and available resources will continually change, and 
 \indent This project will add the following contributions for virtualization:
 \begin{enumerate}
 \item Define the layers of abstraction in various virtual environments.
-\item Define the system resources needed for optimal application performance.
-\item Identify the counters, metrics, and envirement at each layer which contributes to I/O contention.
-\item Dynamically analyze runtime interference and identify layer for database applications which experiences I/O contention at different layers.
+\item Define the physical and virtual resource needed for application performance.
+\item Identify the tools, and performance counters used identify layer layer I/O contention.
+\item Example tool that dynamically analyzes runtime interference from I/O contention at different layers.
 \item Introduce \emph{disk pinning} similar to core pinning (assigning a guest OS to a specific core), where separate physical disks are assigned to individual virtual servers under a constant load.  
 \end{enumerate}
 
@@ -27,27 +27,24 @@ In order to find the cause of a problem application, the first should isolate th
 \subsection{Physical and Virtual Resources}
 In order to determine the actual cause of the performance problem the next step is to identify the resource which is the most influential to the performance problem.  If the problem is in the Guest OS, then the resource would be a virtual resource.  The goal is to determine if the application is bound by Memory, I/O, or CPU.  In other words, adding \emph{additional} either Memory, I/O, or CPU would improve application performance.  
 \newline
+Application:  The resources used at this layer are most likely calls to shared libraries such as glibc.  In order to determine what resources are used, the appliction should monitor or track calls to the libraries.  For I/O the application should track calls to read() or write().  For memory access malloc() and free() can be tracked.  If application can't be changed, then it can be wrapped with \emph{strace} to count the number of calls made to the kernel.
 
-\begin{tabular}{ l p{5cm} }
-  Resource & Definition \\
+OS:  The OS needs to profile I/O, CPU, and Memory access.  This can be done with utilities like Oprofile or Kernel function profiling.  For the linux kernel adding \emph{profile=2} to the kernel boot parameters will write a binary profile of most kernel functions.  
+
+The following tools are used for determinig disk I/O contention.  Similar sets of tools can be used for other system resources.  The hypervisor divides the physical resource into virtual resources for each guest.  A guest system needs to monitor and analyze the resources used.  The hypervisor needs to compute the sum of the resources to determine if there is contention between the guests or if there is a physical resource limitation.
+\begin{tabular}{ l l p{5cm} }
+  Tool & Description \\
   \hline
-  Disk I/O & The application is spending more time than normal for Disk I/O. \\
-  Network I/O & The application is spending more time than normal for Network I/O. \\
-  CPU & The application is spending excessive time computing. \\
-  Memory & The application is requesting more memory or requires additional swappping. \\
+  sar -d & Shows the time the disk was busy, reads and writes per second, wait queue, and service time(seek time). \\
+  Disk I/O & ioping & monitor I/O latency in real time. Similar to 'ping'\cite{oping}\\
 \end{tabular}
 
-The following tools are available to collect data:
-\begin{tabular}{ l l p{5cm} }
-  Resource & Tool & Description \\
-  \hline
-  Disk I/O & sar -d & Shows the time the disk was busy, reads and writes per second, wait queue, and service time(seek time). \\
-  Disk I/O & ioping & monitor I/O latency in real time. Similar to 'ping'\cite{oping}\\
+\begin{comment}
   Uniform Memory & vmstat -a & Active and Inactive page statistics \\
   Uniform Memory & vmstat -s & Virtual Memory table \\
   NUMA Memory & zoneinfo & /proc/zoneinfo \\
   CPU & ps -o <FMT> & Real, system, and clock time \\
-\end{tabular}
+\end{comment}
 
 \begin{comment}
        To see every process with a user-defined format:
