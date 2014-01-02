@@ -1,36 +1,73 @@
-We outline the experiments used to measure the performance and characterize the ability to analyze performance issues in the guest applications and OS (DomU), hypervisor (Dom0), and hardware.  In each test, the “highest level” of the stack is reported as a problem.  For example: if either the OS or Application can change, the Application layer is responsible to conform to the OS. 
+A test infrastructure was created to analyze I/O performance issues in the guest applications, guest OS, hypervisor, and hardware.  Our experiments, when run in this infrastructure, show how a virtual machine is unable to completely analyze problems using existing tools.  Existing data, when collected from the perspective of the user and kernel of the quest machine, does not provide accurate information.  This could lead to improper diagnosis of the problem without additional information from the hypervisor and physical hardware.
 \newline
-Application ->  Guest OS -> Host OS / Hypervisor -> Physical Hardware
+
+The test infrasture simulates a consistent and reproducible system load by using a PostgreSQL database server and PGbench from the postgres contrib package. PGbench creates a TPC-B similar style workload and calculates transactions per second.   Additionally PGreplay can record and playback (faster or slower) the same set of benchmark transactions.  PGreplay allows us to simulate host systems that are not running at 100\% capacity.  This is typical of most systems, since at almost all times, the systems are using only a fraction of the total resources available.  
 \newline
-For generating a typical I/O load on the system PostgreSQL will be used as a database, and PGbench from the Postgres contrib package is used to generate a consistent workload.  PGbench creates a TPC-B similar style workload and calculates transactions per second.   Additionally PGreplay can record and playback (faster or slower) the same set of benchmark transactions.  PGreplay allows us to simulate host systems that are not running at 100\% capacity.  
+
+The tests can be run in all sizes of \emph{virtualization environments}.  Tests which run in a \emph{Small} or \emph{Medium} environment can also be run in a \emph{Cluster} or \emph{Cloud} based system by increasing the size of the database or number of guest machines until a similar load is reached.
+
+\begin{figure}[h!]
+\begin{tabular}{ l p{5cm} }
+  Size & Specifications \\
+  \hline
+  Small & IBM x3650 Quad Core 2GB Ram \\
+  Medium & Dell PowerEdge T410 with dual quadcore Xeon processors, 256Kb L2 cache, and 8MB shared L3 cache. \\
+  Cluster & Multiple small or medium servers clustered together with shared SAN data store. \\
+  Cluod & Amazon Cloud or similar PAAS provider. \\
+\end{tabular}
+\caption{Virtualization sizes for tests}
+\label{fig:virtSize}
+\end{figure}
+
+All tests are run and collect data with the same software stack installed.  We use the Xen Hypervisor and CentOS release as the virtualization and Operating system platform.
+
+\begin{figure}[h!]
+\begin{tabular}{ l p{5cm} }
+  Software & Version \\
+  Hyperviser & Xen 4.2 \\
+  Domain 0 & CentOS 6.2 (Kernel 3.4) \\
+  Guest Domains & CentOS 6.2 (Kernel 2.6.39) PostgreSQL 8.4 \\
+\end{tabular}
+\caption{Software installed on each system}
+\label{fig:softStack}
+\end{figure}
+
+We chose Postgres as the database server for our tests because of its robustness and standard use in hosting facilities and applications.  It is a good general purpose application that can be used to stress I/O, memory, and CPU resources.  For I/O intensive applications, like a database server, the application tends to perform very well when the entire \emph{working set} can fit into main memory.  However, when the \emph{working set}  approaches (or exceeds) the size of main memory, the application tends to degrade quickly.  Our experiments will highlight this fact by changing the database size under load in a virtual environment.
 \newline
-All experiments are going to be performed primarily on:
-\todo[inline]{Make this a table}
-Small:  IBM x3650 Quad Core single Socket with 2GB Ram
-Virtualization:  Dell PowerEdge T410 with dual quadcore Xeon processors and 256Kb L2 cache and 8MB shared L3 cache.  
-Virtual Cluster:   Multiple small or medium servers clustered together with SAN storage server.
 
-Each node will have the following software installed:
-\todo[inline]{Make this a table}
-Hyperviser 
-Xen 4.2
-Dom0 	                   
-CentOS 6.2   (Kernel 3.4)
-PostgreSQL 8.4
-DomU (Guests)       
-CentOS 6.2   (Kernel 2.6.39)
+PGbench \footnote{PGbench is part of the Postgresql Contrib packages.  It is used to tune the Postgres and the operating system} is used to generate a test load on the database.  The test suite uses the "-i" flag \emph{scaling factor} to initialize a database at a specified size so that our results can show changes between a memory bound system and I/O bound system.  Then at least 5 trials are completed in each configuration.  The average results of these test are measured in \textbf{TPS} \emph{Transactions per Second}.   We can use the TPS to show how the database performs when external environment changes are made to the system.
+\newline
 
-\todo[inline]{Why are we using PostgreSQL and PGbench - OLTP,}
+In addtion to TPS to show suboptimal performance.  In our Lixux based test enviroment, the /proc file system utilites are used to collect Memory, IO, and system statistics during the tests that would normally be used to identify and tune I/O performance problems.\cite{suseIO,pgTune}.   
 
-\subsection{Detecting Memory and I/O contention}
-In this experiment we are a small virtual system: an IBM x3650 single socket quad core Intel Xeon CPU.   This machine runs CentOS 6.4 with a Xen configured kernel at 3.4.54 for Domain 0, and the Xen 4.2 hypervisor complied and packaged as part of the CentOS add on packages.   In this case Only the Dom0 is used and 3 separate memory configurations are used to show the difference between a system configured with 512MB, 1024MB, and 2048MB of ram.
+\begin{figure}[h!]
+\begin{tabular}{ l p{5cm} }
+       measurement & description \\
+       \hline
+       swpd  & the amount of virtual memory used. \\
+       free  & the amount of idle memory. \\
+       buff  & the amount of memory used as buffers \\
+       cache & the amount of memory used as cache \\
+       inact & the amount of inactive memory. \\
+       active & the amount of active memory. \\
+\end{tabular}
+\caption{Memory data collected from guest and hypervisor}
+\label{fig:memory}
+\end{figure}
 
-\todo[inline]{Add Chart}
-\indent In this chart we can see that when the DB size is around 50\% of the virtual memory available, the queries resposnse time drops significantly and the system is now bound by the I/O time and swapping pages from disk to memory.   The size of the postgres database is increased in order to find where the “working set” can fit into main memory.    There is a significant drop in performance when the virtual system moves from a Memory Bound application to a Disk I/O Bound application.
+\begin{figure}[h!]
+\begin{tabular}{ l p{5cm} }
+       measurement & description \\
+       \hline
+       si & Amount of memory swapped in from disk (/s). \\
+       so & Amount of memory swapped to disk (/s). \\
+       bi & Blocks received from a block device (blocks/s). \\
+       bo & Blocks sent to a block device (blocks/s). \\
+       wa & Time spent waiting for IO. \\
+\end{tabular}
+\caption{I/O data collected from guest and hypervisor}
+\label{fig:io}
+\end{figure}
 
-\subsection{Virtual Interference}
-Here we run 3 configurations to show the overhead in moving from a physical server to a virtual server.   We use 3 different configutaions.  All 3 configurations use all available resources 4 CPU cores and 2 GB Ram.    There is a significant performance drop when changing from a virtual system to a physical system when the system is bound by memory.   However, when the system is bound by Disk I/O there is little performance penalty.    Interestingly even though the physical system achieves about a 4x performance improvement over the virtual system, it degrades to a similar performance at the same DB size ~1024MB (about 50\% of available ram).
-
-\todo[inline]{Figure :  Due to the significant performance change DomU was created with an additional 2GB of ram available in Dom0.  Although this additional ram slightly delayed when the system became I/O bound it did not help with}
 
 

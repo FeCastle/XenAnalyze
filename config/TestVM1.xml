@@ -1,0 +1,57 @@
+<domain type='xen' >
+  <name>TestVM1</name>
+  <bootloader>/usr/bin/pygrub</bootloader>
+  <os>
+    <type>linux</type>
+  </os>
+  <memory>524288</memory>
+  <vcpu>1</vcpu>
+  <devices>
+    <disk type='file'>
+      <source file='/var/lib/libvirt/images/TestVM1.img'/>
+      <target dev='sda1'/>
+    </disk>
+    <interface type='bridge'>
+      <source bridge='virbr0'/>
+      <mac address='aa:00:00:00:00:11'/>
+      <script path='/etc/xen/scripts/vif-bridge'/>
+    </interface>
+    <console tty='/dev/pts/5'/>
+  </devices>
+</domain>
+
+<domain type='xen'>
+  <name>TestVM1</name>
+  <uuid>8f07fe28-753f-2729-d76d-bdbd892f9111</uuid>
+  <memory>524288</memory>
+  <vcpu>1</vcpu>
+  <bootloader>/usr/bin/pygrub</bootloader>
+  <os>
+    <type arch='x86_64' machine='testvm1'>linux</type>
+  </os>
+  <clock offset='utc'/>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>restart</on_crash>
+  <devices>
+    <disk type='file' device='disk'>
+      <driver name='tap' type='aio'/>
+      <source file='/var/lib/xen/images/rhel5pv.img'/>
+      <target dev='xvda' bus='xen'/>
+    </disk>
+    <disk type='file' device='disk'>
+      <driver name='tap' type='qcow'/>
+      <source file='/root/qcow1-xen.img'/>
+      <target dev='xvdd' bus='xen'/>
+    </disk>
+    <interface type='bridge'>
+      <mac address='00:16:3e:60:36:ba'/>
+      <source bridge='xenbr0'/>
+    </interface>
+    <console type='pty'>
+      <target port='0'/>
+    </console>
+    <input type='mouse' bus='xen'/>
+    <graphics type='vnc' port='-1' autoport='yes' listen='0.0.0.0'/>
+  </devices>
+</domain>

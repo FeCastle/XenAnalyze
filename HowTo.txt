@@ -121,6 +121,7 @@ http://wiki.xen.org/wiki/Xen_Configuration_File_Options
 
 ------------------------ HOW TO BUILD DOM U Domains --------------------------------
 virt-install -d -n TestVM1 -r 512 --vcpus=1 --disk /var/lib/libvirt/images/TestVM1.img,size=8 --nographics -p -l "http://mirror.centos.org/centos/6/os/x86_64" --extra-args="text console=com1 utf8 console=hvc0"
+Passwd: XenGuest
   -- May need to check MAC address /etc/sysconfig/network-scripts/ifcfg-eth0 --
 yum install yum-utils wget openssh-clients rpm-build 
 cd /tmp
@@ -181,28 +182,11 @@ scp /tmp/IBM3650_ScaleF_512_TestVM4_run1.txt deron@172.29.203.30:Projects/XenAna
 /tmp/getScaleFactor2 > /tmp/IBM3650_Concurrent_512_TestVM4.txt
 scp /tmp/IBM3650_Concurrent_512_TestVM?.txt deron@172.29.203.30:Projects/XenAnalyze/data
 
---------------------- Misconfigure PG Blocksize !!!! -------------
-dumpe2fs /dev/mapper/VolGroup-lv_root | grep "Block size"
-               Block size:               4096
-postgres=# show block_size;
-    block_size 
-    ------------
-    8192
-   (1 row)
-
-(Try setting at 5120)
-cd /root/rpmbuild/SPECS
--- Add this to postgresql.spec --
-     --with-blocksize=1 \
-rpmbuild --define='runselftest 0' -ba postgresql.spec
-cd /root/rpmbuild/RPMS/x86_64
-rpm -ivh postgresql*.rpm
---------------------- (NICE TRY...) -------------
-
 --------------------- Configure Bonnie++ and IO tools -------------------
 http://wiki.centos.org/AdditionalResources/Repositories/RPMForge
 wget http://packages.sw.be/rpmforge-release/rpmforge-release-0.5.2-2.el6.rf.x86_64.rpm
 rpm -ivh rpmforge-release-0.5.2-2.el6.rf.x86_64.rpm
 rpm --import http://apt.sw.be/RPM-GPG-KEY.dag.txt
 -------------------------------------------------------------------------
-/tmp/IBM3650_ScaleF_2048_run3_09_10.txt
+
+

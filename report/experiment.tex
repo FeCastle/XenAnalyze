@@ -1,21 +1,18 @@
-\subsection{Multiple Guest Interference}
-In this experiment there we show the interference caused by running multiple virtual machines at the same time.    The previous experiments are run with 4 CPUs and 2GB ruam divided between 4 virtual machines.  Each machine has 512MB and a single CPU.   In the Independent test all 4 tests are run at different times, while the concurrent test all 4 machines are run at the same time.  The reslts of the Physical machine are shown to show the Possible Maximum. 
+In the following test experiments we evaluate the benefits of passing additional information through the layers of the hypervisor and guests for profiling.  Unless otherwise noted, each experiment is performed on a small and medium scale virtualization platform . See Figure \ref{fig:virtSize} for a description of the hardware and Figure \ref{fig:softStack} for the software stack installed.
 
-Figure  For the 512MB TPS is reported as the SUM of 4 machines.
-When the system is memory bound there is about a 17\% drop in performance.   When the system is Disk I/O bound there is about a 35\% drop in performance.   We can determine that the biggest performance difference is at the point where a virtual machine is memory bound, but adding more workload changes to I/O bound.
+\subsection{Interference from external virtual machines}
+In this experiment, we show the interference from external systems, even though the memory and CPU are not overcommited.  First we divide the available memory and CPUs into four equal parts and create four individual guest virtual machines (Dom1 - Dom4).  Each virtual machine is given 25\% of the availble resources so that no guest virtual machine would interfere with another machine if they were on separate physical systems.  We start our Dom1 machine and run our experimental test and collect sar, vmstat, and TPS.  Then we simulate external machine interference by running Dom1 concurrently with Dom2, Dom3, and Dom4.  When the system is memory bound there is about a 17\% drop in performance.   When the system is Disk I/O bound there is about a 35\% drop in performance.   From tradtional utilites such as sar and vmstat, the guest system is unable to detect that the drop in performance is due to external guests even though the guests are configured to use dedicated resources.
+\newline
+On our small system the Dom1 is given 512MB ram and a single core:
 
-\todo[inline]{Make a Table}
-DB Size
-Performance  Drop
-Memory
-64 – 128
-16\% - 17\%
-Memory and I/O
-128 – 256
-42\% - 55\%
-I/O Bound
-256+
-27\% - 40\%
+
+\begin{comment}
+\subsection{Detecting Memory and I/O contention}
+In this experiment we are a small virtual system: an IBM x3650 single socket quad core Intel Xeon CPU.   This machine runs CentOS 6.4 with a Xen configured kernel at 3.4.54 for Domain 0, and the Xen 4.2 hypervisor complied and packaged as part of the CentOS add on packages.   In this case Only the Dom0 is used and 3 separate memory configurations are used to show the difference between a system configured with 512MB, 1024MB, and 2048MB of ram.
+
+\subsection{External Guest Interference}
+In this experiment there we show the interference caused by running multiple virtual machines at the same time.  The following experiments are run with 4 CPUs and 2GB ruam divided between 4 virtual machines.  Each machine has 512MB and a single CPU.   In the Independent test all 4 tests are run at different times, while the concurrent test all 4 machines are run at the same time.  The reslts of the Physical machine are shown to show the Possible Maximum. 
+Figure for the 512MB TPS is reported as the SUM of 4 machines.
 
 \subsection{Guest Application Problem}
 To similate a problem with a guest application we use use a misconfigured postgres database by changing the default blocksize to misalign with the guest OS ( and physical) page size.  
@@ -26,7 +23,10 @@ Set the block size, in kilobytes. This is the unit of storage and I/O within tab
 Running multiple IO and memory intensive guests on the same core can result in LLC cache contention causing a performance degredation below the SLA.  PGbench can be run in a “select only” mode, in which most of the DB relations will be cached in memory.  If another DB guest is run on the same CPU socket the memory intesive application will interfere with the DB server [10].   We schedule two guest machines to run on CPU Socket 0 (core 0 and 1).  The analyzer detects the LLC cache interference and the DB server is significantly degraded below the SLA.  When moved onto separate sockets (socket 0 and 1) both the DB server and “Select Only” DB server run within the SLA.
 4.6  I/O Contention 
 In many cases multiple database servers could be shared on a system with multiple guests if each database only reaches peak throughput seldomly.  In this experiment we run 1 DB server per core and run the PGbench benchmark on each guest simultaneously.  If a single DB server can perform at x TPS, then it may be expected that 4 DB servers can operate at peak capacity at x/4 TPS.   Additionally, we can use PGreplay to see if we can run each system at a fraction of its speed (in this case 25\%) and achieve the same throughput on 4 separate guests.  Since there is additional overhead with the virtualiztion in DOM 0, there will be some overhead associated with the IO, and this will not be achievable.   Since a DB server synchronizes and journals the writes, each guest server will need to wait for the disk writes to complete.  The analyzer will detect the IO bottleneck issue and report problems.
+
 \subsection{I/O Contention with ‘Disk Pinning’}
 In virtualiztion it is possible to “Pin” a guest OS to a single core.  This is a way to make certain that each guest OS interference is known.  This may not be ideal in all cases, since the hypervisor may be able to better schedule guest machines on various cores (or give more cores to guests that need them).    An idea of disk pinning is similar and may (partially) alleviate some overhead in the previous experiment.  In this case, each physical disk is dedicated to a particular virtual machine, instead of a volume or raid group configured by the hypervisor.   Theoritcally, repeating the above experiment could come close to x/4 TPS except for memory cache contention.  Additionally each guest could possibly replay at 25\% of the optimal throughput on a system with 4 cores.    The issue would not be with the phyical disk I/O but with the overhead of Dom0 to schedule the disk writes.
+
 \subsection{Virtual Cluster}
 In this experiment we use a cluster of more than 1 server with a shared storage SAN server.  Each node needs an HBA with fiber connected to a fiber switch.   By running multiple guests with PG bench on the cluster server simultaneously, we can simulate an I/O contention with the shared backing store.   In a virtual cluster environment the analyzer should be able to determine that one or more guests on a particular server is exceeding their expected SLA.  Disk Pinning can also be analyzed with a large distributed backing store with multiple Logical disks (LUNs) connected with HBAs and virtualized to the guest systems.
+\end{comment}
