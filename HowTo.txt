@@ -1,3 +1,4 @@
+-------------------- Build Dom0 ---------------------------------------------------
 ---- Automatic install from CentOS 6.4 ------
 -- http://wiki.centos.org/HowTos/Xen/Xen4QuickStart --
 Install CentOS 6.x from Live CD.
@@ -123,15 +124,22 @@ http://wiki.xen.org/wiki/Xen_Configuration_File_Options
 virt-install -d -n TestVM1 -r 512 --vcpus=1 --disk /var/lib/libvirt/images/TestVM1.img,size=8 --nographics -p -l "http://mirror.centos.org/centos/6/os/x86_64" --extra-args="text console=com1 utf8 console=hvc0"
 Passwd: XenGuest
   -- May need to check MAC address /etc/sysconfig/network-scripts/ifcfg-eth0 --
+  -- Set /etc/resolv.conf
+  -- Set Hostname
+service network restart
 yum install yum-utils wget openssh-clients rpm-build 
-cd /tmp
-wget http://vault.centos.org/6.4/os/Source/SPackages/postgresql-8.4.13-1.el6_3.src.rpm
-rpm -i postgresql-8.4.13-1.el6_3.src.rpm
-yum install make gcc glibc-devel bison flex autoconf perl perl-devel python-devel tcl tcl-devel  readline-devel zlib-devel openssl-devel krb5-devel openldap-devel gettext uuid-devel libxml2-devel libxslt-devel pam-devel systemtap-sdt-devel perl-ExtUtils-Embed
-cd /root/rpmbuild/SPECS
-rpmbuild -ba postgresql.spec
-cd /root/rpmbuild/RPMS/x86_64
-rpm -ivh postgresql*.rpm
+yum install postgresql postgresql-server postgresql-contrib
+
+############### If need to build PG from scratch ###########################
+# cd /tmp
+# wget http://vault.centos.org/6.4/os/Source/SPackages/postgresql-8.4.13-1.el6_3.src.rpm
+# rpm -i postgresql-8.4.13-1.el6_3.src.rpm
+# yum install make gcc glibc-devel bison flex autoconf perl perl-devel python-devel tcl tcl-devel  readline-devel zlib-devel openssl-devel krb5-devel openldap-devel gettext uuid-devel libxml2-devel libxslt-devel pam-devel systemtap-sdt-devel perl-ExtUtils-Embed
+# cd /root/rpmbuild/SPECS
+# rpmbuild -ba postgresql.spec
+# cd /root/rpmbuild/RPMS/x86_64
+# rpm -ivh postgresql*.rpm
+############### If need to build PG from scratch ###########################
 
 pgbench --version
      pgbench (PostgreSQL) 8.4.13
@@ -155,6 +163,57 @@ initdb
 createdb pgbench
 --- RUN TESTS !!!!----------------------
 
+------------------------ How to Build XenStore tools for DomU ------------------------------------
+yum install gcc
+## Taken from here:  http://silviud.blogspot.com/2011/09/from-domu-read-xenstore-ec2-linode-etc.html
+1. wget http://bits.xensource.com/oss-xen/release/4.1.1/xen-4.1.1.tar.gz
+
+2. tar xvfz xen-4.1.1.tar.gz
+
+3. cd xen-4.1.1/tools
+
+4. make -C include
+
+5. cd misc
+
+6. make xen-detect
+
+7. install xen-detect /usr/local/bin
+
+8. cd ../xenstore
+
+9. Build client library and programs:
+  make clients
+
+10. Install client library and programs:
+  install libxenstore.so.3.0 /usr/local/lib
+  install xenstore xenstore-control /usr/local/bin
+  cd /usr/local/bin
+  ln xenstore xenstore-chmod
+  ln xenstore xenstore-exists
+  ln xenstore xenstore-list
+  ln xenstore xenstore-ls
+  ln xenstore xenstore-read
+  ln xenstore xenstore-rm
+  ln xenstore xenstore-write
+
+## Mount the xenfs - TODO add to /etc/fstab ##
+mount -t xenfs none /proc/xen
+
+Usage
+-----
+
+1. Set required environment variable:
+  export XENSTORED_PATH=/proc/xen/xenbus -- Linux
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+2. Now you can do things such as:
+  xen-detect
+  xenstore-ls device
+  xenstore-ls -f /local/domain/0/backend/vif/11/0
+  xenstore-read name
+
+
 ------------------------ HOW TO CLONE DOM U -------------------------------
   --- Disk Image:  /var/lib/libvirt/images/TestVM1.img
 virsh suspend TestVM1
@@ -168,6 +227,7 @@ cp /tmp/Xen/TestVM1.xml /tmp/Xen/TestVM2.xml
   --- Edit uuid, name, source file, domain id, and mac address ---
 virsh create /tmp/Xen/TestVM2.xml
 xm console TestVM2
+  -- Set Hostname
   -- May need to check MAC address /etc/sysconfig/network-scripts/ifcfg-eth0 --
 service network restart
 service postgresql start

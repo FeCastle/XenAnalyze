@@ -1,10 +1,42 @@
 In the following test experiments we evaluate the benefits of passing additional information through the layers of the hypervisor and guests for profiling.  Unless otherwise noted, each experiment is performed on a small and medium scale virtualization platform . See Figure \ref{fig:virtSize} for a description of the hardware and Figure \ref{fig:softStack} for the software stack installed.
 
-\subsection{Interference from external virtual machines}
-In this experiment, we show the interference from external systems, even though the memory and CPU are not overcommited.  First we divide the available memory and CPUs into four equal parts and create four individual guest virtual machines (Dom1 - Dom4).  Each virtual machine is given 25\% of the availble resources so that no guest virtual machine would interfere with another machine if they were on separate physical systems.  We start our Dom1 machine and run our experimental test and collect sar, vmstat, and TPS.  Then we simulate external machine interference by running Dom1 concurrently with Dom2, Dom3, and Dom4.  When the system is memory bound there is about a 17\% drop in performance.   When the system is Disk I/O bound there is about a 35\% drop in performance.   From tradtional utilites such as sar and vmstat, the guest system is unable to detect that the drop in performance is due to external guests even though the guests are configured to use dedicated resources.
-\newline
-On our small system the Dom1 is given 512MB ram and a single core:
+\subsection{External machine interference}
+In this experiment, we show the memory and I/O interference from external systems, without overcommitting the memory and CPU.  First we divide the available memory and CPUs into four equal parts and create four individual guest virtual machines (Dom1 - Dom4).  Each virtual machine is given 25\% of the availble resources so that no guest virtual machine would interfere with another machine if they were on separate physical systems.  We start our Dom1 machine and run our experimental test with PGbench.  Before each test, Linux pagecache and inodes are dropped to prevent previous caching from interfering with results.   While the benchmark is running, system data is collected from the virtual machine and hypervisor.  See Figure \ref{fig:memory}
 
+Then we simulate external machine interference by running Dom1 concurrently with Dom2, Dom3, and Dom4.  In each machine size, we run the tests with 3 distinct database sizes.
+\begin{description}
+  \item[Small] The database is less than 1/2 available memory
+  \item[Medium] The database is equal to available memory
+  \item[Large] The database is 2 times available memory
+\end{description}
+
+On our small system the Dom1 is given 512MB ram and a single core.  When the system is memory bound there is about a 28\% drop in performance (4434 TPS - 3208 TPS), even though the application remains constant.  See Figure \ref{fig:tps1}.
+From the OS layer, using tradtional utilites such as sar and vmstat, the guest OS can see that there is (5\%) less free memory for the application, but that seems to not be used by the application or OS cache which also drops by 5\%.  Additionally the CPU spends more than twice as long waiting on Disk I/O.
+\newline
+Similar results are seen when the system is IO bound with a 24\% drop in TPS and 35\% drop in free memory.  The most significant change is in the Medium size which results in a 90\% performance decrease.  This is because the application changes from a memory bound application to an I/O bound application when there is contention from external systems for memory resources.  
+
+\begin{figure}
+  \begin{tabular}{ l | r | r | r }
+    Size & Single & Multiple & Drop \\
+    \hline
+    Small & 4434 & 3208 & 28\% \\ \hline
+    Medium & 2149 & 216 & 90\% \\ \hline
+    Large & 260 & 197 & 24\% \\  \hline
+  \end{tabular}
+\caption{Dom1 TPS (Transactions Per Second for 3 database sizes, and the changes when run as a single VM or with multiple VMs running simultaneously.}
+\label{fig:tps1}
+\end{figure}
+
+Another interesting result from this experiment is that the Guest OS does not swap when the memory pressure is high from other systems.  The Large database which is larger than main pages memory in and out as needed based on the kernel \emph{swappiness} setting.  However, when the Dom1 runs concurrently with the other systems, it swaps very little or not at all.
+\begin{figure}
+  \begin{tabular}{ l | r | r | r }
+    Vmstat & Memory & Cache & SwapIn/s & BytesIn/s \\
+    \hline
+    Single & 4434 & 3208 & 28\% \\ \hline
+    Multiple & 2149 & 216 & 90\% \\ \hline
+    Difference & 260 & 197 & 24\% \\  \hline
+  \end{tabular}
+\caption{Some output of vmstat on a Large database while running alone and with multiple systems} 
 
 \begin{comment}
 \subsection{Detecting Memory and I/O contention}

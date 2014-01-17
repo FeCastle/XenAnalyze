@@ -16,12 +16,16 @@
 ##
 #########################################################################
 DBNAME=pgbench
-CLIENTS=8   # Set clients at 2x CPUs
+CLIENTS=2   # Set clients at 2x CPUs
+LOGDIR=/usr/local/xen/data
 PGHOST=localhost
 PGUSER=postgres
 export PGHOST PGUSER
 
 function setup {
+	if [ ! -d $LOGDIR ]; then
+		mkdir -p $LOGDIR
+	fi
 	psql -d $DBNAME -c "checkpoint;" 2>/dev/null
 	if [ $? != '0' ]; then
 		echo "Creating DB $DBNAME"
@@ -31,15 +35,30 @@ function setup {
 			exit 1
 		fi
 	fi
+
+	echo "Dropping Caches - Start!!"
+	sync
+	echo 3 > /proc/sys/vm/drop_caches
+	echo 0 > /proc/sys/vm/drop_caches
+	echo "Dropping Caches - Complete!!"
 }
 
-setup
-#for SCALEFACTOR in 5 10 15 20 25 30 35 40 45 50; do
-for SCALEFACTOR in 5; do
-    echo "Testing with Scale Factor of $SCALEFACTOR"
-    pgbench -i -s $SCALEFACTOR $DBNAME 2> /dev/null
-    vacuumdb --analyze $DBNAME
-    psql -d $DBNAME -c "checkpoint;"
-    $DBNAME -T 30 -c $CLIENTS -S $DBNAE | grep tps
-    psql -d $DBNAME -c "SELECT relname, reltuples, pg_size_pretty(relpages * 8192) as size from PG_class WHERE relname='pgbench_accounts';"
+# for SCALEFACTOR in 5 10 15 20 25 30 35 40 45 50; do
+# INC=5
+# SCALEFACTOR=5
+# END=50
+# while [ $SCALEFACTOR -le $END ]; do
+for SCALEFACTOR in 10 25 50; do
+    LOGFILE=$LOGDIR/$HOSTNAME.$SCALEFACTOR
+    echo "Init DB with Scale Factor of $SCALEFACTOR" | tee $LOGFILE
+    pgbench -i -s $SCALEFACTOR $DBNAME > /dev/null 2>&1
+    vacuumdb --analyze $DBNAME >/dev/null 2>&1
+    psql -d $DBNAME -c "checkpoint;" >/dev/null 2>&1
+    setup
+    echo "Starting Test with $CLIENTS clients" | tee $LOGFILE
+    vmstat 5 >> $LOGFILE &
+    pgbench -T 30 -c $CLIENTS -S $DBNAME | grep tps | grep excluding >> $LOGFILE
+    psql -d $DBNAME -c "SELECT relname, reltuples, relpages from PG_class WHERE relname='pgbench_accounts';" >> $LOGFILE
+    # let SCALEFACTOR=$SCALEFACTOR+$INC
+    killall vmstat
 done

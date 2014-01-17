@@ -1,0 +1,13 @@
+# /etc/sysconfig/network-scripts/ifcfg-eth0 
+# Test VM2
+DEVICE="eth0"
+BOOTPROTO="static"
+HWADDR="00:16:3E:22:22:22"
+IPADDR="192.168.122.11"
+NETMASK="255.255.255.0"
+GATEWAY="192.168.122.1"
+NM_CONTROLLED="no"
+ONBOOT="yes"
+TYPE="Ethernet"
+UUID="3873d7a5-d3e6-4868-8cde-8fb83026b7a4"
+

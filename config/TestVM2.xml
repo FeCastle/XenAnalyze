@@ -1,0 +1,32 @@
+<domain type='xen'>
+  <name>TestVM2</name>
+  <uuid>3890ba11-846f-9d92-dc41-b173e4bd2222</uuid>
+  <memory unit='KiB'>524288</memory>
+  <currentMemory unit='KiB'>524288</currentMemory>
+  <vcpu placement='static'>1</vcpu>
+  <bootloader>/usr/bin/pygrub</bootloader>
+  <os>
+    <type>linux</type>
+  </os>
+  <clock offset='utc' adjustment='reset'/>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>restart</on_crash>
+  <devices>
+    <disk type='file' device='disk'>
+      <driver name='tap2' type='aio'/>
+      <source file='/var/lib/libvirt/images/TestVM1.img'/>
+      <target dev='xvda' bus='xen'/>
+    </disk>
+    <interface type='bridge'>
+      <mac address='00:16:3e:22:22:22'/>
+      <source bridge='virbr0'/>
+      <script path='vif-bridge'/>
+    </interface>
+    <console type='pty'>
+      <target type='xen' port='0'/>
+    </console>
+  </devices>
+</domain>
+
+
