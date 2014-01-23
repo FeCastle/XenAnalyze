@@ -5,6 +5,8 @@
 ## This is a small script to use pgbench to determine where the 
 ## system is IObound
 ##
+## To run a benchmark set the scalefactor
+##
 ## For details on the technical details from this script see:
 ##    http://www.westnet.com/~gsmith/content/postgresql/pgbench-scaling.htm
 ##
@@ -21,6 +23,8 @@ LOGDIR=/usr/local/xen/data
 PGHOST=localhost
 PGUSER=postgres
 export PGHOST PGUSER
+
+. ./common.sh
 
 function setup {
 	if [ ! -d $LOGDIR ]; then
@@ -45,13 +49,13 @@ function setup {
 
 # for SCALEFACTOR in 5 10 15 20 25 30 35 40 45 50; do
 # INC=5
-# SCALEFACTOR=5
+SCALEFACTOR=25
 # END=50
 # while [ $SCALEFACTOR -le $END ]; do
-for SCALEFACTOR in 10 25 50; do
+# for SCALEFACTOR in 10 25 50; do
     LOGFILE=$LOGDIR/$HOSTNAME.$SCALEFACTOR
-    echo "Init DB with Scale Factor of $SCALEFACTOR" | tee $LOGFILE
-    pgbench -i -s $SCALEFACTOR $DBNAME > /dev/null 2>&1
+    #echo "Init DB with Scale Factor of $SCALEFACTOR" | tee $LOGFILE
+    #pgbench -i -s $SCALEFACTOR $DBNAME > /dev/null 2>&1
     vacuumdb --analyze $DBNAME >/dev/null 2>&1
     psql -d $DBNAME -c "checkpoint;" >/dev/null 2>&1
     setup
@@ -61,4 +65,7 @@ for SCALEFACTOR in 10 25 50; do
     psql -d $DBNAME -c "SELECT relname, reltuples, relpages from PG_class WHERE relname='pgbench_accounts';" >> $LOGFILE
     # let SCALEFACTOR=$SCALEFACTOR+$INC
     killall vmstat
-done
+# done
+
+### Signal the Host (Dom-0) we are done ###
+$XENSTORE_WRITE ${benchmark} off
