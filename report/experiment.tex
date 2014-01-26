@@ -30,13 +30,15 @@ Similar results are seen when the system is IO bound with a 24\% drop in TPS and
 Another interesting result from this experiment is that the Guest OS does not swap when the memory pressure is high from other systems.  The Large database which is larger than main pages memory in and out as needed based on the kernel \emph{swappiness} setting.  However, when the Dom1 runs concurrently with the other systems, it swaps very little or not at all.
 \begin{figure}
   \begin{tabular}{ l | r | r | r }
-    Vmstat & Memory & Cache & SwapIn/s & BytesIn/s \\
+    Vmstat & Memory & SwapIn/s & BytesIn/s \\
     \hline
-    Single & 4434 & 3208 & 28\% \\ \hline
-    Multiple & 2149 & 216 & 90\% \\ \hline
-    Difference & 260 & 197 & 24\% \\  \hline
+    Single & 211Kb &  1,480 & 6,877 \\ \hline
+    Multiple & 138Kb & 85 & 4,438 \\ \hline
+    Drop & 35\% & 94\% & 35\% \\  \hline
   \end{tabular}
 \caption{Some output of vmstat on a Large database while running alone and with multiple systems} 
+\label{fig:vmstat}
+\end{figure}
 
 \begin{comment}
 \subsection{Detecting Memory and I/O contention}

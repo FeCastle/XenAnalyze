@@ -19,9 +19,9 @@ $vmstat = "/proc/vmstat";
 $diskstat = findDisk();
 our $xenVmstat = "data/analysis/vmstat";
 our $xenDiskstat = "data/analysis/diskstat";
+our %vmPre, %vmPost;
+our %diskPre, %diskPost;
 
-my %vmPre, %vmPost;
-my %diskPre, %diskPost;
 my @diskKeys;    # /proc/diskstats do not have "names"
 $diskKeys[0] = "r_total";
 $diskKeys[1] = "r_merged";
@@ -107,16 +107,13 @@ sub collectDisk() {
 
 sub getDelta {
 	$val = shift;
-	%ret;
+	my %ret;
 	print ("Getting delta for $val\n");
 	if ($val =~ /VM/) {
 		foreach $statkey  (keys %vmPre) {
 			$delta = $vmPost{$statkey} - $vmPre{$statkey};
 			$delta =~ s/-/_/;    ## Replace negative numbers with _ for CLI
 			$ret{$statkey} = $delta;
-			# $cmd = "xenstore-write $xenVmstat/$statkey $delta";
-			# print "$cmd\n";
-			# `$cmd`;
 		}
 	}
 	elsif ($val =~ /DISK/) {
@@ -127,9 +124,6 @@ sub getDelta {
 				$delta = $diskPost{$statkey};
 			}	
 			$ret{$statkey} = $delta;
-			# $cmd = "xenstore-write $xenDiskstat/$statkey $delta";
-			# print "$cmd\n";
-			# `$cmd`;
 		}
 	}
 	else {

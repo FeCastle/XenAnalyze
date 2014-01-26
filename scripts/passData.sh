@@ -36,16 +36,23 @@ function signalGuests {
 #########################################################################
 function waitForGuests {
 	while [ 1 == 1 ]; do
-	  	for guestDomID in `${XENSTORE_LIST} /local/domain`; do
+		COUNTER=0
+	  	#for guestDomID in `${XENSTORE_LIST} /local/domain`; do
+	  	for guestDomID in 25 26 27 28; do
 			# if [ $guestDomID != "0" ]; then 
 			# For test only wait for 26 VM2 #
-			if [ $guestDomID == "26" ]; then 
-				runTest=$($XENSTORE_READ /local/domain/${guestDomID}/${1} )
-				echo "$1 in guest $guestDomID is $runTest"
-				if [ ${runTest}x == "off"x ]; then
-					return;
-				fi
+			runTest=$($XENSTORE_READ /local/domain/${guestDomID}/${1} )
+			echo "$1 in guest $guestDomID is $runTest"
+			if [ ${runTest}x == ${2}x ]; then
+				COUNTER=$[$COUNTER +1]
+			fi 
+			echo "There are ${COUNTER} guests that are ${2}"
+			if [ $COUNTER == "4" ]; then
+				echo "All Guests Complete!"
+				sleep 1;
+				return;
 			fi
+			
 	  	done
 	  	sleep 1
 	done
@@ -56,7 +63,7 @@ function waitForGuests {
 #########################################################################
 function doDomHost {
 	echo "I am Domain Host - Monitor stats."
-	collectHost.pl &
+	./collectHost.pl &
 	signalGuests ${dataCollect} on
 	signalGuests ${benchmark} on
 	waitForGuests ${benchmark} off
@@ -102,7 +109,23 @@ function doDomGuest {
 	done
 }
 
+function cleanup {
+	signalGuests ${benchmark} off
+	signalGuests ${dataCollect} off
+	killall -q -1 collectHost.pl
+	for guestDomID in `${XENSTORE_LIST} /local/domain`; do
+		xenstore-rm "/local/domain/${guestDomID}/data/analysis/vmstat"
+		xenstore-rm "/local/domain/${guestDomID}/data/analysis/diskstat"
+	done
+}
+
 ######################### MAIN ##########################################
+if [ $1x == "clean"x ]; then 
+	echo "Doing Cleanup...";
+	cleanup
+	exit 0
+fi
+
 if [ ${myUUID}x == "x" ]; then
 	echo "Error:  xenstore: Unable to get UID"
 fi
