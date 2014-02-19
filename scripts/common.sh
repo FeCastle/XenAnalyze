@@ -1,4 +1,8 @@
 #!/bin/bash
+XENSTORED_PATH=/proc/xen/xenbus
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+export XENSTORED_PATH
+export LD_LIBRARY_PATH
 
 XENSTORE=xenstore
 XENSTORE_READ=${XENSTORE}-read

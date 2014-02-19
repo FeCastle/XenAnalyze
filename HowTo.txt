@@ -2,7 +2,7 @@
 ---- Automatic install from CentOS 6.4 ------
 -- http://wiki.centos.org/HowTos/Xen/Xen4QuickStart --
 Install CentOS 6.x from Live CD.
-yum udate
+yum update
 yum install centos-release-xen
 yum install xen
 /usr/bin/grub-bootxen.sh
@@ -26,12 +26,12 @@ initdb
  echo shared_buffers=$SHARED_BUFFERS >> $PGDATA/postgresql.conf
  echo wal_buffers=$WAL_BUFFERS >> $PGDATA/postgresql.conf
  echo checkpoint_segments=$CHECKPOINT_SEGMENTS >> $PGDATA/postgresql.conf
- pg_ctl start 
+pg_ctl start 
 
 [root@Wall-eve ~]# xm info
 host                   : Wall-eve.cs.pdx.edu
-release                : 2.6.39
-version                : #2 SMP Mon Jul 29 12:18:13 PDT 2013
+release                : 3.10.29-11.el6.centos.alt.x86_64
+version                : #1 SMP Tue Feb 11 22:00:02 UTC 2014
 machine                : x86_64
 nr_cpus                : 16
 nr_nodes               : 2
@@ -39,47 +39,31 @@ cores_per_socket       : 4
 threads_per_core       : 2
 cpu_mhz                : 2261
 hw_caps                : bfebfbff:28100800:00000000:00003b40:009ce3bd:00000000:00000001:00000000
-virt_caps              : hvm hvm_directio
+virt_caps              : hvm
 total_memory           : 12278
-free_memory            : 11087
+free_memory            : 11113
 free_cpus              : 0
 xen_major              : 4
 xen_minor              : 2
-xen_extra              : .0
+xen_extra              : .3-28.el6
 xen_caps               : xen-3.0-x86_64 xen-3.0-x86_32p hvm-3.0-x86_32 hvm-3.0-x86_32p hvm-3.0-x86_64 
 xen_scheduler          : credit
 xen_pagesize           : 4096
 platform_params        : virt_start=0xffff800000000000
 xen_changeset          : unavailable
 xen_commandline        : dom0_mem=1024M,max:1024M loglvl=all guest_loglvl=all
-cc_compiler            : gcc (GCC) 4.4.7 20120313 (Red Hat 4.4.7-3)
-cc_compile_by          : root
-cc_compile_domain      : cs.pdx.edu
-cc_compile_date        : Tue Jul 23 11:56:30 PDT 2013
+cc_compiler            : gcc (GCC) 4.4.7 20120313 (Red Hat 4.4.7-4)
+cc_compile_by          : mockbuild
+cc_compile_domain      : centos.org
+cc_compile_date        : Tue Feb 11 20:23:20 UTC 2014
 xend_config_format     : 4
-
 
 [root@Wall-eve ~]# free
              total       used       free     shared    buffers     cached
-Mem:        805696     467416     338280          0      24296     254068
--/+ buffers/cache:     189052     616644
+Mem:        945872     322420     623452          0      26760     112456
+-/+ buffers/cache:     183204     762668
 Swap:      6160380          0    6160380
 
---- NOT Needed - Can Use Default Network ---
-[root@Wall-eve ~]# cat /tmp/xenNet.xml
-<network>
-  <name>xenNet</name>
-  <uuid>969a1ff3-e314-4431-beef-5b5f08d943b5</uuid>
-  <forward mode='nat' dev="em1"/>
-  <bridge name='virbr0' stp='on' delay='0' />
-  <ip address='192.168.1.1' netmask='255.255.255.0'>
-    <dhcp>
-      <range start='192.168.1.100' end='192.168.1.254' />
-    </dhcp>
-  </ip>
-</network>
-
-[root@Wall-eve ~]# virsh net-create /tmp/xenNet.xml
 [root@Wall-eve ~]# virsh net-list
 Name                 State      Autostart
 -----------------------------------------
@@ -127,7 +111,7 @@ Passwd: XenGuest
   -- Set /etc/resolv.conf
   -- Set Hostname
 service network restart
-yum install yum-utils wget openssh-clients rpm-build 
+yum install yum-utils wget openssh-clients rpm-build vim
 yum install postgresql postgresql-server postgresql-contrib
 
 ############### If need to build PG from scratch ###########################
@@ -205,8 +189,8 @@ Usage
 
 1. Set required environment variable:
   export XENSTORED_PATH=/proc/xen/xenbus -- Linux
+  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 2. Now you can do things such as:
   xen-detect
   xenstore-ls device
@@ -221,6 +205,7 @@ cd /var/lib/libvirt/images
 cp TestVM1.img TestVM2.img
 virsh resume TestVM1
 
+mkdir /tmp/Xen
 cd /tmp/Xen
 virsh dumpxml TestVM1 > /tmp/Xen/TestVM1.xml
 cp /tmp/Xen/TestVM1.xml /tmp/Xen/TestVM2.xml

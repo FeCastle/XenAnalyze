@@ -38,7 +38,9 @@ function waitForGuests {
 	while [ 1 == 1 ]; do
 		COUNTER=0
 	  	#for guestDomID in `${XENSTORE_LIST} /local/domain`; do
-	  	for guestDomID in 25 26 27 28; do
+		# TODO get running guests...
+		# 
+	  	for guestDomID in 2 3; do
 			# if [ $guestDomID != "0" ]; then 
 			# For test only wait for 26 VM2 #
 			runTest=$($XENSTORE_READ /local/domain/${guestDomID}/${1} )
@@ -47,7 +49,7 @@ function waitForGuests {
 				COUNTER=$[$COUNTER +1]
 			fi 
 			echo "There are ${COUNTER} guests that are ${2}"
-			if [ $COUNTER == "4" ]; then
+			if [ $COUNTER == "2" ]; then
 				echo "All Guests Complete!"
 				sleep 1;
 				return;
