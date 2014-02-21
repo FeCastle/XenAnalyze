@@ -67,5 +67,3 @@ SCALEFACTOR=25
     killall vmstat
 # done
 
-### Signal the Host (Dom-0) we are done ###
-$XENSTORE_WRITE ${benchmark} off

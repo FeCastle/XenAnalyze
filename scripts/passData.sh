@@ -60,13 +60,16 @@ function waitForGuests {
 
 #########################################################################
 # doDomHost
+# 
+# pass in the name of the benchmark to run.
 #########################################################################
 function doDomHost {
 	echo "I am Domain Host - Monitor stats."
 	./collectHost.pl &
 	signalGuests ${dataCollect} on
 	sleep 2
-	signalGuests ${benchmark} on
+	# signalGuests ${benchmark} on
+	signalGuests ${benchmark} $1
 	waitForGuests ${benchmark} off
 	signalGuests ${dataCollect} off
 	sleep 2
@@ -99,11 +102,13 @@ function doDomGuest {
 		fi
 
 		doBench=$($XENSTORE_READ ${benchmark} 2>/dev/null)
-		if [[ $doBench == "on" ]]; then
+		if [[ $doBench != "off" ]]; then
 			if [[ $startBench == "off" ]]; then
 				echo "Starting Benchmark"
 				startBench="on"
-				$benchCmd &
+				$doBench
+				### Signal the Host (Dom-0) we are done ###
+				$XENSTORE_WRITE ${benchmark} off
 			fi
 		fi
 		
@@ -133,8 +138,12 @@ if [ ${myUUID}x == "x" ]; then
 fi
 echo "${myName} ${myUUID} ${targetMem} ${domid}"
 
+## On the host we can specify what benchmark for the guests to run ##
 if [ ${domid} == 0 ]; then
-	doDomHost
+	if [ -n $1 ]; then
+		benchCmd=$1
+	fi
+	doDomHost ${benchCmd}
 else
 	doDomGuest
 fi

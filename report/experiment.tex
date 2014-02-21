@@ -39,7 +39,9 @@ Similar results are seen when the system is IO bound (Large database) with a 24\
 \end{figure}
 
 \subsection{Detecting I/O contention}
-Here we repeat the previous experiment, while collecting I/O resource data, from the hypervisor and external guest machines.  We use the framework described in section 5 to collect I/O read data from the /proc/diskstat kernel statistics from all domains and the hypervisor.  From this data we can determine the impact of external I/O interference on our guest domain.
+Here we repeat the previous experiment with a large database, which is larger than available memory. We use the framework described in section 5.5 to collect I/O and virtual memory data from the /proc/diskstat and /proc/vmstat kernel statistics from all domains and the hypervisor.  From this data we can determine the impact of external I/O interference on our guest domain.\\
+Before running the experiment, we need to calculate the I/O overhead by running the "dd" utility in a guest domain and collecting data without any interference.  After 3 runs we can see that the 
+
 
 
 \begin{comment}
