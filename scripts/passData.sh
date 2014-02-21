@@ -33,23 +33,24 @@ function signalGuests {
 # waitForGuests
 #   This function is only run in Dom0.  Wait for guest machines to 
 #   complete a task.
+#  ${1} The name of the store to read
+#  ${2} The value of the store to match
 #########################################################################
 function waitForGuests {
 	while [ 1 == 1 ]; do
 		COUNTER=0
 	  	#for guestDomID in `${XENSTORE_LIST} /local/domain`; do
-		# TODO get running guests...
-		# 
-	  	for guestDomID in 2 3; do
-			# if [ $guestDomID != "0" ]; then 
-			# For test only wait for 26 VM2 #
+		xtotal=${#domIDs[@]}
+		echo "The number of domains is ${xtotal}"
+		for (( i=0; i<${xtotal}; i++ )); do
+			guestDomID=${domIDs[$i]}
 			runTest=$($XENSTORE_READ /local/domain/${guestDomID}/${1} )
 			echo "$1 in guest $guestDomID is $runTest"
 			if [ ${runTest}x == ${2}x ]; then
 				COUNTER=$[$COUNTER +1]
 			fi 
 			echo "There are ${COUNTER} guests that are ${2}"
-			if [ $COUNTER == "2" ]; then
+			if [ $COUNTER == ${xtotal} ]; then
 				echo "All Guests Complete!"
 				sleep 1;
 				return;

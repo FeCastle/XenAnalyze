@@ -20,6 +20,8 @@ domid=$(${XENSTORE_READ} domid)
 dataCollect="data/analysis/collect"   # Start/stop collecting statistics
 benchmark="data/analysis/benchmark"   # Generate a load
 
-## Run this benchmark on the Guest machines ##
+## Default - Run this benchmark on the Guest machines ##
 benchCmd="./getScaleFactor"
 
+## Guest Machines DomIDs to run ##
+domIDs=(2)
