@@ -41,7 +41,7 @@ sub doResults() {
 ############################## MAIN #################################
 $SIG{'HUP'} = 'doResults';
 doPre;
-sleep 1;
+sleep;
 doResults;
 print ("Guest Complete.\n");
 

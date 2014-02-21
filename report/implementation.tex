@@ -1,53 +1,57 @@
-Since the system workload, and available resources will continually change, and it is difficult to predict a constant workload across multiple virtual systems, applications running in a virtual environment will need the ability to analyze performance.  Existing tools that show performance such as top, sar, and vmstat in Linux OS and perfmon in Windows require additional information from addtional sources of data.  A framework is needed so that existing tools and new tools can be developed to show the true perfomance of a virtualized system.
+Since the system workload and available resources will continually change, applications running in a virtual environment will need the ability to analyze performance at run time.  Existing resource usage tools such as top, sar, and vmstat in Linux OS and perfmon in Windows require additional information from external sources of data.  A framework is needed so that existing tools and new tools can be developed to show the true perfomance and resource usage of a virtualized system.
 
-\indent  In this section we will explore the missing data that is needed and develop some tools to collect and analyze the addtional data from the point of view of a running guest application. First we define the new layers of abstraction virtual environments.  Then we identify the virtual resources that are needed for a virtualized guest.  For measuring I/O performance in virtual guest, we describe the following methods needed to collect and analyze the additional data:
+\indent  In this section we will explore the missing data that is needed, and design some tools to collect and analyze the addtional data from the point of view of a running guest system. First, we define the new layers of abstraction in virtual environments.  Then we identify the virtual resources that are needed for a virtualized guest.  For measuring I/O performance in virtual guest, we describe the following methods needed to collect and analyze the additional data:
 \begin {enumerate}
 \item Identify the performance counters on a virtual guest machine.
-\item A method to calculate the overhead and theoritical maximum performance using an offline modeling technique.
+\item A method to calculate the overhead and theoritical maximum throughput using an offline modeling technique.
 \item A method to analyze performance of a guest machine which may be experiencing degredation from external interference.
 \item Example tool that dynamically analyzes runtime interference from I/O contention at different layers.
 \end{enumerate}
 
-After building a tool we can Introduce \emph{disk pinning} similar to core pinning (assigning a guest OS to a specific core), where separate physical disks are assigned to individual virtual servers under a constant load.  
+After building an example tool we can introduce \emph{disk pinning}, where separate physical disks are assigned to individual virtual servers under a constant load.  Much research has shown that core pinning can dramatically improve CPU bound applications.  This will show how that idea translates to I/O bound virtual systems.  Obviously, the benefits of virtualization decrease as physical resources are bound to virtual machines.  With that considered, there may be significant improvments for I/O bound systems, where CPU cores may be shared.  We can use our new data to analyze the change in interference.
 
 % 1 Define the new layers of abstraction virtual environments.
 \subsection{Abstraction Layers}
-In order to find the root cause of a degraded application running in a virtual machine, the first step is to isolate the problem to a specific layer. Without virtualization, the problem could be in the applicaiton, OS, or hardware.  In a virtual environment, the hypervisor or unrelated guest also needs to be considered as a cause of the problem.  The hypervisor provides the virtual resources to the guest and controls access to the physical hardware.  Since the guest machine does not access the hardware it will have some performance overhead. An external guest machine may cause interference by competing for resources with other running guest machines.  Our experiments will show that this contention exists even when the hypervisor has not overcommited the resource.
+In order to find the root cause of a degraded application running in a virtual machine, the first step is to isolate the problem to a specific layer. Without virtualization, the problem could be in the applicaiton, OS, or hardware.  In a virtual environment, the hypervisor or unrelated guest also needs to be considered as a cause of the problem.  The hypervisor provides the virtual resources to the guest and controls access to the physical hardware.  Since the guest machine can only access the hardware through the hypervisor, it will have some performance overhead. An external guest machine may also cause interference by competing for resources with other running guest machines.  Our experiments will show that both the hypervisor and external guest need to be considered when analyzing performance problems.
 \begin{figure}
 \begin{tabular}{ l p{5cm} }
   layer & definition \\
   \hline
   Application & Includes all code and libraries running in user space. \\
   OS & Includes all kernel code and device drivers. \\
-  Extrenal Guest & An external virtual system. \\
-  Hypervisor & The hypervisor and VMM to manage the guest domains. \\
+  \textbf{Extrenal Guest} & An external virtual system. \\
+  \textbf{Hypervisor} & The hypervisor and VMM to manage the guest domains. \\
   Hardare & Physical hardware. \\
 \end{tabular}
 \caption{New layers \emph{Hypervisor} and \emph{External Guest} for virtualizataion}
 \label{fig:layers}
 \end{figure}
-Existing tools that measure resource usage, when run in a guest machine, do not show any information about interference from the external guest or hypervisor. 
 
 % 2 Identify resources which are difficult to measure usage.
 \subsection{Resources}
-In order to determine the real cause of the performance problem the next step is to identify the resource which is the most influential to the performance problem.  The goal is to determine if the application is bound by Memory, I/O, or CPU.  In other words, adding \emph{additional} either Memory, I/O, or CPU would improve application performance.  
-In a virtual environment, the resources allocated to a guest machine are an abstraction of the physical resources available.   Any information obtained through the guest machine will not show interference from any of the new virtualization layers.  An administrator using system tools like sar and vmstat to collect information from the guest machine will not show how much of that resource is available to the application.  Additional information is needed from hypervisor about the physical resource so that the guest OS and applications can make better decisions about the availability of the resource. 
+In order to determine the real cause of the performance problem the next step is to identify the resource which is the most influential to the performance problem.  The goal is to determine if the application is bound by Memory, I/O, or CPU(Figure \ref{fig:resources}).  In other words, adding \emph{additional} either Memory, I/O, or CPU would improve application performance. \\
+\indent In a virtual environment, the resources allocated to a guest machine are an abstraction of the physical resources available.   Any information obtained through the guest machine will not show interference from any of the new virtualization layers.  Therefore an administrator using system tools like sar and vmstat will not be able to determine the true availability of the resource for the application.  Additional information is needed from hypervisor about the physical resource so that the administrator, OS, or application can make better decisions about the availability of the resource. 
 \begin{figure}
-  \begin{tabular}{ l | r }
+  \begin{tabular}{ l r }
     Resource & Definition \\
     \hline
-    CPU & The virtual core allocated to the guest \\ \hline
-    Memory & The virtual RAM allocated to the guest \\ \hline
-    I/O & The Disk and Network I/O system \\ \hline
+    CPU & The virtual core allocated to the guest \\
+    Memory & The virtual RAM allocated to the guest \\ 
+    Disk I/O & The virtual block disk I/O system \\
+    Network I/O & The virtual network I/O system \\
   \end{tabular}
+\caption{Virtual resources which may experience interference}
 \label{fig:resources}
 \end{figure}
 
 % 3 Identify the performance counters which can be used to measure I/O performance on a virtual guest machine.
 \subsection{Performance Counters}
-On a Linux OS many of the system administrator utilities used to identify resource usage comes from the /proc filesystem. For example the \emph{sar -d} command will show block device statistics such as transfers/sec, reads/sec, and writes/sec, as well as many other statistics.  Similar GUI are available on Microsoft Windows OS through perfmon.exe and an API in the Windows Performance Toolkit \cite{winperf}. The hypervisor divides the physical resource into virtual resources for each guest.  Additionally each resource may be shared, between multiple guests by overcommitting the resource.  When a guest system views statistics about a resource, part of the information is missing from the guest application.  Interference from the hypervisor and external guests need to be passed to the guest virtual machine about the true performance of the resource.
+On a Linux OS many of the system administrator utilities used to identify resource usage comes from the /proc filesystem. For example the \emph{sar -d} command will show block device statistics such as transfers/sec, reads/sec, and writes/sec, as well as many other statistics.  Similar GUI are available on Microsoft Windows OS through perfmon.exe and an API in the Windows Performance Toolkit \cite{winperf}. The hypervisor divides the physical resource into virtual resources for each guest.  Additionally each resource may be shared, between multiple guests by overcommitting the resource.  When a guest system views statistics about a resource, part of the information is missing from the guest application.  Interference from the hypervisor and external guests need to be passed to the guest virtual machine about the true performance of the resource. \\
 
-The following statistics are used for determinig disk I/O contention on a Linux OS.  Similar counters can be used for other operating systems or resources. For modern operating systems it is important to collect both I/O and virtual memory information when analyzing I/O contention, since disk reads and writes are buffered and cached in memory for performance reasons.  
+\indent The Linux kernel tracks I/O statistics in \emph{diskstat} and virtual memory statistics in \emph{vmstat} (Figure \ref{fig:iocounters}).  These counters an help identify disk I/O contention issues and are used by adminstrative utilites sar and iostat \cite{iostats}.  Similar counters can be used for other operating systems or resources. For modern operating systems it is important to collect both I/O and virtual memory information when analyzing I/O contention, since disk reads and writes are buffered and cached in memory for performance reasons.  \\
+
+\indent For each resource available on a most operating systems, there are OS level statistics collected about those resources.  It is important to indentify the resources used, and methods of collecting resources.  For our examples we use I/O statistics, but other statistics could be collected for CPU or memory usage.
+
 \begin{figure}
 \begin{tabular}{ l l p{5cm} }
   Statistics & Description \\
@@ -55,13 +59,14 @@ The following statistics are used for determinig disk I/O contention on a Linux 
   /proc/diskstat & I/O statistics of block devices \\
   /proc/vmstat & Detailed virtual memory statistics\\
 \end{tabular}
+\caption{Disk I/O performance counters on Linux.}
 \label{fig:iocounters}
 \end{figure}
 
 
 % 4 A method to calculate the overhead and theoritical maximum performance using an offline modeling technique.
 \subsection{Overhead and Theoretical Maximum}
-For each virtual resource \ref{fig:resources} there is a cost to making that resource virtualized, instead of allowing the guest OS to have direct access to the hardware.  Several researchers \cite{cherkasova, huber1} have shown the overhead for CPU and memory intensive applications for a given configuration.  Our experiments will show the overhead for Disk I/O using an offline modeling technique similar to previous research for memory and CPU overhead.  First we show how to calculate the overhead and theoritcal maximum for a resource.
+For each virtual resource (Figure \ref{fig:resources}) there is a cost to making that resource virtualized, instead of allowing the guest OS to have direct access to the hardware.  Several researchers \cite{cherkasova, huber1} have shown the overhead for CPU and memory intensive applications for a given configuration.  Our experiments will show the overhead for Disk I/O using an offline modeling technique similar to previous research for memory and CPU overhead.  First we show how to calculate the overhead and theoritcal maximum for a resource.
 
 \indent Before a guest application is run in a virtualized environment, we need to calculate the \emph{overhead} and theoritcal maximum \emph{tmax} in that environment.  This only needs to be done once.  In large scale datacenters and cloud systems, templates are created before virtual machines are used in production.  A template is a snapshot image of a virtual machine that has been built and tested to meet some need.  For example a Redhat 6.2 system with an Apache web server may need to be used on several machines.  A system could be built, tuned, and tested for that enviroment and then made into a template.  Future users can deploy a new virtual machine from that known state.  We are suggesting that the \emph{overhead} and \emph{tmax} be calculated before being made into a template.  
 \newline
@@ -94,4 +99,4 @@ virtual I/O interference 22.4%
 \end{figure}
 
 \subsection{Disk Pinning}
-Disk pinning may be a substitute for multiple I/O bound guest appliations running in a virtual system.  Several papers have demonstrated the effects of core pinning or \emph{core affinity} for CPU bound applications.  This can reduce the load on the hypervisor and prevent cache contention.  Similarly a single I/O bound guest may use a single disk excessivley causing performance problems on external guests.  RAID systems are used to improve performance for database applications.  By increasing the number of physical spindles, multiple random disk seeks can occur concurrently.  By setting physical disks to specific virtual guests, we can reduce I/O interference from multiple guests.  For applications that are bound by I/O virtualization, it may be better to share cores and separate physical disks for each virtual machine.
+Disk pinning may be a solution for multiple I/O bound guest appliations running in a virtual system.  Several papers have demonstrated the effects of core pinning or \emph{core affinity} for CPU bound applications, which can reduce the load on the hypervisor and prevent cache contention.  Similarly, a multiple I/O bound guests may use a single disk excessivley causing interference and degreaded performance.  By increasing the number of physical spindles, multiple random disk seeks can occur concurrently.  By setting physical disks to specific virtual guests, we can reduce I/O interference from multiple guests.  For applications that are bound by virtual I/O resources, it may be better to share cores and separate physical disks for each virtual machine.  At some point assigning a dedicated physical resource to guest machines minimizes the benefits of virtualizaion.  It should be the task of the administrator to decide how the physical resources are used based on the need.

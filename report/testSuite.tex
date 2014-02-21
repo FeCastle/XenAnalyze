@@ -1,10 +1,8 @@
-A test infrastructure was created to analyze I/O performance issues in the guest applications, guest OS, hypervisor, and hardware.  Our experiments, when run in this infrastructure, show how a virtual machine is unable to completely analyze problems using existing tools.  Existing data, when collected from the perspective of the user and kernel of the quest machine, does not provide accurate information.  This could lead to improper diagnosis of the problem without additional information from the hypervisor and physical hardware.
-\newline
+A test infrastructure was created to analyze I/O performance issues in the guest applications, guest OS, hypervisor, and hardware.  Our experiments, when run in this infrastructure, show how a virtual machine is unable to completely analyze problems using existing tools.  In order to test and measure interference an infrastructure needed to be built to start and stop multiple virtual machines, run tests concurrently, and collect and analyze data from all systems.  \\
 
-The test infrasture simulates a consistent and reproducible system load by using a PostgreSQL database server and PGbench from the postgres contrib package. PGbench creates a TPC-B similar style workload and calculates transactions per second.   Additionally PGreplay can record and playback (faster or slower) the same set of benchmark transactions.  PGreplay allows us to simulate host systems that are not running at 100\% capacity.  This is typical of most systems, since at almost all times, the systems are using only a fraction of the total resources available.  
-\newline
+\indent The test infrasture simulates a consistent and reproducible system load by using a PostgreSQL database server and PGbench from the postgres contrib package. PGbench creates a TPC-B similar style workload and calculates transactions per second (TPS).   Additionally PGreplay can record and playback (faster or slower) the same set of benchmark transactions.  PGreplay allows us to simulate host systems that are not running at 100\% capacity.  This is typical of most systems, since at almost all times, the systems are using only a fraction of the total resources available.  Several other benchmarks such as Postmark \cite{katcher} were also considered. \\
 
-The tests can be run in all sizes of \emph{virtualization environments}.  Tests which run in a \emph{Small} or \emph{Medium} environment can also be run in a \emph{Cluster} or \emph{Cloud} based system by increasing the size of the database or number of guest machines until a similar load is reached.
+\indent The tests can be run in all sizes of virtualization environments (Figure \ref{fig:virtSize}).  Tests which run in a \emph{Small} or \emph{Medium} environment can also be run in a \emph{Cluster} or \emph{Cloud} based system by increasing the size of the database or number of guest machines until a similar load is reached.  For our test suite we are targeting \emph{Small} and \emph{Medium} sized virtualization environments. \\
 
 \begin{figure}[h!]
 \begin{tabular}{ l p{5cm} }
@@ -19,7 +17,7 @@ The tests can be run in all sizes of \emph{virtualization environments}.  Tests 
 \label{fig:virtSize}
 \end{figure}
 
-All tests are run and collect data with the same software stack installed.  We use the Xen Hypervisor and CentOS release as the virtualization and Operating system platform.
+\indent All tests are run and collect data with the same software stack installed (Figure \ref{fig:softStack}).  We use the Xen Hypervisor and CentOS release as the virtualization and Operating system platform.  This software stack can be extended to mulptiple servers to produce a larger cluster of servers.  We chose Postgres as the database server for our tests because of its robustness and standard use in hosting facilities and applications.  It is a good general purpose application that can be used to stress I/O, memory, and CPU resources. \\
 
 \begin{figure}[h!]
 \begin{tabular}{ l p{5cm} }
@@ -32,12 +30,13 @@ All tests are run and collect data with the same software stack installed.  We u
 \label{fig:softStack}
 \end{figure}
 
-We chose Postgres as the database server for our tests because of its robustness and standard use in hosting facilities and applications.  It is a good general purpose application that can be used to stress I/O, memory, and CPU resources.  For I/O intensive applications, like a database server, the application tends to perform very well when the entire \emph{working set} can fit into main memory.  However, when the \emph{working set}  approaches (or exceeds) the size of main memory, the application tends to degrade quickly.  Our experiments will highlight this fact by changing the database size under load in a virtual environment.
-\newline
+For I/O intensive applications, like a database server, the application tends to perform very well when the entire \emph{working set} can fit into main memory.  However, when the \emph{working set}  approaches (or exceeds) the size of main memory, the application tends to degrade quickly.  Our experiments will highlight this fact by changing the database size under load in a virtual environment.
+\
 
 PGbench \footnote{PGbench is part of the Postgresql Contrib packages.  It is used to tune the Postgres and the operating system} is used to generate a test load on the database.  The test suite uses the "-i" flag \emph{scaling factor} to initialize a database at a specified size so that our results can show changes between a memory bound system and I/O bound system.  Then at least 5 trials are completed in each configuration.  The average results of these test are measured in \textbf{TPS} \emph{Transactions per Second}.   We can use the TPS to show how the database performs when external environment changes are made to the system.
 \newline
 
+\begin{comment}
 In addtion to TPS to show suboptimal performance.  In our Lixux based test enviroment, the /proc file system utilites are used to collect Memory, IO, and system statistics during the tests that would normally be used to identify and tune I/O performance problems.\cite{suseIO,pgTune}.   
 
 \begin{figure}[h!]
@@ -68,6 +67,5 @@ In addtion to TPS to show suboptimal performance.  In our Lixux based test envir
 \caption{I/O data collected from guest and hypervisor}
 \label{fig:io}
 \end{figure}
-
-
+\end{comment}
 

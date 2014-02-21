@@ -65,9 +65,11 @@ function doDomHost {
 	echo "I am Domain Host - Monitor stats."
 	./collectHost.pl &
 	signalGuests ${dataCollect} on
+	sleep 2
 	signalGuests ${benchmark} on
 	waitForGuests ${benchmark} off
 	signalGuests ${dataCollect} off
+	sleep 2
 	killall -q -1 collectHost.pl
 }
 
@@ -101,7 +103,7 @@ function doDomGuest {
 			if [[ $startBench == "off" ]]; then
 				echo "Starting Benchmark"
 				startBench="on"
-				./getScaleFactor &
+				$benchCmd &
 			fi
 		fi
 		
