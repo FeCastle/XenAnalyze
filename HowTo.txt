@@ -147,6 +147,27 @@ initdb
 createdb pgbench
 --- RUN TESTS !!!!----------------------
 
+------------------------ HOW TO CLONE DOM U -------------------------------
+  --- Disk Image:  /var/lib/libvirt/images/TestVM1.img
+virsh suspend TestVM1
+cd /var/lib/libvirt/images
+cp TestVM1.img TestVM2.img
+virsh resume TestVM1
+
+cd /tmp/Xen
+virsh dumpxml TestVM1 > /tmp/Xen/TestVM1.xml
+cp /tmp/Xen/TestVM1.xml /tmp/Xen/TestVM2.xml
+  --- Edit uuid, name, source file, domain id, and mac address ---
+virsh create /tmp/Xen/TestVM2.xml
+xm console TestVM2
+  -- May need to check MAC address /etc/sysconfig/network-scripts/ifcfg-eth0 --
+service network restart
+service postgresql start
+su - postgres
+/tmp/getScaleFactor2 > /tmp/IBM3650_ScaleF_512_TestVM2_run1.txt
+scp /tmp/IBM3650_ScaleF_512_TestVM4_run1.txt deron@172.29.203.30:Projects/XenAnalyze/data
+
+
 ------------------------ How to Build XenStore tools for DomU ------------------------------------
 yum install gcc
 ## Taken from here:  http://silviud.blogspot.com/2011/09/from-domu-read-xenstore-ec2-linode-etc.html
