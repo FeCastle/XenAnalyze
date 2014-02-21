@@ -1,125 +1,102 @@
-Since the system workload, and available resources will continually change, and it is difficult to predict a constant workload across multiple virtual systems, data centers will need the ability to profile and analyze virtual environments.  Application and system profiling tools are available but require manual analysis of the data and possibly detailed knowledge above that of a traditional system administrator, in order to arrive at a probable conclusion.   
+Since the system workload and available resources will continually change, applications running in a virtual environment will need the ability to analyze performance at run time.  Existing resource usage tools such as top, sar, and vmstat in Linux OS and perfmon in Windows require additional information from external sources of data.  A framework is needed so that existing tools and new tools can be developed to show the true perfomance and resource usage of a virtualized system.
 
-\indent This project will add the following contributions for virtualization:
-\begin{enumerate}
-\item Define the new layers of abstraction virtual environments.
-\item Define the physical and virtual resource needed for application performance.
-\item Identify the tools, and performance counters used identify layer layer I/O contention.
+\indent  In this section we will explore the missing data that is needed, and design some tools to collect and analyze the addtional data from the point of view of a running guest system. First, we define the new layers of abstraction in virtual environments.  Then we identify the virtual resources that are needed for a virtualized guest.  For measuring I/O performance in virtual guest, we describe the following methods needed to collect and analyze the additional data:
+\begin {enumerate}
+\item Identify the performance counters on a virtual guest machine.
+\item A method to calculate the overhead and theoritical maximum throughput using an offline modeling technique.
+\item A method to analyze performance of a guest machine which may be experiencing degredation from external interference.
 \item Example tool that dynamically analyzes runtime interference from I/O contention at different layers.
-\item Introduce \emph{disk pinning} similar to core pinning (assigning a guest OS to a specific core), where separate physical disks are assigned to individual virtual servers under a constant load.  
 \end{enumerate}
 
+After building an example tool we can introduce \emph{disk pinning}, where separate physical disks are assigned to individual virtual servers under a constant load.  Much research has shown that core pinning can dramatically improve CPU bound applications.  This will show how that idea translates to I/O bound virtual systems.  Obviously, the benefits of virtualization decrease as physical resources are bound to virtual machines.  With that considered, there may be significant improvments for I/O bound systems, where CPU cores may be shared.  We can use our new data to analyze the change in interference.
+
+% 1 Define the new layers of abstraction virtual environments.
 \subsection{Abstraction Layers}
-In order to find the root cause of a degraded application running in a virtual machine, the first step is to isolate the problem to a specific layer. Without virtualization, the problem could be in the applicaiton, OS, or hardware.  In a virtual environment, the hypervisor or unrelated guest also needs to be considered as a cause of the problem.  
+In order to find the root cause of a degraded application running in a virtual machine, the first step is to isolate the problem to a specific layer. Without virtualization, the problem could be in the applicaiton, OS, or hardware.  In a virtual environment, the hypervisor or unrelated guest also needs to be considered as a cause of the problem.  The hypervisor provides the virtual resources to the guest and controls access to the physical hardware.  Since the guest machine can only access the hardware through the hypervisor, it will have some performance overhead. An external guest machine may also cause interference by competing for resources with other running guest machines.  Our experiments will show that both the hypervisor and external guest need to be considered when analyzing performance problems.
 \begin{figure}
 \begin{tabular}{ l p{5cm} }
   layer & definition \\
   \hline
   Application & Includes all code and libraries running in user space. \\
   OS & Includes all kernel code and device drivers. \\
-  Extrenal Guest & An external virtual system. \\
-  Hypervisor & The hypervisor and VMM to manage the guest domains. \\
+  \textbf{Extrenal Guest} & An external virtual system. \\
+  \textbf{Hypervisor} & The hypervisor and VMM to manage the guest domains. \\
   Hardare & Physical hardware. \\
 \end{tabular}
 \caption{New layers \emph{Hypervisor} and \emph{External Guest} for virtualizataion}
 \label{fig:layers}
 \end{figure}
 
-\subsection{Overhead and Theoretical Maximum}
-There is an overhead to virtualization and several researchers \cite{cherkasova, huber1} have shown the overhead for CPU and memory intensive applications.  Our experiments will show the overhead for Disk I/O using an offline modeling technique similar to previous research for memory and CPU overhead.  We need to collect data one time for each configuration before the guest applicaitons are run with interferenece. For example: A Xen paravirtualized environment with a Linux guest OS may have a different overhead than a VMware system with a Windows guest OS.  
-\newline
-To calculate the virtualization overhead, create a single virtual machine with dedicated resources.  There should not be any other machines running.  Then place a load on the machine and begin monitoring the resource in BOTH the guest OS and hypervisor.  For our experiment, we show the I/O read overhead to be about 3\% when there is not external interference.  The guest machine maximum read throughput is about 270 rd/s and the hypervisor can process those reads at a maximum of 278 rd/s.
-
+% 2 Identify resources which are difficult to measure usage.
 \subsection{Resources}
-In a virtual environment, the resources allocated to a guest machine are an abstraction of the physical resources available.  Using system tools like sar and vmstat to collect information from the guest machine does not account for this fact.  Therefore additional information is needed from hypervisor about the physical resource so that the guest OS and applications can make better decisions about the availability of the resource. 
+In order to determine the real cause of the performance problem the next step is to identify the resource which is the most influential to the performance problem.  The goal is to determine if the application is bound by Memory, I/O, or CPU(Figure \ref{fig:resources}).  In other words, adding \emph{additional} either Memory, I/O, or CPU would improve application performance. \\
+\indent In a virtual environment, the resources allocated to a guest machine are an abstraction of the physical resources available.   Any information obtained through the guest machine will not show interference from any of the new virtualization layers.  Therefore an administrator using system tools like sar and vmstat will not be able to determine the true availability of the resource for the application.  Additional information is needed from hypervisor about the physical resource so that the administrator, OS, or application can make better decisions about the availability of the resource. 
 \begin{figure}
-  \begin{tabular}{ l | r }
+  \begin{tabular}{ l r }
     Resource & Definition \\
     \hline
-    CPU & The virtual core allocated to the guest \\ \hline
-    Memory & The virtual RAM allocated to the guest \\ \hline
-    I/O & The Disk and Network I/O system \\ \hline
+    CPU & The virtual core allocated to the guest \\
+    Memory & The virtual RAM allocated to the guest \\ 
+    Disk I/O & The virtual block disk I/O system \\
+    Network I/O & The virtual network I/O system \\
   \end{tabular}
+\caption{Virtual resources which may experience interference}
 \label{fig:resources}
 \end{figure}
-Several of the adminstration tools in a Linux OS look at the /proc file system.  In order to collect performance metrics about I/O (such as reads and writes / second), tools collect statistics from /proc/iostat\cite{iostats}.  However, this information will not be completely accurate from the point of view of virtualized guest machine. In order to get a complete view of the resource, we need to calculate how much of that resource is used by external guest and the hypervisor overhead.
+
+% 3 Identify the performance counters which can be used to measure I/O performance on a virtual guest machine.
+\subsection{Performance Counters}
+On a Linux OS many of the system administrator utilities used to identify resource usage comes from the /proc filesystem. For example the \emph{sar -d} command will show block device statistics such as transfers/sec, reads/sec, and writes/sec, as well as many other statistics.  Similar GUI are available on Microsoft Windows OS through perfmon.exe and an API in the Windows Performance Toolkit \cite{winperf}. The hypervisor divides the physical resource into virtual resources for each guest.  Additionally each resource may be shared, between multiple guests by overcommitting the resource.  When a guest system views statistics about a resource, part of the information is missing from the guest application.  Interference from the hypervisor and external guests need to be passed to the guest virtual machine about the true performance of the resource. \\
+
+\indent The Linux kernel tracks I/O statistics in \emph{diskstat} and virtual memory statistics in \emph{vmstat} (Figure \ref{fig:iocounters}).  These counters an help identify disk I/O contention issues and are used by adminstrative utilites sar and iostat \cite{iostats}.  Similar counters can be used for other operating systems or resources. For modern operating systems it is important to collect both I/O and virtual memory information when analyzing I/O contention, since disk reads and writes are buffered and cached in memory for performance reasons.  \\
+
+\indent For each resource available on a most operating systems, there are OS level statistics collected about those resources.  It is important to indentify the resources used, and methods of collecting resources.  For our examples we use I/O statistics, but other statistics could be collected for CPU or memory usage.
+
+\begin{figure}
+\begin{tabular}{ l l p{5cm} }
+  Statistics & Description \\
+  \hline
+  /proc/diskstat & I/O statistics of block devices \\
+  /proc/vmstat & Detailed virtual memory statistics\\
+\end{tabular}
+\caption{Disk I/O performance counters on Linux.}
+\label{fig:iocounters}
+\end{figure}
+
+
+% 4 A method to calculate the overhead and theoritical maximum performance using an offline modeling technique.
+\subsection{Overhead and Theoretical Maximum}
+For each virtual resource (Figure \ref{fig:resources}) there is a cost to making that resource virtualized, instead of allowing the guest OS to have direct access to the hardware.  Several researchers \cite{cherkasova, huber1} have shown the overhead for CPU and memory intensive applications for a given configuration.  Our experiments will show the overhead for Disk I/O using an offline modeling technique similar to previous research for memory and CPU overhead.  First we show how to calculate the overhead and theoritcal maximum for a resource.
+
+\indent Before a guest application is run in a virtualized environment, we need to calculate the \emph{overhead} and theoritcal maximum \emph{tmax} in that environment.  This only needs to be done once.  In large scale datacenters and cloud systems, templates are created before virtual machines are used in production.  A template is a snapshot image of a virtual machine that has been built and tested to meet some need.  For example a Redhat 6.2 system with an Apache web server may need to be used on several machines.  A system could be built, tuned, and tested for that enviroment and then made into a template.  Future users can deploy a new virtual machine from that known state.  We are suggesting that the \emph{overhead} and \emph{tmax} be calculated before being made into a template.  
+\newline
+\indent To calculate the virtualization overhead, create a single virtual machine with dedicated resources on isolated hardware.  There should not be any other virtual guest machines running.  Next we need to find a load that will stress each resource.  It may be possible to generate a load that will stress I/O, memory, and CPU, but it is best to stress them separately since other interference could mislead results.  For our experiments we choose the Linux \emph{dd} utility to stress disk I/O resource.  It is important that we ensure that the load is large enough to prevent caching in memory.  Then place a load on the machine and begin monitoring the resource using the previously determined counters in BOTH the guest OS and hypervisor.  In this case we use /proc/diskstat and calculate rd/s.  For our experiment, we show the I/O read overhead to be about 3\% when there is not external interference.  The guest machine maximum read throughput is about 270 rd/s and the hypervisor can process those reads at a maximum of 278 rd/s.  We know that the \emph{tmax} for this performance statistic is about 270 rd/s.
+
+% A method to analyze performance of a guest machine which may be experiencing degredation from external interference.
+\subsection{Detecting I/O Interference}
+In order to collect performance I/O metrics (such as reads/second and writes/second) with a complete view of the resource, we need a method to calculate how much of that resource is used by the external guests and the hypervisor overhead.  At each layer, data and statistics need to be collected to determine why the application may be degraded.
+\indent When a tool runs in the userspace of guest machine to get resource usage, the guest OS should collect information about the usage of the resource from the hypervisor and external guests.  If the guest has previously collected the  \emph{overhead} and \emph{tmax}, then the guest virtual machine can determine if the resource is available and the problem is in the guest machine, or the resource is degraded from external interference.
+
 \begin{enumerate}
 	\item Guest tool requests OS statistics.
 	\item Guest OS forwards request to hypervisor.
 	\item Hypervisor forwards request to all guests.
 	\item Each Guest responds with individual statistics.
-	\item Hypervisor calculates a percentage 
+	\item Hypervisor calculates a percentage of resource used.
 	\item Hypervisor returns data to original requestor.
-	\item Guest tools shows overhead and interference from external guests.
+	\item Guest tool shows overhead and interference from external guests.
 \end{enumerate}
 
-\subsection{Physical and Virtual Resources}
-In order to determine the actual cause of the performance problem the next step is to identify the resource which is the most influential to the performance problem.  If the problem is in the Guest OS, then the resource would be a virtual resource.  The goal is to determine if the application is bound by Memory, I/O, or CPU.  In other words, adding \emph{additional} either Memory, I/O, or CPU would improve application performance.  
-\newline
-Application:  The resources used at this layer are most likely calls to shared libraries such as glibc.  In order to determine what resources are used, the appliction should monitor or track calls to the libraries.  For I/O the application should track calls to read() or write().  For memory access malloc() and free() can be tracked.  If application can't be changed, then it can be wrapped with \emph{strace} to count the number of calls made to the kernel.
-
-OS:  The OS needs to profile I/O, CPU, and Memory access.  This can be done with utilities like Oprofile or Kernel function profiling.  For the linux kernel adding \emph{profile=2} to the kernel boot parameters will write a binary profile of most kernel functions.  
-
-The following tools are used for determinig disk I/O contention.  Similar sets of tools can be used for other system resources.  The hypervisor divides the physical resource into virtual resources for each guest.  A guest system needs to monitor and analyze the resources used.  The hypervisor needs to compute the sum of the resources to determine if there is contention between the guests or if there is a physical resource limitation.
-\begin{tabular}{ l l p{5cm} }
-  Tool & Description \\
-  \hline
-  sar -d & Shows the time the disk was busy, reads and writes per second, wait queue, and service time(seek time). \\
-  Disk I/O & ioping & monitor I/O latency in real time. Similar to 'ping'\cite{oping}\\
-\end{tabular}
-
-\begin{comment}
-  Uniform Memory & vmstat -a & Active and Inactive page statistics \\
-  Uniform Memory & vmstat -s & Virtual Memory table \\
-  NUMA Memory & zoneinfo & /proc/zoneinfo \\
-  CPU & ps -o <FMT> & Real, system, and clock time \\
-\end{comment}
-
-\begin{comment}
-       To see every process with a user-defined format:
-          ps -eo pid,tid,class,rtprio,ni,pri,psr,pcpu,stat,wchan:14,comm
-          ps axo stat,euid,ruid,tty,tpgid,sess,pgrp,ppid,pid,pcpu,comm
-          ps -eo pid,tt,user,fname,tmout,f,wchan
-
-PROCESS STATE CODES
-       Here are the different values that the s, stat and state output
-       specifiers (header "STAT" or "S") will display to describe the state of
-       a process:
-       D    uninterruptible sleep (usually IO)
-       R    running or runnable (on run queue)
-       S    interruptible sleep (waiting for an event to complete)
-       T    stopped, either by a job control signal or because it is being
-            traced.
-       W    paging (not valid since the 2.6.xx kernel)
-       X    dead (should never be seen)
-       Z    defunct ("zombie") process, terminated but not reaped by its
-            parent.
-      For BSD formats and when the stat keyword is used, additional
-       characters may be displayed:
-       <    high-priority (not nice to other users)
-       N    low-priority (nice to other users)
-       L    has pages locked into memory (for real-time and custom IO)
-       s    is a session leader
-       l    is multi-threaded (using CLONE_THREAD, like NPTL pthreads do)
-       +    is in the foreground process group.
-\end{comment}
-
-\subsection{Detecting I/O Interference}
-It has been demonstrated that I/O is a major contributor to significant degradation in a virtual enviroment.  Normally, the goal of the OS is to delay, cache, and merge physical I/O requests.  However, if the \emph{working set} for a heavy I/O application like a database exceeds the available memory of the application, the application becomes I/O bound and caching in memory becomes less effective.
-At each layer data and statistics need to be collected to determine why the application may be degraded.
-\newline
-
-\begin{tabular}{ l p{5cm} }
-  Layer & Counter \\
-  \hline
-  Application & BytesRead/s BytesWritten/s. \\
-  OS & sar virtual I/O and Paging. \\
-  Virtual Guest & Hypervisor moitors other guests \\
-  Hypervisor & sar physical I/O and Paging. \\
-  Hardare & Physical hardware measures IOPS. \\
-\end{tabular}
-
-\indent At each layer the analysis tool will need to create a baseline of statistics to track performance counters at various intervals.
+As an example: the userspace tool \emph{iostat} reads disk performance counters in /proc/diskstats and will report transfers, bytes read, and bytes written per second.  If an application was experiencing I/O performance problems these would be counters an administrator or application developer may monitor.  These numbers may be misleading as to the root cause of the problem if external interference is causing the problem.  
+\begin{figure}
+\begin{Verbatim}
+Device:  tps    kB_read/s    kB_wrtn/s
+sda   577.20     41388.00    148073.00
+virtual I/O interference 22.4%     
+\end{Verbatim}
+\label{fig:iostat}
+\caption{\emph{iostat} with additional information from hypervisor calcuated interference}
+\end{figure}
 
 \subsection{Disk Pinning}
-Disk pinning may be a substitute for multiple I/O bound guest appliations running in a virtual system.  Several papers have demonstrated the effects of core pinning or \emph{core affinity} for CPU bound applications.  This can reduce the load on the hypervisor scheduler and prevent cache contention.  Similarly a single I/O bound guest may use a single disk excessivley causing performance problems on external guests.  RAID systems have been used to improve performance for database applications.  By increasing the number of physical spindles, multiple random disk seeks can occur concurrently.  By setting physical disks to specific virtual guests, we can reduce I/O interference from multiple guests.
+Disk pinning may be a solution for multiple I/O bound guest appliations running in a virtual system.  Several papers have demonstrated the effects of core pinning or \emph{core affinity} for CPU bound applications, which can reduce the load on the hypervisor and prevent cache contention.  Similarly, a multiple I/O bound guests may use a single disk excessivley causing interference and degreaded performance.  By increasing the number of physical spindles, multiple random disk seeks can occur concurrently.  By setting physical disks to specific virtual guests, we can reduce I/O interference from multiple guests.  For applications that are bound by virtual I/O resources, it may be better to share cores and separate physical disks for each virtual machine.  At some point assigning a dedicated physical resource to guest machines minimizes the benefits of virtualizaion.  It should be the task of the administrator to decide how the physical resources are used based on the need.

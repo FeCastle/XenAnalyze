@@ -7,18 +7,19 @@
 ##########################################################################
 DD=/bin/dd
 BS=256k
-COUNT=3000
+COUNT=300
 TMPDIR=/tmp/ddout/
 mkdir -p ${TMPDIR}
 i=1
-while true
-do
-	FILE=${TMPDIR}${i}
+# while true
+# do
+	FILE=${TMPDIR}file.${i}
 	echo ---- $i read/write file ${FILE} ----
-	$DD if=/dev/zero of=${FILE} bs=${BS} count=${COUNT}
-	$DD if=${FILE} of=/dev/zero bs=${BS} count=${COUNT}
-	rm ${TMPDIR}${i} 
+	$DD if=/dev/urandom of=${FILE} bs=${BS} count=${COUNT} conv=fdatasync
+	$DD if=${FILE} of=/dev/null bs=${BS} count=${COUNT} 
+	rm ${FILE} 
 	let i=i+1
-	sleep 1
-done
+#sleep 1
+# done
+echo "DD Test complete!"
 

@@ -8,20 +8,21 @@ System virtualization is a way for a data center to reduce cost and power by ove
   \end{center}
 
   \caption{\small In this example there are 3 paravirtualized guests (DomU) running on a Xen Server.  The Xen hypervisor and Dom0 divide, share, and overcommit the physical resources between the 3 guest domains.  Each guest has access to virtual resources and not physical hardware.}
-  \label{fig-VirtualizationExample.pdf}
+  \label{virtStack}
 \end{figure}
 
-\indent The problem this introduces is in performing profiling and analysis of this additional layer of abstraction for the guest systems.  The hypervisor, or Virtual Machine Manager, adds to the already complex existing layers (Application, OS, and Hardware) one must analyze when an application performs sub-optimally.  How can a system administrator determine if the problem is in the application, OS, hypervisor, hardware, or an unrelated guest virtual machine on the same physical host system?  In a traditional environment there can be 'interference' \cite{paul}or ‘system noise' caused by these layers, which attributes to poor application performance.  The hypervisor as well as multiple other guest virtual machines which compete for system resources add to this outside interference, which is undetectable from a guest VM, and therefore undetectable by the guest applications.
+\indent The problem virtualization introduces is profiling and analysis of this additional layer of abstraction for the guest systems.  The hypervisor, or Virtual Machine Manager, adds to the already complex existing layers (Application, OS, and Hardware) one must analyze when an application performs sub-optimally.  How can a system administrator determine if the problem is in the application, OS, hypervisor, hardware, or an unrelated guest virtual machine on the same physical host system?  In a single server environment or HPC cluster there can be 'interference' \cite{paul} or ‘system noise' caused by these layers, which contributes to poor application performance.  The hypervisor as well as multiple other guest virtual machines (See: figure \ref{virtStack}) compete for system resources and add to this interference.  Addtional information is needed, in order for a running guest application to accurately analyze this interference.
 
-\indent This paper we show that using existing profiling tools and measuring changes in system runtime data in the guests and VMM we are now able to determine the layer of the complex software stack that attributes to a sub-optimal running application in a virtual environment.  Additionally, we can determine which system resource (memory, CPU, or IO) needs to be modified or is used inefficiently.
+\indent This research shows a method for analyzing performance data at runtime in the guests and Virtual Machine Monitor (VMM).   With this framework we are now able to determine the layer of the complex software stack and the detect the interference and overhead from virtualization.  Additionally, we can determine which system resource (memory, CPU, or IO) needs to be modified or is used inefficiently.  This could significantly reduce time spent troubleshooting and analyzing performance problems in virtualized environments.
 
 \indent This project will add the following contributions for virtualization:
 \begin{enumerate}
-\item Define the layers of abstraction in various virtual environments.
+\item Define the layers of abstraction in virtual environments.
 \item Define the system resources which attributes to application problem from I/O, memory, or CPU problems.
-\item Framework to Identify the counters, metrics, and envirement at each layer which contributes to I/O contention.
+\item Framework to identify the counters, metrics, and environment at each layer.
+\item Virtualization test suite that causes I/O interference in several different areas.
 \item Example tool which dynamically analyzes runtime interference and identifies the layer which experiences I/O contention.
 \item Introduce \emph{disk pinning} for virtualization where separate physical disks are assigned to individual virtual servers.
 \end{enumerate}
 
-
+\indent The rest of this document is organized as follows:  In section 2, we look at a real problem example in a large data center, and the challenges faced with existing tools.  In section 3, we examine the current state of tools and techniques used to profile and analyze performance issues with virtualization.  Section 4 looks at related works that have identified interference and methods of root cause analysis.  In section 5 we define the needed data and an example tool that can collect and analyze this data.  The last sections are dedicated to the test suite infrastructure to both create the interference and show the accuracey of the analysis.  We also look at possible other uses and what needs further investigation.
