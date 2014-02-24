@@ -16,7 +16,30 @@ Profiling a system allows a user or system administrator to see which functions 
 \indent Profiling results also require manual inspection and may not show how interference from other parts of the system or virtual machines impact the guest machine \cite{traeger, knapp1}.  Additionally the user running the profiler needs to have some "guess" or prior knowledge about what event to sample, and the desired freqency of the sample.  Should the user sample Cache miss, TLB miss, or some other counter?  As more events are profiled, the more perturbation is encounted.  In a virtual environment a user may need to start several profilers on several virtual machines each monitoring various hardware counters, system state, and applications.  Only after several runs in many different configurations and manual inspection could an advanced administrator make some determination as to the root cause of the problem. 
 
 \subsection{Performance Monitoring}
-Modern operating systems have a method of monitoring the performance of the system.  In a Linux OS there are tools such as top, iostat, ps, and vmstat.  Windows uses perfmon to show the current performance.  These tools read data tracked by the OS kernel about hardware resource usage.  By examining these counters and aggregating the data with tools, an administrator can see the current processes and which resources are being used.  
-\indent On Linux these resource counters are tracked in the /proc filesystem, which is really a dynamic view into the kernel memory and statistics.  By running a test load and examining the /proc filesystem or using the tools, one can reasonably determine the resources used and which process or thread is using them.  In many cases these tools can quickly narrow the scope of possible problems for a degraded system.
-\indent When a system is virtualized the guest OS only sees the statistics from its narrow point of view.  Similar tools have been created in the hypervisor (vmtop and esxtop) to show each virtual machine running and the resources that the entire machine is using.  In order to analyze a comlex problem with multiple guests running concurrenlty, one needs to monitor both the tools in the hypervisor and the guests.  However, usually the administrator for the hypervisor and guest machines are different people or completely different organizations in many cloud infrastructures.  
-\indent When monitoring resources that are shared, the counters only measure the resource from the point of view of the guest.  The counters do not collect information from external guests or the interference from external guests or the hypervisor.  In order to accurately analyze performance issues on complex virtualized systems, we need to aggregate resource usage from all systems and the hypervisor.  
+Modern operating systems have a method of monitoring the performance of the system.  In a Linux OS there are tools such as top, iostat, ps, and vmstat.  
+Windows uses perfmon.exe to show the current performance.  
+These tools read data tracked by the OS kernel about hardware resource usage.  
+By examining these counters and aggregating the data with tools, an administrator can see the current processes and how each of the resources are being used. \\ 
+\indent On Linux these resource counters are tracked in the /proc filesystem, which is really a dynamic view into the kernel memory and statistics.  
+By running a test load and examining the /proc filesystem or using the tools, one can reasonably determine the resources used and which process or thread is using them.  
+In many cases these tools can quickly narrow the scope of possible problems for a degraded system. \\
+
+\indent When a system is virtualized, the guest OS only tracks the statistics from its own viewpoint.  
+Similar tools have been created in the hypervisor (vmtop and esxtop) to show each virtual machine running and the resources that the entire machine is using.  
+In order to analyze a comlex problem with multiple guests running concurrenlty, one needs to monitor both the tools in the hypervisor and the guests.  
+However, usually the administrator for the hypervisor and guest machines are different people or completely different organizations in many cloud infrastructures.  \\
+
+\indent When monitoring virtualized resources, the counters only measure the virtual resource.  
+As our tests will show, they do not necessarily aggregate as expected.  
+The counters do not collect information from external guests or show the interference from external guests or the hypervisor.  
+In order to accurately analyze performance issues on complex virtualized systems, we need to collect and analyze resource usage from all systems and the hypervisor.  
+We need the ability to perform System-wide performance monitoring similar to the System-wide profiling available.
+
+\subsection{Definitions}
+\begin{description}
+  \item[Hypervisor] A thin kernel layer that abstracts the hardware from the virtual guests.\\
+  \item[VMM] Virtual Machine Manager. A kernel and OS that manages access to the hypervisor.  In Xen this is Dom0.
+  \item[Guest] A complete OS (with applications) that is running under a hypervisor.  In Xen this is DomU.
+  \item[Vitual Resource]  A physical resource (such as Disk, CPU or memory) that is managed by a hypervisor and allocated to a guest.
+  \item[Virtualized] Changing a physical system to a virtual guest system.
+\end{description}
