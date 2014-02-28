@@ -143,6 +143,7 @@ echo "${myName} ${myUUID} ${targetMem} ${domid}"
 
 ## On the host we can specify what benchmark for the guests to run ##
 if [ ${domid} == 0 ]; then
+	benchCmd="JustaTest"
 	if [ -n $1 ]; then
 		benchCmd=$1
 	fi
