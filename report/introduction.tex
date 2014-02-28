@@ -1,10 +1,14 @@
-System virtualization is a way for a data center to reduce cost and power by overcommitting and sharing system resources across disparate operating systems with common hardware.  One problem virtualization introduces is performance analysis of the additional layers of abstraction for the virtualized systems.  
-In a single server environment or HPC cluster there can be 'interference' \cite{paul} or ‘system noise' caused by complex software layers (Application, OS, and Hardware), which contributes to poor application performance.  
-The hypervisor, as well as multiple external guest virtual machines (See: figure \ref{virtStack}), compete for system resources and add to this interference.  Existing performance tools do not show interference from the hypervisor or external guests.  In order to accurately analyze performance problems, a framework is needed to dynamically quantify the overhead of virtualization and the interference caused by running multiple virtual systems concurrently.
-
-\indent Since each guest machine only uses a portion of the available resources at any given time, the total resources allocated to all guest VMs can exceed the total physical resources \cite{huber2, amit, buell1}.   This idea of overcommitting resources is the same as preemptive multitasking, where multiple processes share a single CPU; and OS virtual memory, where the total memory available to applications exceeds the physical memory capacity.  When the workload increases, and the guests use more more resources, the interference between virtualized systems increases. 
+Virtualization is a way for a data center to reduce cost and power by overcommitting and sharing system resources across disparate operating systems with common hardware.  
+In a single server environment or HPC cluster there can be \emph{interference} \cite{paul} or \emph{system noise}\cite{tsafrir} caused by complex software layers (Application, OS, and Hardware), which contributes to poor application performance.  
+The hypervisor, as well as multiple external guest virtual machines (See: figure \ref{virtStack}), compete for system resources and add to this interference.  
+Existing performance tools do not show interference from the hypervisor or external guests.  
+Profiling tools are available on limited platforms, and require significant guest kernel support, configuration, and coordination.  
+Additionally, profiling is a great tool for test and development, but may not be a great solution for production systems.
+In order to accurately analyze performance problems, a framework for system-wide analyssi is needed to quantify the interference caused by running multiple virtual guests concurrently.
 
 \indent Due to the cost savings and decreased physical administration overhead, IT Data Centers and Businesses are moving toward virtualized environments.  In 2008 Gartner’s showed that 12\% of hardware at data centers were virtualized, and then predicted that by 2013 61\% would be virtualized \cite{gartners}.   Additionally, research from Ramya and Edwin show tremendous growth in Platform As A Service (PAAS) where an entire system platform is dynamically provisioned in a cloud computing service \cite{ramya}.   Massive data centers are able to provide virtual systems, and manage large clusters of shared resources, for a fraction of the price of building a physical server for each customer.
+
+\indent Since each guest machine only uses a portion of the available resources at any given time, the total resources allocated to all guest VMs can exceed the total physical resources \cite{huber2, amit, buell1}.   This idea of overcommitting resources is the same as preemptive multitasking, where multiple processes share a single CPU; and OS virtual memory, where the total memory available to applications exceeds the physical memory capacity.  In order to maximize resources, IT Data Centers need to overcommit the resources, with the hope that multiple virtual guest machines do not need all resources concurrently.  
 
 \begin{figure}[!b]
   \begin{center}
@@ -14,7 +18,7 @@ The hypervisor, as well as multiple external guest virtual machines (See: figure
   \label{virtStack}
 \end{figure}
 
-\indent This research presents a method for analyzing performance data at runtime in the guests and Virtual Machine Monitor (VMM).   With this framework we can detect the interference and overhead from virtualization.  Additionally, we can determine which system resource (memory, CPU, or IO) needs to be modified or is used inefficiently.  This could significantly reduce time spent troubleshooting and analyzing performance problems in virtualized environments.
+\indent This research presents a method for analyzing performance data at runtime in the guests and Virtual Machine Monitor (VMM).   With this framework we can detect the total interference cause by interference and system noise with virtualization.  Additionally, we can determine which system resource (memory, CPU, or IO) needs to be modified or is used inefficiently.  This could significantly reduce time spent troubleshooting and analyzing performance problems in virtualized environments.
 
 \indent This project will add the following contributions for virtualization:
 \begin{enumerate}

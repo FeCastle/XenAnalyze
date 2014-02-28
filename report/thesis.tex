@@ -1,5 +1,5 @@
-\documentclass[10pt,twocolumn,oneside]{article}
-% \documentclass[10pt,onecolumn,oneside]{article}
+% \documentclass[10pt,twocolumn,oneside]{article}
+\documentclass[10pt,onecolumn,oneside]{article}
 % \usepackage{simpleConference}
 \usepackage{times}
 \usepackage{graphicx}
@@ -8,13 +8,15 @@
 \usepackage{url,hyperref}
 \usepackage{fancyvrb}
 \usepackage{verbatim}
+\usepackage[top=1in, bottom=1in, left=1.5in, right=1in]{geometry}
+\usepackage{fixltx2e}
 % \usepackage[backend=bibtex]{biblatex}
 
 %Remove hyphens
 \usepackage[none]{hyphenat}
 
 \begin{document}
-\title{A Framework for Analyzing Performance Problems with Virtualization}
+\title{System-wide Performance Analysis for Virtualization}
 \author{Deron Jensen\\
 \\
 Department of Computer Science\\
@@ -23,18 +25,18 @@ Portland, OR \\
 deron@cs.pdx.edu \\
 }
 \date{\today}
-\twocolumn[
-  \begin{@twocolumnfalse}
+% \onecolumn[
+% \begin{@twocolumnfalse}
   \maketitle
 
 \begin{abstract}
 With the current trend in cloud computing and virtualization, more organizations are moving their systems from a physical host to a virtual server.  Although this can significanlty reduce hardware, power, and administration costs, it can increase cost in analyzing performance problems.  With virtualization, there is an initial performance overhead, and as more virtual machines are added to a physical host the probability of interference between various guest machines running different applications increases.  When this interference occurs, a virtualized guest application may not perform as expected.  Additionally, there is little or no information to the virtual OS about the interference.  From the hypervisor viewpoint, tools are available to view each virtual machine, but the overhead and interference is not available. \newline
 \indent  We examine the interference that has been shown in previous research, and relate that to existing tools and research in root cause analysis.  We show that in virtualization there are addtional layers which need to be analyzed, and devise a framework to determine if degredation is occuring from a external virtualization layer.  Additionally, we build a virtualization test suite with Xen and Postgresql and run multiple tests to create I/O interference.  We show how our framework can help determine if the problem is from external interference when an application is degraded.   
   \end{abstract}
-  \end{@twocolumnfalse}
-]
+% \end{@twocolumnfalse}
+% ]
 
-\twocolumn
+\onecolumn
 % 1.  This is a comment
 \section{Introduction}
 \input{introduction}
@@ -48,7 +50,7 @@ With the current trend in cloud computing and virtualization, more organizations
 \section{Related Work}
 \input{related}
 
-\section{Implementation}
+\section{Design}
 \input{implementation}
 
 \section{Test Suite for IO virtualization}
