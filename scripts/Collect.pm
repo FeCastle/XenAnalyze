@@ -35,7 +35,6 @@ $diskKeys[8] = "IO_cur";
 $diskKeys[9] = "IO_ms";
 $diskKeys[10]= "IO_weighted";
 
- 
 ##############################################################################
 # findDisk
 #   The disk may be a full SCSI disk (sda) or a volume group (dm-0)
@@ -70,9 +69,11 @@ sub collectVM() {
 	while (<VMSTAT>) {
 		@data = split (/\s+/);
 		if ($x eq 0) {
+			print "PRE Collecting VM:  $data[0] -> $data[1]\n";
 			$vmPre{$data[0]} = $data[1];
 		}
 		else {
+			print "POST Collecting VM:  $data[0] -> $data[1]\n";
 			$vmPost{$data[0]} = $data[1];
 		}
 	}
@@ -93,11 +94,11 @@ sub collectDisk() {
 		(scalar @diskKeys == scalar @data) || die "$diskstat - Mismatch";
 		for ($i=0; $i< scalar @diskKeys; ++$i) {
 			if ($x eq 0) {
-				print "PRE Collecting Disk:  $diskKeys[$i] -> $data[$i]\n";
+			#	print "PRE Collecting Disk:  $diskKeys[$i] -> $data[$i]\n";
 				$diskPre{$diskKeys[$i]} = $data[$i];
 			}
 			else {
-				print "POST Collecting Disk:  $diskKeys[$i] -> $data[$i]\n";
+			#	print "POST Collecting Disk:  $diskKeys[$i] -> $data[$i]\n";
 				$diskPost{$diskKeys[$i]} = $data[$i];
 			}
 		}
