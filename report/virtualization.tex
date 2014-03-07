@@ -1,6 +1,7 @@
-Profiling a system allows a user or system administrator to see which functions are being called the most frequently.  Oprofile \cite{levon} is a profiler that can profile both application and kernel functions, by registering with the Performance Monitoring Unit on the CPU.  The PMU will track hardware counters and will notify the registered profiler when a specific hardware counter reaches a threshold set by the profiler \cite{mucci}.  When Oprofile receives notification, through an NMI, it will record the PC and other information about the system, and over time will have the most frequent function called when the hardware event occured.  Some typical hardware events counters are:  TLB miss, LLC Cache miss, or CPU instructions retired.   Other profilers like OSprof use latency distribution analysis [7].  As function calls are entered and exited to or from the stack, the profiler tracks the start and end time of the functions.
+\subsection{Profiling}
+Profiling a system allows a user or system administrator to see which functions are being called the most frequently.  Oprofile \cite{levon} is a profiler that can profile both application and kernel functions, by registering with the Performance Monitoring Unit (PMU) on the CPU.  The PMU will track hardware counters and will notify the registered profiler when a specific hardware counter reaches a threshold set by the profiler \cite{mucci}.  When Oprofile receives notification, through an NMI, it will record the PC and other information about the system, and over time will have the most frequently called function when the specified hardware event occured.  Some typical hardware events counters are:  TLB miss, LLC Cache miss, or CPU instructions retired.   Other profilers like OSprof use latency distribution analysis [7].  As function calls are entered and exited to or from the stack, the profiler tracks the start and end time of the functions.
 
-\indent The difficulties with running a profiler like Oprofile in a virtualized guest is that the hardware counters in the guest may not be available for all hypervisors \cite{buell1}.  Additionally, the guest is not guaranteed to receive interrupts in a correct order.   Tracking the wall-clock time and CPU time on virtual machines is extremely difficult and there are many additions in the hypervisor to help guest machines accurately track time.
+\indent The difficulties with running a profiler like Oprofile in a virtualized guest is that the hardware counters in the guest may not be available for all hypervisors \cite{buell1}.  Additionally, the guest is not guaranteed to receive interrupts in a correct order.   Tracking the wall-clock time and CPU time on virtual machines is extremely difficult and there are many additions in the hypervisor to help guest machines accurately track time.  Usually to profile a kernel a patch or configuration change is needed to enable profiling, which makes it difficult on production systems.
 
 \indent In virtualization there are 2 types of profiling:  Guest-wide profilers only profile a single guest (or domain), and System-wide which monitors all guests and the VMM \cite{du1}.  In order to provide Guest-wide profiling for virtual systems, the profiler runs in the guest and the VMM needs to provide synchronous delivery of interrupts from the hardware to the guest machines.  For System-wide profiling the profiler runs in the VMM and requires interaction between the guest OS and VMM.  Specifically, the VMM needs to know which application and kernel functions are running on the guest machine at the time of the interrupt.
 
@@ -8,6 +9,41 @@ Profiling a system allows a user or system administrator to see which functions 
 
 \indent In KVM, a Linux Kernel VM subsystem, a customized profiler can implement both guest-wide and system-wide profiling \cite{du2}.  Linux perf is another profiler that runs in the Host Linux on KVM, and can measure software and harware event counters as well as tracing.  It is aware of the memory layout of the guest and can monitor the Kernel space of the guest VM, but not its user-space application. 
 
+\begin{comment}
 \indent VMware ESX sever strives to provide a complete full virtualization including hardware counters to allow any guest profiling to work as if it were on native hardware.  VMware creates a virtual timer for the guest OS, but the profiler may need relative time difference and track only time on the Virtual CPU.  Additionally, there needs to be a way to efficiently and accurately emulate interrupt events from the virtual machine to the host. These techniques are classified as speculative and non-speculative events, and the Hypervisor may try to give the guest a complete view of system in order to run any Profiler in the unmodified guest OS.  VMware provides VMKperf in order to profile the hypervisor, but does not profile the guest OS.
+\end{comment}
 
-\indent Profiling results also require manual inspection and may not show how interference from other parts of the system or virtual machines impact the guest machine \cite{traeger, knapp1}.  Additionally the user running the profile needs to have some "guess" or prior knowledge about what to sample, and the desired freqency of the sample.  Should the user sample Cache miss, TLB miss, or some other counter?  In a virtual environment a user may need to start several profilers on several virtual machines each monitoring various hardware counters, system state, and applications.  Only after several runs in many different configurations and manual inspection could an advanced administrator make some determination as to the root cause of the problem. 
+\indent Profiling results also require manual inspection and may not show how interference from other parts of the system or virtual machines impact the guest machine \cite{traeger, knapp1}.  Additionally the user running the profiler needs to have some "guess" or prior knowledge about what event to sample, and the desired freqency of the sample.  Should the user sample Cache miss, TLB miss, or some other counter?  As more events are profiled, the more perturbation is encounted.  In a virtual environment a user may need to start several profilers on several virtual machines each monitoring various hardware counters, system state, and applications.  Only after several runs in many different configurations and manual inspection could an advanced administrator make some determination as to the root cause of the problem. 
+
+\subsection{Performance Monitoring}
+Modern operating systems have a method of monitoring the performance of the system.  In a Linux OS there are tools such as top, iostat, ps, and vmstat.  
+Windows uses perfmon.exe to show the current performance.  
+These tools read data tracked by the OS kernel about hardware resource usage.  
+By examining these counters and aggregating the data with tools, an administrator can see the current processes and how each of the resources are being used. \\ 
+\indent On Linux these resource counters are tracked in the /proc filesystem, which is really a dynamic view into the kernel memory and statistics.  
+By running a test load and examining the /proc filesystem or using the tools, one can reasonably determine the resources used and which process or thread is using them.  
+In many cases these tools can quickly narrow the scope of possible problems for a degraded system. \\
+
+\indent When a system is virtualized, the guest OS only tracks the statistics from its own viewpoint.  
+Similar tools have been created in the hypervisor (vmtop and esxtop) to show each virtual machine running and the resources that the entire machine is using.  
+In order to analyze a comlex problem with multiple guests running concurrenlty, one needs to monitor both the tools in the hypervisor and the guests.  
+However, usually the administrator for the hypervisor and guest machines are different people or completely different organizations in many cloud infrastructures.  \\
+
+\indent When monitoring virtualized resources, the counters only measure the virtual resource.  
+As our tests will show, they do not necessarily aggregate as expected.  
+The counters do not collect information from external guests or show the interference from external guests or the hypervisor.  
+In order to accurately analyze performance issues on complex virtualized systems, we need to collect and analyze resource usage from all systems and the hypervisor.  
+We need the ability to perform System-wide performance monitoring similar to the System-wide profiling available.
+
+\subsection{Definitions}
+\begin{description}
+  \item[Hypervisor] A thin kernel layer that abstracts the hardware from the virtual guests.\\
+  \item[VMM] Virtual Machine Manager. A kernel and OS that manages access to the hypervisor.  In Xen this is Dom0.\\
+  \item[Guest] A complete OS (with applications) that is running under a hypervisor.  In Xen this is DomU.\\
+  \item[Vitual Resource]  A physical resource (such as Disk, CPU or memory) that is managed by a hypervisor and allocated to a guest.\\
+  \item[Virtualized] Changing a physical system to a virtual guest system.\\
+  \item[Overcommit] Assigning more resources than are phyiscally available.\\
+  \item[System-wide profiling] Both the guest and VMM are profiled.\\
+  \item[System noise] Interrupts from deamons or other kernel processes that need to perform some task. \cite{tsafrir}\\
+  \item[Paravirtualization] A virtualization technique where the native instruction set is not completely implemented.  Usually the Guest OS needs to be modified to know it is virtualized. This is the technique used by Xen. \cite{vmwareMem, du1}
+\end{description}
