@@ -1,21 +1,17 @@
-Since the system workload and available resources will continually change, applications running in a virtual environment will need the ability to analyze performance at run time.  
-Existing resource usage tools such as top, sar, and vmstat in Linux OS and perfmon in Windows require additional information from external sources of data.  
-A framework is needed so that existing tools and new tools can be developed to show the true perfomance and resource usage of a virtualized system.
-
-\indent  In this section we will explore the missing data that is needed, and design some tools to collect and analyze the addtional data from the point of view of a virtual guest system. 
+In this section we will explore the missing data that is needed, and design a framework to collect and analyze the addtional data from the point of view of a virtual guest system. 
 First, we define the new layers of abstraction in virtual environments.  
-Then we identify the virtual resources that are needed for a virtualized guest.
+Then we identify the virtual resources that require additional information for a virtualized guest.
 For measuring I/O performance in virtual guest, we describe the following methods needed to collect and analyze the additional data:
 \begin {enumerate}
-\item Identify the performance counters on a virtual guest machine.
-\item A method to calculate the overhead and theoritical maximum throughput using an offline modeling technique.
-\item A method to analyze performance of a guest machine which may be experiencing degredation from external interference.
-\item Example tool that dynamically analyzes runtime interference from I/O contention at different layers.
+  \item Identify the performance counters on a virtual guest machine.
+  \item A method to calculate the overhead of virtualization without interference.
+  \item A method to analyze performance of a guest machine which may be experiencing degredation from external interference.
+  \item Example tool that dynamically analyzes runtime interference from I/O contention at different layers.
 \end{enumerate}
 
 % 1 Define the new layers of abstraction virtual environments.
 \subsection{Abstraction Layers}
-In order to find the root cause of a degraded application running in a virtual machine, we first need to determine if the problem is in the virtual machine or is caused by external interference.  
+To reduce the time  determine if the problem is in the virtual machine or is caused by external interference.  
 Without virtualization, the problem could be in the applicaiton, OS, or hardware.  
 In a virtual environment, the hypervisor and external guests also needs to be considered as a cause of the problem (Table \ref{tab:layers}).  
 The hypervisor provides the virtual resources to the guest and controls access to the physical hardware.  
