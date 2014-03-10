@@ -1,45 +1,82 @@
-A test infrastructure was created to analyze I/O performance issues in the guest applications, guest OS, hypervisor, and hardware.  Our experiments, when run in this infrastructure, show how a virtual machine is unable to completely analyze problems using existing tools.  In order to test and measure interference an infrastructure needed to be built to start and stop multiple virtual machines, run tests concurrently, and collect and analyze data from all systems.  \\
+In order to test our design, a test infrastructure was created to place a load on the guest machines and coordinate the stop and start of the collection of resources.   
+Our experiments, when run in this infrastructure, demonstrate the performance problems guest machines may experience when running the same system load while running by itself and with multiple machines running simultaneously.  
 
-\indent The test infrasture simulates a consistent and reproducible system load by using a PostgreSQL database server and PGbench from the postgres contrib package. PGbench creates a TPC-B similar style workload and calculates transactions per second (TPS).   Additionally PGreplay can record and playback (faster or slower) the same set of benchmark transactions.  PGreplay allows us to simulate host systems that are not running at 100\% capacity.  This is typical of most systems, since at almost all times, the systems are using only a fraction of the total resources available.  Several other benchmarks such as Postmark \cite{katcher} were also considered. \\
+\subsection{Methodology}
+All guests start by running a process in the background waiting for the hypervisor to signal the start of the test.  
+Then the hypervisor starts the same process and signals to the guest the start of the test.  
+Each guest then starts collecting the $pre$ resource counters and generates a system load.  
+The hypervisor also begins collecting the same resource counters from its view, but does not generate a load.  
+When each guests completes, it reads the $post$ counters and sends the difference between the two counters back to the hypervisor, and signals the test is complete.  
+When the hypervisor has collected the information from all guests it aggregates the counters from all guests and itself according to \emph{Equation 2}.
 
-\indent The tests can be run in all sizes of virtualization environments (Figure \ref{fig:virtSize}).  Tests which run in a \emph{Small} or \emph{Medium} environment can also be run in a \emph{Cluster} or \emph{Cloud} based system by increasing the size of the database or number of guest machines until a similar load is reached.  For our test suite we are targeting \emph{Small} and \emph{Medium} sized virtualization environments. \\
+\subsection{Software}
+\indent All tests are run and collect data with the same software stack installed (Figure \ref{fig:softStack}).  
+We use the Xen Hypervisor and CentOS release as the test virtualization and Operating system platform.  
+This software stack can be extended to mulptiple servers to produce a larger cluster of servers.  
+We chose Postgres as the database server for our tests because of its robustness and standard use in hosting facilities and applications.  
+It is a good general purpose application that can be used to stress I/O, memory, and CPU resources, although we focused our test suite to measure database read operations.
 
-\begin{figure}[h!]
+\indent The tests can be run in all sizes of virtualization environments (Figure \ref{fig:virtSize}).  
+Tests which run in a \emph{Small} or \emph{Medium} environment can also be run in a \emph{Cluster} or \emph{Cloud} based system by increasing the size of the database or number of guest machines until a similar load is reached.  
+For our test suite we are targeting \emph{Small} and \emph{Medium} sized virtualization environments. 
+
+\begin{figure}[lh]
+\begin{tabular}{ l p{5cm} }
+  Software & Version \\
+  \hline
+  Hyperviser & Xen 4.2 \\
+  Domain 0 & CentOS 6.2 (Kernel 3.4) \\
+  Guest Domains & CentOS 6.2 (Kernel 2.6.39) PostgreSQL 8.4 \\
+  \hline
+\end{tabular}
+\caption{Software installed virtualization test stack}
+\label{fig:softStack}
+\end{figure}
+
+\begin{figure}[rh]
 \begin{tabular}{ l p{5cm} }
   Size & Specifications \\
   \hline
   Small & IBM x3650 Quad Core 2GB Ram \\
-  Medium & Dell PowerEdge T410 with dual quadcore Xeon processors, 256Kb L2 cache, and 8MB shared L3 cache. \\
+  Medium & Dell PowerEdge T410 dual quadcore Xeon processors, 8GB Ram. \\
   Cluster & Multiple small or medium servers clustered together with shared SAN data store. \\
-  Cluod & Amazon Cloud or similar PAAS provider. \\
+  Cloud & Amazon Cloud or similar PAAS provider. \\
+  \hline
 \end{tabular}
 \caption{Virtualization sizes for tests}
 \label{fig:virtSize}
 \end{figure}
 
-\indent All tests are run and collect data with the same software stack installed (Figure \ref{fig:softStack}).  We use the Xen Hypervisor and CentOS release as the virtualization and Operating system platform.  This software stack can be extended to mulptiple servers to produce a larger cluster of servers.  We chose Postgres as the database server for our tests because of its robustness and standard use in hosting facilities and applications.  It is a good general purpose application that can be used to stress I/O, memory, and CPU resources. \\
+\indent The test infrasture generates a consistent and reproducible system load by using a PostgreSQL database server with PGbench and PGreplay. 
+PGbench creates a TPC-B similar style workload and calculates transactions per second (TPS), so we can track the performance of each guest system from the application layer \cite{pgTune}.  
+We use PGbench to both generate a load to measure overhead and create interference.
+PGreplay is used to record and playback (faster or slower) the same set of benchmark transactions, which allows us to simulate host systems that are not running at 100\% capacity.  
+Instead of running multiple guests each with a fraction of the resources, we can overcommit the resources, generate a smaller load, and measure the interference from overcommitment.
+This is typical of most virtual systems, since at almost all times, the systems are using only a fraction of the total resources available.  
+The test suite infrastructure will allow any benchmark or command to run on the systems as the command to run is passed from the hypervisor to the guest machines.
+Several other benchmarks such as Postmark \cite{katcher} were also considered, and could be easily used in this test framework.
 
-\begin{figure}[h!]
-\begin{tabular}{ l p{5cm} }
-  Software & Version \\
-  Hyperviser & Xen 4.2 \\
-  Domain 0 & CentOS 6.2 (Kernel 3.4) \\
-  Guest Domains & CentOS 6.2 (Kernel 2.6.39) PostgreSQL 8.4 \\
-\end{tabular}
-\caption{Software installed on each system}
-\label{fig:softStack}
-\end{figure}
+\subsection{Domain Communication}
+\indent One of the challenges of this test suite is the coordination of the starting and stopping of the test, collection of resource counters, and the information sharing between the guests and hypervisor.  
+Since we use Xen as our virtualization platform, we chose XenBus and XenStore \cite{xenbus}. 
+XenBus provides an abstraction for paravirtualized drivers to communicate between domains.  
+XenStore is an information storage space shared between domains.  
+These tools are often used to configure and manage domains with higher level user tools, and can be configured to provide security between domains.
+In order for paravitualized guest domains to communicate with the hypervisor the XenStore tools for DomU domains had to be built as this is not currently part of the standard package of guest tools.  Other options were to use the TCP/IP stack to send and receive messages between the domains to coordinate the tests and information as well.
 
-For I/O intensive applications, like a database server, the application tends to perform very well when the entire \emph{working set} can fit into main memory.  However, when the \emph{working set}  approaches (or exceeds) the size of main memory, the application tends to degrade quickly.  Our experiments will highlight this fact by changing the database size under load in a virtual environment.
-\
+\subsection{I/O Workload}
+For I/O intensive workloads, the application tends to perform very well when the entire \emph{working set} can fit into main memory.  
+However, when the \emph{working set}  approaches (or exceeds) the size of main memory, the application tends to degrade quickly.  
+Our initial experiments to find an I/O workload highlight this fact by changing the database size under load in a virtual environment.
+Before running the entire test suite we need to create a test database that will exceed the \emph{working set} and increase the probability that a database read will need to fetch the data from disk storage.  With PGbench the "-i" flag \emph{scaling factor} is used to initialize a database at a specified size so that our results can show changes between a memory bound system and I/O bound system.  
+A script runs and creates a small database then runs a benchmark and collects the results of the benchmark - TPS.  The script then creates a slighly larger database and runs the benchmark again.  This process is repeated until the TPS drop significantly, and the CPU time is almost idle.  At this point we can determine an adequate database size for an IO bound system.
 
-PGbench \footnote{PGbench is part of the Postgresql Contrib packages.  It is used to tune the Postgres and the operating system} is used to generate a test load on the database.  The test suite uses the "-i" flag \emph{scaling factor} to initialize a database at a specified size so that our results can show changes between a memory bound system and I/O bound system.  Then at least 5 trials are completed in each configuration.  The average results of these test are measured in \textbf{TPS} \emph{Transactions per Second}.   We can use the TPS to show how the database performs when external environment changes are made to the system.
-\newline
+\subsection{Test Data Collection}
+\indent For each test result, at least 3 trials are completed in each configuration.  The average results of these test are measured in \textbf{TPS} \emph{Transactions per Second}, and performance counters captured at each layer.   
+We can use the TPS to show how the database performs at the application layer when external environment changes are made to the system.  We use the performance counters to try to analyze the interference and explain the degredation from virtualization.
 
-\begin{comment}
-In addtion to TPS to show suboptimal performance.  In our Lixux based test enviroment, the /proc file system utilites are used to collect Memory, IO, and system statistics during the tests that would normally be used to identify and tune I/O performance problems.\cite{suseIO,pgTune}.   
-
-\begin{figure}[h!]
+\begin{table}[h]
+\begin{subtable}[h]{0.45\textwidth}
 \begin{tabular}{ l p{5cm} }
        measurement & description \\
        \hline
@@ -49,12 +86,13 @@ In addtion to TPS to show suboptimal performance.  In our Lixux based test envir
        cache & the amount of memory used as cache \\
        inact & the amount of inactive memory. \\
        active & the amount of active memory. \\
+       \hline
 \end{tabular}
-\caption{Memory data collected from guest and hypervisor}
+\caption{Virtual memory data collected}
 \label{fig:memory}
-\end{figure}
-
-\begin{figure}[h!]
+\end{subtable}
+\hfill
+\begin{subtable}[h]{0.45\textwidth}
 \begin{tabular}{ l p{5cm} }
        measurement & description \\
        \hline
@@ -63,9 +101,11 @@ In addtion to TPS to show suboptimal performance.  In our Lixux based test envir
        bi & Blocks received from a block device (blocks/s). \\
        bo & Blocks sent to a block device (blocks/s). \\
        wa & Time spent waiting for IO. \\
+       \hline
 \end{tabular}
-\caption{I/O data collected from guest and hypervisor}
+\caption{I/O read data collected}
 \label{fig:io}
-\end{figure}
-\end{comment}
+\end{subtable}
+\caption{Test result data collected from guest and hypervisor}
+\end{table}
 

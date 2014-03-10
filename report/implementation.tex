@@ -11,15 +11,15 @@ For measuring I/O performance in virtual guest, we describe the following method
 
 % 1 Define the new layers of abstraction virtual environments.
 \subsection{Abstraction Layers}
-To reduce the time  determine if the problem is in the virtual machine or is caused by external interference.  
-Without virtualization, the problem could be in the applicaiton, OS, or hardware.  
-In a virtual environment, the hypervisor and external guests also needs to be considered as a cause of the problem (Table \ref{tab:layers}).  
+As we have previously stated, a virtual machine could behave unexpectedly due to interference and overhead from virtualization.
+Without virtualization, the problem could be in the application, OS, or hardware.  
+In a virtual environment, the hypervisor and external guests also need to be considered as a cause of the problem (Table \ref{tab:layers}).  
 The hypervisor provides the virtual resources to the guest and controls access to the physical hardware.  
 Since the guest machine can only access the hardware through the hypervisor, it will have some performance overhead. 
 An external guest machine may also cause interference by competing for resources with other running guest machines.  
-Interference can be caused by the hypervisor and external guest need to be considered when analyzing performance problems.
+Performance problems can be caused by the hypervisor or external guest and needs to be considered when trying to determine the root cause of the problem.
 
-\begin{table}
+\begin{table}[h]
 \begin{tabular}{ l p{10cm} }
   Layer & Definition \\
   \hline
@@ -36,14 +36,12 @@ Interference can be caused by the hypervisor and external guest need to be consi
 
 % 2 Identify resources which are difficult to measure usage.
 \subsection{Resources}
-In order to determine the real cause of the performance problem the next step is to identify the resource which is the most influential to the performance problem.  
-The goal is to determine if the application is bound by Memory, I/O, or CPU (Table \ref{tab:resources}).  In other words, adding \emph{additional} either Memory, I/O, or CPU would improve application performance. \\
-\indent In a virtual environment, the resources allocated to a guest machine are an abstraction of the physical resources available.  
-Any information obtained through the guest machine will not show interference from any of the new virtualization layers.  
-Therefore, an administrator using system tools like sar and vmstat will not be able to determine the true availability of the resource for the application.  
+Now we define the virtual resources available to the guest OS and applications.
+In a virtual environment, the resources allocated to a guest machine are an abstraction of the physical resources available.  
+If the physical resource is used by other layers of virtualization the guest machine will not have complete access to the physical resource.    
 Additional information is needed from hypervisor about the physical resource so that the administrator, OS, or application can make better decisions about the availability of the resource. 
 
-\begin{table}
+\begin{table}[h]
   \begin{tabular}{ l p{10cm} }
     Resource & Definition \\
     \hline
@@ -59,74 +57,104 @@ Additional information is needed from hypervisor about the physical resource so 
 
 % 3 Identify the performance counters which can be used to measure I/O performance on a virtual guest machine.
 \subsection{Performance Counters}
-On a Linux OS many of the system administrator utilities used to identify resource usage comes from the /proc filesystem. 
+Performance counters are used by system administrators and developers to show how the resources are utilized and determine if the application is bound by Memory, I/O, or CPU (Table \ref{tab:resources}).  
+In other words, adding additional Memory, I/O, or CPU would improve application performance. 
+On a Linux OS most of the utilities used to identify resource usage comes from the /proc filesystem \cite{proc}. 
 For example the \emph{sar -d} command will show block device statistics such as transfers/sec, reads/sec, and writes/sec, as well as many other statistics.  
 Similar GUI are available on Microsoft Windows OS through perfmon.exe and an API in the Windows Performance Toolkit \cite{winperf}. 
+
+\begin{comment}
 The hypervisor divides the physical resource into virtual resources for each guest.  
 Additionally, each resource may be shared between multiple guests by overcommitting the resource.  
 When a guest system views statistics about a resource, part of the information is missing from the guest application.  
 Interference from the hypervisor and external guests need to be passed to the guest virtual machine about the true performance of the resource. 
+\end{comment}
 
-\indent The Linux kernel tracks I/O statistics in \emph{diskstat} and virtual memory statistics in \emph{vmstat} (Table \ref{tab:iocounters}).  
-These counters an help identify disk I/O contention issues and are used by adminstrative utilites sar and iostat \cite{iostats}.  
-Similar counters can be used for other operating systems or resources. 
-For modern operating systems it is important to collect both I/O and virtual memory information when analyzing I/O contention, since disk reads and writes are buffered and cached in memory for performance reasons. 
+\indent To monitor resource usage of applications and the kernel, administration tools will read these counters over some period of time.  
+Then a tool will display the output in some report or graph to show how the system resources are used.
+For example to display I/O reads per second every 5 seconds a tool may do the following:
+\begin{figure}[h]
+\begin{algorithmic}[H]
+ \STATE $interval \gets 5$
+ \STATE $counter \gets$  Disk Read
+ \STATE $pre \gets READ counter$ 
+ \LOOP
+    \STATE $SLEEP  interval$
+    \STATE $post \gets READ  counter$
+    \STATE $result \gets (pre - post)/interval$
+    \STATE $DISPLAY  result$
+    \STATE $pre \gets post$ 
+ \ENDLOOP
+\end{algorithmic}
+\label{alg1}
+\caption{Method for guest or hypervisor to collect performance counters}
+\end{figure}
 
 \indent For each resource available on a most operating systems, there are OS level statistics collected about those resources.  It is important to indentify the resources used, and methods of collecting resources.  
-For our examples we use I/O statistics, but other statistics could be collected for CPU or memory usage.
-
-\begin{table}
-\begin{tabular}{ l l p{5cm} }
-  Statistics & Description \\
-  \hline
-  /proc/diskstat & I/O statistics of block devices \\
-  /proc/vmstat & Detailed virtual memory statistics\\
-  \hline
-\end{tabular}
-\caption{Disk I/O performance counters on Linux.}
-\label{tab:iocounters}
-\end{table}
-
+For our experiments we use I/O and virtual memory statistics, but other statistics could be collected for CPU or network resource usage.
 
 % 4 A method to calculate the overhead and theoritical maximum performance using an offline modeling technique.
 \subsection{Virtualization Overhead}
 For each virtual resource (Table \ref{tab:resources}) there is a performance cost to making that resource virtualized, instead of allowing the guest OS to have direct access to the hardware.  
-Several researchers \cite{cherkasova, huber1} have called this cost the \emph{overhead}.  
-Additionally they quantified the overhead for CPU and memory intensive applications for a given configuration.  Our experiments will calculate the overhead for Disk I/O using an offline modeling technique similar to previous research.
+Several researchers \cite{cherkasova, huber1} have called this cost the \emph{overhead}, and have quantified the overhead for a given configuration.  This research used and offline modeling technique by running a benchmark with and without virtualization.  
+This type of technique could be difficult since physical servers would need to be provisioned for this exercise.  We present our method for calculating the \emph{overhead} for a resouce that has been virtualized.
 
-\indent Before a guest application is run in a virtualized environment, we need to calculate the \emph{overhead} in that environment.  This only needs to be done once per configuration.  In large scale datacenters and cloud systems, templates are created before virtual machines are used in production.  A template is a snapshot image of a virtual machine that has been built and tested to meet some need.  For example a Redhat 6.2 system with an Apache web server may need to be used on several machines.  A system could be built, tuned, and tested for that enviroment and then made into a template.  Future users can deploy a new virtual machine from that known state.  We are suggesting that the \emph{overhead} be calculated before being made into a template.  
+\indent Before a guest application is run in a virtualized environment, we need to calculate the \emph{overhead} in that environment.  This only needs to be done once per configuration.  In large scale datacenters and cloud systems, templates are usually created before virtual machines are used in production.  A template is a snapshot image of a virtual machine that has been built and tested to meet some need.  For example a Redhat 6.2 system with an Apache web server may need to be used on several machines.  A system could be built, tuned, and tested for that enviroment and then made into a template.  Future users can deploy a new virtual machine from that known state.  We are suggesting to calculate the overhead from virtualization before a machine is made into a template.  
 
-\indent To calculate the virtualization overhead, create a single virtual machine with dedicated resources on isolated hardware.  There should not be any other virtual guest machines running.  Next we need to find a load that will stress each resource.  It may be possible to generate a load that will stress I/O, memory, and CPU, but it is best to stress them separately since other interference could mislead results.  Then place the load on the machine and begin monitoring the resource using the previously determined performance counters in BOTH the guest OS and hypervisor. Previous research calculated the overhead of virtualization between running on a physical server and running on a guest.  Our method dynamically calculates the overhead while running a single guest machine.
+\indent To calculate the virtualization overhead, create a single virtual machine with dedicated resources on isolated hardware.  
+There should not be any other virtual guest machines running.  Next we need to find a load that will stress each resource (Table \ref{tab:resources}).  
+It may be possible to generate a load that will stress I/O, memory, and CPU, but it is best to stress them separately since other interference could mislead results.  
+Then place the load on the virtual machine and begin monitoring the resource using the algorithm in Figure \ref{alg1} in BOTH the guest OS and hypervisor. 
+Our method dynamically calculates the overhead while running a single guest machine.
 
-\indent For a given performance counter, we count the hypervisor \emph{count\textsubscript{H}} and the guest \emph{count\textsubscript{G}}.  We calculate the overhead from virtualization as:
-\[ Overhead_V = \frac{count_H - count_G}{count_H} \]
+\indent For a given performance counter and some time interval, we count the hypervisor \emph{count\textsubscript{H}} and the guest \emph{count\textsubscript{G}}.  
+We assert that for counters that measure time using a resource, the overhead is the additional time spent in the Guest.  
+If it takes 200 ms to complete some task in the guest and 150ms is used for the task in the hypervisor then the overhead to virtualize the task is 50ms or 25\% of the total time.
 
+\begin{equation}
+  Overhead_V = \frac{count_G - count_H}{count_G} 
+\end{equation}
 
 % A method to analyze performance of a guest machine which may be experiencing degredation from external interference.
-\subsection{Detecting I/O Interference}
-In order to collect performance I/O metrics (such as reads/second and writes/second) with a complete view of the resource, we need a method to calculate how much of that resource is used by the external guests and the hypervisor overhead.  At each layer, data and statistics need to be collected to determine why the application may be degraded.
-\indent When a tool runs in the userspace of guest machine to get resource usage, the guest OS should collect information about the usage of the resource from the hypervisor and external guests.  If the guest has previously collected the  \emph{overhead} and \emph{tmax}, then the guest virtual machine can determine if the resource is available and the problem is in the guest machine, or the resource is degraded from external interference.
+\subsection{Detecting Interference}
+In order to collect performance metrics (such as reads/second and writes/second) with a complete view of the resource, we need a method to calculate how much of that resource is used by the external guests and the hypervisor overhead.  
+At each layer and each resource, data and statistics need to be collected to determine why the application may be degraded.
+
+\indent When a tool runs in the userspace of guest machine to get resource usage, the guest OS should collect information about the usage of the resource from the hypervisor and external guests.  Since the guest has previously collected the \emph{overhead}, then the guest virtual machine can determine if the resource is degraded by examining the sum of all of counters from the virtual machines and calculating the overhead from all of the virtual machines.
 
 \begin{enumerate}
 	\item Guest tool requests OS statistics.
 	\item Guest OS forwards request to hypervisor.
 	\item Hypervisor forwards request to all guests.
 	\item Each Guest responds with individual statistics.
-	\item Hypervisor calculates a percentage of resource used.
-	\item Hypervisor returns data to original requestor.
+	\item Hypervisor calculates total overhead of resource used.
+	\item Hypervisor returns total overhead to original requestor.
 	\item Guest tool shows overhead and interference from external guests.
 \end{enumerate}
 
-As an example: the userspace tool \emph{iostat} reads disk performance counters in /proc/diskstats and will report transfers, bytes read, and bytes written per second.  If an application was experiencing I/O performance problems these would be counters an administrator or application developer may monitor.  These numbers may be misleading as to the root cause of the problem if external interference is causing the problem.  
-\begin{figure}
+\indent Since the guest has previously calculated $ Overhead_V $ we can use that information to calculate the interference when multiple guests are run concurrently $ Overhead_{Vall} $.  If all \emph{n} guests have been modified to collect and pass information to the hypervisor, each guest can reply with their counters when asked by the hypervisor.  It is important that all guests and the hypervisor start and stop counting concurrently to provide accurate results.  
+
+\[ Count_{Gall} = \sum_{i=1}^n{count_G} \] 
+\begin{equation}
+Overhead_{Vall} = \frac{count_{Gall} - count_H}{count_{Gall}} 
+\label{eq2}
+\end{equation}
+
+We can see that when the number of guests machines is 1 (as when we collected the overhead with 1 machine), this is exactly as equation 1.  After the hypervisor calculates the count and overhead for all machines running and passes this information to the original guest, the guest can then calculate the interference.  
+
+\indent As an example: the userspace tool \emph{iostat} reads disk performance counters in /proc/diskstats and will report transfers, bytes read, and bytes written per second.  If an application was experiencing I/O performance problems these would be counters an administrator or application developer may monitor.  These numbers may be misleading as to the root cause of the problem if external interference is causing the problem.  The following example shows a possible output from the perspective of the running guest when experienceing I/O interference from external guest machines.
+\begin{figure}[h]
 \begin{Verbatim}
 Device:  tps    kB_read/s    kB_wrtn/s
 sda   577.20     41388.00    148073.00
 virtual I/O interference 22.4%     
 \end{Verbatim}
 \label{fig:iostat}
-\caption{\emph{iostat} with additional information from hypervisor calcuated interference}
+\caption{Example:  \emph{iostat} with additional information from hypervisor calcuated interference}
 \end{figure}
 
+
+\begin{comment}
 \subsection{Disk Pinning}
 Disk pinning may be a solution for multiple I/O bound guest appliations running in a virtual system.  Several papers have demonstrated the effects of core pinning or \emph{core affinity} for CPU bound applications, which can reduce the load on the hypervisor and prevent cache contention.  Similarly, a multiple I/O bound guests may use a single disk excessivley causing interference and degreaded performance.  By increasing the number of physical spindles, multiple random disk seeks can occur concurrently.  By setting physical disks to specific virtual guests, we can reduce I/O interference from multiple guests.  For applications that are bound by virtual I/O resources, it may be better to share cores and separate physical disks for each virtual machine.  At some point assigning a dedicated physical resource to guest machines minimizes the benefits of virtualizaion.  It should be the task of the administrator to decide how the physical resources are used based on the need.
+\end{comment}

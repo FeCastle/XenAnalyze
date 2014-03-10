@@ -18,16 +18,17 @@ Profiling a system allows a user or system administrator to see which functions 
 \subsection{Performance Monitoring}
 Modern operating systems have a method of monitoring the performance of the system.  In a Linux OS there are tools such as top, iostat, ps, and vmstat.  
 Windows uses perfmon.exe to show the current performance.  
-These tools read data tracked by the OS kernel about hardware resource usage.  
-By examining these counters and aggregating the data with tools, an administrator can see the current processes and how each of the resources are being used. \\ 
+Most kernels will write statistics when each resource is used, and these tools read and analyze the kernel data about resource usage.  
+By examining these counters and aggregating the data with tools, an administrator can see the current processes and how each of the resources are being used. 
+
 \indent On Linux these resource counters are tracked in the /proc filesystem, which is really a dynamic view into the kernel memory and statistics.  
 By running a test load and examining the /proc filesystem or using the tools, one can reasonably determine the resources used and which process or thread is using them.  
-In many cases these tools can quickly narrow the scope of possible problems for a degraded system. \\
+In many cases these tools can quickly narrow the scope of possible problems for a degraded system. 
 
 \indent When a system is virtualized, the guest OS only tracks the statistics from its own viewpoint.  
+In other words the resource statistics are for the virtualized resource.
 Similar tools have been created in the hypervisor (vmtop and esxtop) to show each virtual machine running and the resources that the entire machine is using.  
-In order to analyze a comlex problem with multiple guests running concurrenlty, one needs to monitor both the tools in the hypervisor and the guests.  
-However, usually the administrator for the hypervisor and guest machines are different people or completely different organizations in many cloud infrastructures.  \\
+However, usually the administrator for the hypervisor and guest machines are different people or completely different organizations in many cloud infrastructures. 
 
 \indent When monitoring virtualized resources, the counters only measure the virtual resource.  
 As our tests will show, they do not necessarily aggregate as expected.  
@@ -46,4 +47,7 @@ We need the ability to perform System-wide performance monitoring similar to the
   \item[System-wide profiling] Both the guest and VMM are profiled.\\
   \item[System noise] Interrupts from deamons or other kernel processes that need to perform some task. \cite{tsafrir}\\
   \item[Paravirtualization] A virtualization technique where the native instruction set is not completely implemented.  Usually the Guest OS needs to be modified to know it is virtualized. This is the technique used by Xen. \cite{vmwareMem, du1}
+  \item[Working set] The size of most of the data an application needs.  For database servers if the working set can fit into RAM, it is much faster than going to disk and swapping data. 
+  \item[Overhead] The additional cost (time) required for virtualization.  For each operation, there may be additional resources required to virtualize the operation instead of interacting directly with the hardware.
+  \item[Snapshot] A complete state of the entire virtual machine saved to non-volatile disk for later use.  A snapshot is used to create a template or roll back to a previous state.
 \end{description}

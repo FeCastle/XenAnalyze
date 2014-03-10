@@ -1,5 +1,22 @@
 In the following test experiments we evaluate the benefits of passing additional information through the layers of the hypervisor and guests for profiling.  Unless otherwise noted, each experiment is performed on a small and medium scale virtualization platform . See Figure \ref{fig:virtSize} for a description of the hardware and Figure \ref{fig:softStack} for the software stack installed.
 
+\indent The Linux kernel tracks I/O statistics in \emph{diskstat} \cite{iostats} and virtual memory statistics in \emph{vmstat} (Table \ref{tab:iocounters}).  
+These counters an help identify disk I/O contention issues and are used by adminstrative utilites sar and iostat \cite{iostats}.  
+Similar counters can be used for other operating systems or resources. 
+For modern operating systems it is important to collect both I/O and virtual memory information when analyzing I/O contention, since disk reads and writes are buffered and cached in memory for performance reasons. 
+
+\begin{table}[h]
+\begin{tabular}{ l l p{5cm} }
+  Statistics & Description \\
+  \hline
+  /proc/diskstat & I/O statistics of block devices \\
+  /proc/vmstat & Detailed virtual memory statistics\\
+  \hline
+\end{tabular}
+\caption{Disk I/O performance counters on Linux.}
+\label{tab:iocounters}
+\end{table}
+
 \subsection{External machine interference}
 In this experiment, we show the memory and I/O interference from external systems, without overcommitting the resources.  From the guest domain running the benchmark, there is a significant drop in the application performance when run concurrently with external systems.  Additionally, monitoring resources in the guest domain provides little information about the performance problems. 
 

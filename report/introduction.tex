@@ -25,13 +25,12 @@ Performance monitoring tools from the virtual guests do not currently provide in
 
 \indent This project will add the following contributions for virtualization:
 \begin{enumerate}
-\item Define the layers of abstraction in virtual environments.
-\item Define the physical and virtual resources which need to be measured.
-\item Examine some common counters, and metrics which can measure resource utilization.
-\item Design a framework to collect resource metrics at several layers and quantify the interference from virtualization.
-\item Virtualization test suite that causes I/O interference.
-\item Example tool which dynamically analyzes runtime interference.
-\item Introduce \emph{disk pinning} for virtualization where separate physical disks are assigned to individual virtual servers.
+\item \textbf{Layers} Define the layers of abstraction in virtual environments.
+\item \textbf{Resources} Define the physical and virtual resources which need to be measured.
+\item \textbf{Counters} Examine some common counters, and metrics which can measure resource utilization.
+\item \textbf{Framework} Design a framework to collect resource metrics at several layers and quantify the interference from virtualization.
+\item \textbf{Test Suite} Virtualization test suite that causes I/O interference.
+\item \textbf{I/O Tool} Example tool which dynamically analyzes runtime interference from an I/O bound application.
 \end{enumerate}
 
 \indent The rest of this document is organized as follows:  In section 2, we review a real problem example in a large data center, and the challenges faced with existing tools.  In section 3, we examine the current state of tools and techniques used to profile and analyze performance issues with virtualization.  Section 4 looks at related works that have identified interference and methods of root cause analysis.  In section 5 we define the needed data and an example tool that can collect and analyze this data.  The last sections are dedicated to the test suite infrastructure to both create the interference and show the accuracy of the analysis.  We also look at possible other uses and what needs further investigation.
