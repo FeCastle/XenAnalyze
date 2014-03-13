@@ -16,25 +16,83 @@ Profiling a system allows a user or system administrator to see which functions 
 \indent Profiling results also require manual inspection and may not show how interference from other parts of the system or virtual machines impact the guest machine \cite{traeger, knapp1}.  Additionally the user running the profiler needs to have some "guess" or prior knowledge about what event to sample, and the desired freqency of the sample.  Should the user sample Cache miss, TLB miss, or some other counter?  As more events are profiled, the more perturbation is encounted.  In a virtual environment a user may need to start several profilers on several virtual machines each monitoring various hardware counters, system state, and applications.  Only after several runs in many different configurations and manual inspection could an advanced administrator make some determination as to the root cause of the problem. 
 
 \subsection{Performance Monitoring}
-Modern operating systems have a method of monitoring the performance of the system.  In a Linux OS there are tools such as top, iostat, ps, and vmstat.  
-Windows uses perfmon.exe to show the current performance.  
-Most kernels will write statistics when each resource is used, and these tools read and analyze the kernel data about resource usage.  
-By examining these counters and aggregating the data with tools, an administrator can see the current processes and how each of the resources are being used. 
+Modern operating systems have a method of monitoring the performance of the system.  These statistics are tracked in the kernel to track access to resources, and are not (necessarily) related to the PMU on the CPU.  For example a specific CPU may track hard events such as L2 cache miss, or TLB cache miss, but the kernel will track time spent reading or writing to a physical disk, or virtual memory cache information.
 
-\indent On Linux these resource counters are tracked in the /proc filesystem, which is really a dynamic view into the kernel memory and statistics.  
-By running a test load and examining the /proc filesystem or using the tools, one can reasonably determine the resources used and which process or thread is using them.  
-In many cases these tools can quickly narrow the scope of possible problems for a degraded system. 
+\indent In a Linux OS there are administration tools such as top, iostat, ps, and vmstat.  
+Windows uses \emph{Performance Monitor} or \emph{Resource Monitor} to show the current performance.  
+Most kernels will write statistics when each resource is used, and these tools read and analyze the kernel data about resource usage, through the method provided by the kernel.
+By examining these counters and aggregating the data with tools, an administrator can see the current threads and how each of the resources are being used. 
 
-\indent When a system is virtualized, the guest OS only tracks the statistics from its own viewpoint.  
-In other words the resource statistics are for the virtualized resource.
-Similar tools have been created in the hypervisor (vmtop and esxtop) to show each virtual machine running and the resources that the entire machine is using.  
-However, usually the administrator for the hypervisor and guest machines are different people or completely different organizations in many cloud infrastructures. 
+\indent When a system is virtualized, the guest OS kernel only tracks the statistics from its own viewpoint.  
+In other words, the resource statistics are for the virtualized resource, and not the physical resource.
 
 \indent When monitoring virtualized resources, the counters only measure the virtual resource.  
 As our tests will show, they do not necessarily aggregate as expected.  
 The counters do not collect information from external guests or show the interference from external guests or the hypervisor.  
 In order to accurately analyze performance issues on complex virtualized systems, we need to collect and analyze resource usage from all systems and the hypervisor.  
 We need the ability to perform System-wide performance monitoring similar to the System-wide profiling available.
+
+\subsubsection{Linux Tools}
+\indent On Linux these resource counters are tracked in the /proc filesystem, which is a dynamic view into the kernel data structures and statistics \cite{proc}.  
+For example \emph{/proc/stat} contains statistics about the time (since boot) that the the CPU was idle, running in user mode, or running in kernel mode.
+By running a test load and examining the /proc filesystem or using the tools, one can reasonably determine the resources used and which process or thread is using them.  
+In many cases these tools can quickly narrow the scope of possible problems for a degraded system. 
+
+\begin{figure}[h]
+\begin{Verbatim}
+top - 15:57:05 up 109 days, 23:54,  6 users,  load average: 0.12, 0.17, 0.11
+Tasks: 164 total,   1 running, 163 sleeping,   0 stopped,   0 zombie
+Cpu(s):  6.0%us,  0.7%sy,  0.0%ni, 93.3%id,  0.0%wa,  0.0%hi,  0.0%si,  0.0%st
+Mem:   2062348k total,  1868648k used,   193700k free,   185776k buffers
+Swap:  2095100k total,   389996k used,  1705104k free,   699236k cached
+
+  PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND            
+  999 root      20   0 94876  52m 4900 S  4.0  2.6 373:01.16 Xorg               
+ 5362 deron     20   0  317m  92m  62m S  2.0  4.6 300:20.40 soffice.bin        
+25333 deron     20   0  140m  15m 5684 S  1.0  0.8   3:33.53 gnome-terminal     
+ 1859 deron     20   0  166m 5820 4028 S  0.3  0.3   3:15.13 metacity           
+\end{Verbatim}
+\caption{\emph{top} collects information from Linux kernel through \emph{proc} and displays infromation about CPU, Memory, and processes}
+\label{fig:top}
+\end{figure}
+
+\subsubsection{Windows Peformance Tools}
+On Windows OS the counters are similar where the counters are tracked by the Windows kernel about processes and threads.  Then a userspace API \cite{winperf} is presented and a graph or report GUI administration tool can display any number of statistics about the system.  Similar to the /proc file system in Linux and administration tools there is little or no information provided about the overhead and interference from external layers.
+
+\begin{figure}[!h]
+  \begin{center}
+  \includegraphics[width=6in]{images/ResourceMonitor.jpg}
+  \caption{Microsoft Windows Resource Monitor.  Reads data from winperf API tracked in Windows kernel}
+  \label{resourceMonitor}
+  \end{center}
+\end{figure}
+
+\subsubsection{Hypervisor Peformance Tools}
+Similar tools have been created in the hypervisor, \emph{xentop} for Xen and \emph{esxtop} for VMware, to show each virtual machine running and the resources that the entire machine is using.  
+These tools use the same information from the \emph{proc} filesystem as VMware and Xen use a Linux based kernel.  
+From this view we can see the guest machines, and the hypervisor, but we can't easily determine how they impact each other.  There is also no way to relate a virtual process running in the guest machine from the hypervisor tools.  The hypervisor has no access to the guest information.
+Even if the these could show everything running in the guest machines, the administrator for the hypervisor and guest machines are different people or even completely different organizations. 
+
+\begin{figure}[h]
+\begin{Verbatim}
+
+xentop - 17:07:00   Xen 4.2.2-23.el6
+5 domains: 3 running, 2 blocked, 0 paused, 0 crashed, 0 dying, 0 shutdown
+Mem: 4182752k total, 4182236k used, 516k free    CPUs: 4 @ 2133MHz
+      NAME  STATE   CPU(sec) CPU(%)     MEM(k) MEM(%)  MAXMEM(k) MAXMEM(%) 
+  Domain-0 -----r      78969   16.9    2035712   48.7    2097152      50.1    
+  Test_VM1 -----r	    6474   11.5     524288   12.5     524288      12.5     
+  Test_VM2 -----r	    4642   12.7     524288   12.5     524288      12.5 
+  Test_VM3 --b---	    4210    0.1     524288   12.5     524288      12.5     
+  Test_VM4 --b---	    4137    0.1     524288   12.5     524288      12.5  
+\end{Verbatim}
+\caption{\emph{xentop} 4 Guest domains. 2 are actively running and 2 are blocked.}
+\label{fig:xentop}
+\end{figure}
+
+\subsubsection{Steal Time - Complete View}
+Due to the fact that the hypervisor has one view of the system, and the virtualized guests have a different view of the system, the Xen Hypervisor has added a \emph{steal time} statistic and made it available to the guest operating systems.New linux distributions have implemented this new kernel option as \emph{steal: involuntary wait} \cite{proc}.  Additionally administrative tools top, sar, and vmstat have all implemented this new counter.  
+On most systems top will show as '0.0\%st' (Figure ~\ref{fig:top}), but if it is running on a Xen Hypervisor the paravirtualized guest will communicate with the hypervisor and collect information. Amazon cloud uses Xen and this has become a valuable tool for guest to determine if they are having performance problems from external interference \cite{netflix}.
 
 \subsection{Definitions}
 \begin{description}

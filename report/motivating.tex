@@ -18,8 +18,8 @@ A large US corportation, with over 10,000 employees, used a suite of application
 12:46:31 write(61, "7:for "..., 3288)  
 12:46:31 close(61) = 0
 \end{Verbatim}
-\label{fig:syscall}
 \caption{\emph{strace} shows system calls to open, lseek, and write take up to 14 seconds to complete}
+\label{fig:syscall}
 \end{figure}
 
 \indent Looking at statistics in the host VMM showed exactly what was noticed on the guest:  \emph{high CPU usage}.   However, from the point of view of the VMM, there was no difference between application time and kernel time.  The problem could not be related to virtualization but no symptoms appeared until the application was virtualized.  The guest was unable to perform profiling with hardware coutners on this version of the hypervisor \cite{serebrin} to see if there was a kernel bug.  Was there a bug or misconfiguration in the application, guest OS, hypervisor, or hardware?  Or was there just too much overhead from virtualization during peak usage? 
