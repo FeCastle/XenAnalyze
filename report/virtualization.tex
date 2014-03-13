@@ -96,8 +96,8 @@ On most systems top will show as '0.0\%st' (Figure ~\ref{fig:top}), but if it is
 
 \subsection{Definitions}
 \begin{description}
-  \item[Hypervisor] A thin kernel layer that abstracts the hardware from the virtual guests.\\
-  \item[VMM] Virtual Machine Manager. A kernel and OS that manages access to the hypervisor.  In Xen this is Dom0.\\
+  \item[Hypervisor] A thin kernel layer that abstracts the hardware and presents virtual resources to the guests.\\
+  \item[VMM] Virtual Machine Manager. A kernel and OS that configures the hypervisor and virtual guests.  In Xen this is Dom0.\\
   \item[Guest] A complete OS (with applications) that is running under a hypervisor.  In Xen this is DomU.\\
   \item[Vitual Resource]  A physical resource (such as Disk, CPU or memory) that is managed by a hypervisor and allocated to a guest.\\
   \item[Virtualized] Changing a physical system to a virtual guest system.\\
@@ -107,5 +107,5 @@ On most systems top will show as '0.0\%st' (Figure ~\ref{fig:top}), but if it is
   \item[Paravirtualization] A virtualization technique where the native instruction set is not completely implemented.  Usually the Guest OS needs to be modified to know it is virtualized. This is the technique used by Xen. \cite{vmwareMem, du1}
   \item[Working set] The size of most of the data an application needs.  For database servers if the working set can fit into RAM, it is much faster than going to disk and swapping data. 
   \item[Overhead] The additional cost (time) required for virtualization.  For each operation, there may be additional resources required to virtualize the operation instead of interacting directly with the hardware.
-  \item[Snapshot] A complete state of the entire virtual machine saved to non-volatile disk for later use.  A snapshot is used to create a template or roll back to a previous state.
+  \item[Snapshot] A complete state of the entire virtual machine saved to non-volatile disk for later use.  A snapshot is used to create a template or for configuration management and roll back to a previous state.
 \end{description}

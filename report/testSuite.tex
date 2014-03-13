@@ -1,24 +1,25 @@
-In order to test our design, a test infrastructure was created to place a load on the guest machines and coordinate the stop and start of the collection of resources.   
+In order to test our design, two virtualization stacks, a test infrastructure, and several benchmarks were created.  Our test suite runs load on the guest machines and coordinate the stop and start of the collection of multiple performance counters.     
 Our experiments, when run in this infrastructure, demonstrate the performance problems guest machines may experience when running the same system load while running by itself and with multiple machines running simultaneously.  
 
 \subsection{Methodology}
-All guests start by running a process in the background waiting for the hypervisor to signal the start of the test.  
-Then the hypervisor starts the same process and signals to the guest the start of the test.  
-Each guest then starts collecting the $pre$ resource counters and generates a system load.  
-The hypervisor also begins collecting the same resource counters from its view, but does not generate a load.  
-When each guests completes, it reads the $post$ counters and sends the difference between the two counters back to the hypervisor, and signals the test is complete.  
-When the hypervisor has collected the information from all guests it aggregates the counters from all guests and itself according to \emph{Equation 2}.
+Each guest VM in the test starts a process and waits for the hypervisor to signal the start of the test.  
+The hypervisor then starts a process which signals all the guests to start, and which benchmark to run.  
+Each guest then collects the $pre$ resource counters and begins running the specified benchmark system load.  
+The hypervisor also collects the same resource counters from its view, but does not generate a load.  
+When each guest completes the benchmark, it reads the $post$ counters and sends the difference between the two counters back to the hypervisor (Figure \ref{alg1}).
+When the hypervisor has collected the information from all guests, it then calculates the overheard (Equation 1 or 2).
+By running this scenario once with only 1 virtual machine, and once with multiple virtual machines we can calculate the interference (Equation 3).
 
-\subsection{Software}
-\indent All tests are run and collect data with the same software stack installed (Figure \ref{fig:softStack}).  
-We use the Xen Hypervisor and CentOS release as the test virtualization and Operating system platform.  
+\subsection{Software and Hardware}
+\indent Both virtualization platforms have the same software stack installed (Figure \ref{fig:softStack}).  
+We use the Xen hypervisor and CentOS release for both the guest (DomU) and VMM (Dom0).  
 This software stack can be extended to mulptiple servers to produce a larger cluster of servers.  
 We chose Postgres as the database server for our tests because of its robustness and standard use in hosting facilities and applications.  
 It is a good general purpose application that can be used to stress I/O, memory, and CPU resources, although we focused our test suite to measure database read operations.
 
 \indent The tests can be run in all sizes of virtualization environments (Figure \ref{fig:virtSize}).  
 Tests which run in a \emph{Small} or \emph{Medium} environment can also be run in a \emph{Cluster} or \emph{Cloud} based system by increasing the size of the database or number of guest machines until a similar load is reached.  
-For our test suite we are targeting \emph{Small} and \emph{Medium} sized virtualization environments. 
+For our experiments we run on a \emph{Small} and \emph{Medium} sized virtualization environments. 
 
 \begin{figure}[lh]
 \begin{tabular}{ l p{5cm} }
