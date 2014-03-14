@@ -1,14 +1,14 @@
-In order to test our design, two virtualization stacks, a test infrastructure, and several benchmarks were created.  Our test suite runs load on the guest machines and coordinate the stop and start of the collection of multiple performance counters.     
-Our experiments, when run in this infrastructure, demonstrate the performance problems guest machines may experience when running the same system load while running by itself and with multiple machines running simultaneously.  
+In order to test our design, two virtualization stacks, a test infrastructure, and several benchmarks were created.  Our test suite runs a load on the guest machines and coordinates the stop and start of the collection of multiple performance counters across the guests and hypervisor.     
+Our experiments, when run in this infrastructure, demonstrate the performance problems guest machines may experience.  We run the benchmark at least three times with the guest isolated and at least three times with multiple guests running simultaneously.  We report the average results of these tests.
 
 \subsection{Methodology}
-Each guest VM in the test starts a process and waits for the hypervisor to signal the start of the test.  
+Firts, each guest VM starts a process and waits for the hypervisor to signal the start of the test.  
 The hypervisor then starts a process which signals all the guests to start, and which benchmark to run.  
 Each guest then collects the $pre$ resource counters and begins running the specified benchmark system load.  
 The hypervisor also collects the same resource counters from its view, but does not generate a load.  
 When each guest completes the benchmark, it reads the $post$ counters and sends the difference between the two counters back to the hypervisor (Figure \ref{alg1}).
 When the hypervisor has collected the information from all guests, it then calculates the overheard (Equation 1 or 2).
-By running this scenario once with only 1 virtual machine, and once with multiple virtual machines we can calculate the interference (Equation 3).
+By running this scenario once with only 1 virtual machine, and once with multiple virtual machines we can calculate the interference for those counters that measure the time spent accessing the resource (Equation 3).
 
 \subsection{Software and Hardware}
 \indent Both virtualization platforms have the same software stack installed (Figure \ref{fig:softStack}).  
@@ -21,7 +21,8 @@ It is a good general purpose application that can be used to stress I/O, memory,
 Tests which run in a \emph{Small} or \emph{Medium} environment can also be run in a \emph{Cluster} or \emph{Cloud} based system by increasing the size of the database or number of guest machines until a similar load is reached.  
 For our experiments we run on a \emph{Small} and \emph{Medium} sized virtualization environments. 
 
-\begin{figure}[lh]
+\begin{table}[h]
+\begin{subtable}[h]{0.45\textwidth}
 \begin{tabular}{ l p{5cm} }
   Software & Version \\
   \hline
@@ -32,9 +33,9 @@ For our experiments we run on a \emph{Small} and \emph{Medium} sized virtualizat
 \end{tabular}
 \caption{Software installed virtualization test stack}
 \label{fig:softStack}
-\end{figure}
-
-\begin{figure}[rh]
+\end{subtable}
+\hfill
+\begin{subtable}[h]{0.45\textwidth}
 \begin{tabular}{ l p{5cm} }
   Size & Specifications \\
   \hline
@@ -46,19 +47,19 @@ For our experiments we run on a \emph{Small} and \emph{Medium} sized virtualizat
 \end{tabular}
 \caption{Virtualization sizes for tests}
 \label{fig:virtSize}
-\end{figure}
+\end{subtable}
+\caption{Software and Hardware stacks}
+\end{table}
 
-\indent The test infrasture generates a consistent and reproducible system load by using a PostgreSQL database server with PGbench and PGreplay. 
+\subsection{PGbench}
+\indent The test infrasture generates a consistent and reproducible system load by using a PostgreSQL database server with PGbench. 
 PGbench creates a TPC-B similar style workload and calculates transactions per second (TPS), so we can track the performance of each guest system from the application layer \cite{pgTune}.  
 We use PGbench to both generate a load to measure overhead and create interference.
-PGreplay is used to record and playback (faster or slower) the same set of benchmark transactions, which allows us to simulate host systems that are not running at 100\% capacity.  
-Instead of running multiple guests each with a fraction of the resources, we can overcommit the resources, generate a smaller load, and measure the interference from overcommitment.
-This is typical of most virtual systems, since at almost all times, the systems are using only a fraction of the total resources available.  
-The test suite infrastructure will allow any benchmark or command to run on the systems as the command to run is passed from the hypervisor to the guest machines.
-Several other benchmarks such as Postmark \cite{katcher} were also considered, and could be easily used in this test framework.
+PGbench will put a stress load on the limits of the system, it is a good tool for simulating guest machines that are all consuming as much resources as possible.  
+We measure the TPS from the benchmark when run as a single virtual machine and when run with multiple machine concurrently.  We compare the degradation from the application to our proposed calculation for interference.
 
 \subsection{Domain Communication}
-\indent One of the challenges of this test suite is the coordination of the starting and stopping of the test, collection of resource counters, and the information sharing between the guests and hypervisor.  
+One of the challenges of this test suite is the coordination of the starting and stopping of the test, collection of resource counters, and the information sharing between the guests and hypervisor.  
 Since we use Xen as our virtualization platform, we chose XenBus and XenStore \cite{xenbus}. 
 XenBus provides an abstraction for paravirtualized drivers to communicate between domains.  
 XenStore is an information storage space shared between domains.  
@@ -66,30 +67,37 @@ These tools are often used to configure and manage domains with higher level use
 In order for paravitualized guest domains to communicate with the hypervisor the XenStore tools for DomU domains had to be built as this is not currently part of the standard package of guest tools.  Other options were to use the TCP/IP stack to send and receive messages between the domains to coordinate the tests and information as well.
 
 \subsection{I/O Workload}
-For I/O intensive workloads, the application tends to perform very well when the entire \emph{working set} can fit into main memory.  
+For I/O intensive workloads, the application tends to perform very well when the entire \emph{working set} can fit into main memory, and the OS will cache reads from disk.
 However, when the \emph{working set}  approaches (or exceeds) the size of main memory, the application tends to degrade quickly.  
 Our initial experiments to find an I/O workload highlight this fact by changing the database size under load in a virtual environment.
-Before running the entire test suite we need to create a test database that will exceed the \emph{working set} and increase the probability that a database read will need to fetch the data from disk storage.  With PGbench the "-i" flag \emph{scaling factor} is used to initialize a database at a specified size so that our results can show changes between a memory bound system and I/O bound system.  
-A script runs and creates a small database then runs a benchmark and collects the results of the benchmark - TPS.  The script then creates a slighly larger database and runs the benchmark again.  This process is repeated until the TPS drop significantly, and the CPU time is almost idle.  At this point we can determine an adequate database size for an IO bound system.
+Before running the entire test suite we need to create a test database that will exceed the \emph{working set} and increase the probability that a database read will need to fetch the data from disk storage.  With PGbench the "-i" flag \emph{scaling factor} is used to initialize a database at a specified size (prior to running the benchmark) so that our results can show changes between a memory bound system and I/O bound system.  
 
-\subsection{Test Data Collection}
-\indent For each test result, at least 3 trials are completed in each configuration.  The average results of these test are measured in \textbf{TPS} \emph{Transactions per Second}, and performance counters captured at each layer.   
-We can use the TPS to show how the database performs at the application layer when external environment changes are made to the system.  We use the performance counters to try to analyze the interference and explain the degredation from virtualization.
+We created a script to find the size of database required for a force I/O.  It runs and creates a small database then runs a benchmark and collects the results of the benchmark - TPS.  The script then creates a slighly larger database and runs the benchmark again.  This process is repeated until the TPS drop significantly, and the CPU time is almost idle.  At this point we can determine an adequate database size for an I/O bound system.
+
+\begin{figure}[!h]
+  \begin{center}
+  \includegraphics[width=4in]{images/SmallScale.png}
+  \caption{TPS on our \emph{Small} x3650 system with 1 virtual machine and 1 GB of ram. It changes from a memory bound application to an I/O bound application when the DB size reaches about 1/2 of the available RAM.}
+  \label{smallIO}
+  \end{center}
+\end{figure}
+
+
+\subsection{Test Data}
+\indent We can use the TPS to show how the database performs at the application layer when external environment changes are made to the system.  Our tests will select Memory and I/O resources to monitor.  For measuring disk I/O it is a good to also collect virtual memory (in this case we are talking about OS virtual memory, not virtualization) as well as I/O data.  We selected to measure paging performance counters \ref{fig:memory} across all layers for the memory resource.  We selected disk read counters \ref{fig:io} as our data at all layers to measure interference from I/O. 
+We use these performance counters to try to analyze the interference and explain the degredation from virtualization.
 
 \begin{table}[h]
 \begin{subtable}[h]{0.45\textwidth}
 \begin{tabular}{ l p{5cm} }
        measurement & description \\
        \hline
-       swpd  & the amount of virtual memory used. \\
-       free  & the amount of idle memory. \\
-       buff  & the amount of memory used as buffers \\
-       cache & the amount of memory used as cache \\
-       inact & the amount of inactive memory. \\
-       active & the amount of active memory. \\
+       pgpgin  &  count of pages in. \\
+       pgpgout  & count pages out. \\
+       pgfault  & count minor (or soft) page faults. \\
        \hline
 \end{tabular}
-\caption{Virtual memory data collected}
+\caption{Virtual memory paging performance counters\ref{memory}}
 \label{fig:memory}
 \end{subtable}
 \hfill
@@ -97,14 +105,12 @@ We can use the TPS to show how the database performs at the application layer wh
 \begin{tabular}{ l p{5cm} }
        measurement & description \\
        \hline
-       si & Amount of memory swapped in from disk (/s). \\
-       so & Amount of memory swapped to disk (/s). \\
-       bi & Blocks received from a block device (blocks/s). \\
-       bo & Blocks sent to a block device (blocks/s). \\
-       wa & Time spent waiting for IO. \\
+       r\_sectors & The number block sectors read \\
+       r\_ms & The time spent reading \\
+       r\_total & Total number of reads completed. \\
        \hline
 \end{tabular}
-\caption{I/O read data collected}
+\caption{I/O read performance counters \ref{iostats}}
 \label{fig:io}
 \end{subtable}
 \caption{Test result data collected from guest and hypervisor}
