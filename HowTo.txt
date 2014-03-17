@@ -248,6 +248,15 @@ scp /tmp/IBM3650_ScaleF_512_TestVM4_run1.txt deron@172.29.203.30:Projects/XenAna
 /tmp/getScaleFactor2 > /tmp/IBM3650_Concurrent_512_TestVM4.txt
 scp /tmp/IBM3650_Concurrent_512_TestVM?.txt deron@172.29.203.30:Projects/XenAnalyze/data
 
+----------------------- Change Memory (example 2GB) --------------------------
+TestVM="TestVM1"
+virsh shutdown $TestVM
+virsh setmaxmem $TestVM 2097152 
+xm mem-set $TestVM 2048
+virsh dumpxml $TestVM > /tmp/Xen/${TestVM}.xml
+virsh destroy $TestVM
+virsh create /tmp/Xen/${TestVM}.xml
+
 --------------------- Configure Bonnie++ and IO tools -------------------
 http://wiki.centos.org/AdditionalResources/Repositories/RPMForge
 wget http://packages.sw.be/rpmforge-release/rpmforge-release-0.5.2-2.el6.rf.x86_64.rpm
