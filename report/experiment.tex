@@ -1,9 +1,12 @@
-In the following test experiments we evaluate the benefits of passing additional information through the layers of the hypervisor and guests for profiling.  Unless otherwise noted, each experiment is performed on a small and medium scale virtualization platform . See Figure \ref{fig:virtSize} for a description of the hardware and Figure \ref{fig:softStack} for the software stack installed.
+In the following test experiments we evaluate the benefits of passing additional information through the layers of the hypervisor and guests for profiling.  Unless otherwise noted, each experiment is performed on a \emph{personal} and \emph{business} scale virtualization platform (Table \ref{virtSize}).  Both systems have CentOS and Xen Server installed (Table \ref{softStack}) for the software stack installed.
 
 \subsection{External machine interference}
 In this experiment, we show the memory and I/O interference from external systems, without overcommitting the resources.  From the guest domain running the benchmark, there is a significant drop in the application performance when run concurrently with external systems.  Additionally, monitoring resources in the guest domain provides little information about the performance problems. 
 
-First we divide the physical memory and CPUs into four equal parts and create four individual guest virtual machines (Dom1 - Dom4).  Each virtual machine is given 25\% of the availble resources so that no guest virtual machine would interfere with another machine if they were on separate physical systems.  We start only our Dom1 machine and run our experimental test with PGbench.  On our Medium Dell server Dom1 is allocated 2GB Ram and 2 vCPU.  We can see that when the DB size changes to an I/O bound system its performance drops significantly.  This is due to the fact that it must fetch database rows from the disk and it is much slower.  
+First we divide the physical memory and CPUs into four equal parts and create four individual guest virtual machines (Dom1 - Dom4).  Each virtual machine is given 25\% of the availble resources so that no guest virtual machine would interfere with another machine if they were on separate physical systems.  We start only our Dom1 machine and run our experimental test with PGbench.  On our \emph{Business} Dell server, Dom1 is allocated 2GB vRAM and 2 vCPU, while on the IBM server is Dom1 is given 512MB vRAM and 1 vCPU.  
+
+\subsubsection{Database Size}
+We start by initializing a Small DB and run PGBench and collect the TPS.  Then we increase the DB size slightly and run the benchmark again.  After repeating this process several times, we can see that when the DB size changes to an I/O bound system its performance drops significantly.  This is due to the fact that it must fetch database rows from the disk and it is much slower.  The Dom1 on both servers begin to degrade significantly to I/O when the DB size is close to the available vRAM.
 
 \begin{description}
   \item[Small] Performance is based on Memory.
@@ -11,9 +14,10 @@ First we divide the physical memory and CPUs into four equal parts and create fo
   \item[Large] Performance is based on I/O.
 \end{description}
 
-Then we simulate external machine interference by running Dom1 concurrently with Dom2, Dom3, and Dom4. On each of the Dom2 - Dom4 systems are configured with 2GB of RAM and 2 vCPUs as well.  We create a 2 GB database on each guest and run PG bench continuously to generate I/O interference.
+\subsubsection{With Interference}
+Then we simulate external machine interference by running Dom1 concurrently with Dom2, Dom3, and Dom4. Each of the Dom2 - Dom4 systems are configured the same as Dom1.  We create a 2 GB database on each guest of the Dell, and a 1GB database on each guest of the IBM.  We run a PGBench in a loop to continuously create I/O interference on each external guest machine (Dom2 - Dom4) while going from a small DB to a large DB on Dom1.
 
- We again measure the results of the benchmark on Dom1, while the other 3 guest domains are causing interference.  When the system is not I/O bound (Small database) there is about a 28\% drop in performance (4434 TPS - 3208 TPS) on the Small server and little change in the large server (Figure \ref{fig:tps1}).  We can see that on both servers it drops to an I/O bound system much quicker.  And there is significant interference from the I/O.
+ We again measure the results of the benchmark on Dom1, while the other 3 guest domains are causing interference.  When the system is not I/O bound (Small database) there is about a 28\% drop in performance (4434 TPS - 3208 TPS) on the IBM server and little change in the Dell server (Table \ref{fig:tps1}).  We can see that on both servers it drops to an I/O bound system much quicker.  And there is significant interference from the I/O on both servers for a large database.
 
 \begin{table}[h]
 \begin{subtable}[h]{0.45\textwidth}
@@ -44,8 +48,9 @@ Then we simulate external machine interference by running Dom1 concurrently with
 \caption{Dom1 TPS (Transactions Per Second) for 3 database sizes, when run as a single VM and with 3 external guests running concurrently.}
 \end{table}
 
-\indent Trying to analyze the performance drop in Dom1 without knowing about this external interference is difficult.  There were no changes to Dom1 when run by itself and run with other guests.  We now look at available memory, Swap In and Bytes In/S to see if we can determine why the application benchmark is degraded without collecting external information (Figure \ref{fig:vmstat}).  We can see that memory is not used as efficiently, the system almost completely elimiates swapping data in, and also can't read as quickly from disk.  However, there is little that we can change or tune in the OS to improve the application.  The root cause of the performance drop is due to external interference, which is not known from examining the data available.
-\begin{figure}
+\subsubsection{Anaylysis Using Current Tools}
+\indent Trying to analyze the performance drop in Dom1 without knowing about this external interference is difficult.  There were no changes to Dom1 when run by itself and run with other guests.  We now look at available memory, Swap In and Bytes In/S to see if we can determine why the application benchmark is degraded without collecting external information (Table \ref{fig:vmstat}).  We can see that memory is not used as efficiently, the system almost completely elimiates swapping data in, and also can't read as quickly from disk.  However, there is little that we can change or tune in the OS to improve the application.  The root cause of the performance drop is due to external interference, which is not known from examining the data available.
+\begin{table}
   \begin{tabular}{ l | r | r | r }
     Vmstat & Single & Multiple & Drop \\ \hline
 	Memory & 211Kb & 138Kb & 35\% \\
@@ -54,7 +59,10 @@ Then we simulate external machine interference by running Dom1 concurrently with
   \end{tabular}
 \caption{Some resource statistics collected with vmstat on Dom1 on a Large database while running alone and with multiple systems.} 
 \label{fig:vmstat}
-\end{figure}
+\end{table}
+
+
+
 
 \begin{comment}
 \begin{table}[h]

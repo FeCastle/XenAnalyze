@@ -17,9 +17,9 @@ This software stack can be extended to mulptiple servers to produce a larger clu
 We chose Postgres as the database server for our tests because of its robustness and standard use in hosting facilities and applications.  
 It is a good general purpose application that can be used to stress I/O, memory, and CPU resources, although we focused our test suite to measure database read operations.
 
-\indent The tests can be run in all sizes of virtualization environments (Figure \ref{fig:virtSize}).  
-Tests which run in a \emph{Small} or \emph{Medium} environment can also be run in a \emph{Cluster} or \emph{Cloud} based system by increasing the size of the database or number of guest machines until a similar load is reached.  
-For our experiments we run on a \emph{Small} and \emph{Medium} sized virtualization environments. 
+\indent The tests can be run in all sizes of virtualization environments (Table \ref{virtSize}).  
+Tests which run in a \emph{Personal} or \emph{Business} virtualization platform can also be run in a \emph{Cluster} or \emph{Cloud} based system by increasing the size of the database or number of guest machines until a similar load is reached.  
+For our experiments we run on a \emph{Personal} and \emph{Business} sized virtualization environments. 
 
 \begin{table}[h]
 \begin{subtable}[h]{0.45\textwidth}
@@ -32,21 +32,21 @@ For our experiments we run on a \emph{Small} and \emph{Medium} sized virtualizat
   \hline
 \end{tabular}
 \caption{Software installed virtualization test stack}
-\label{fig:softStack}
+\label{softStack}
 \end{subtable}
 \hfill
 \begin{subtable}[h]{0.45\textwidth}
 \begin{tabular}{ l p{5cm} }
   Size & Specifications \\
   \hline
-  Small & IBM x3650 Quad Core 2GB Ram \\
-  Medium & Dell PowerEdge T410 dual quadcore Xeon processors, 8GB Ram. \\
+  Personal & IBM x3650 Quad Core 2GB Ram \\
+  Business & Dell PowerEdge T410 dual quadcore Xeon processors, 8GB Ram. \\
   Cluster & Multiple small or medium servers clustered together with shared SAN data store. \\
   Cloud & Amazon Cloud or similar PAAS provider. \\
   \hline
 \end{tabular}
 \caption{Virtualization sizes for tests}
-\label{fig:virtSize}
+\label{virtSize}
 \end{subtable}
 \caption{Software and Hardware stacks}
 \end{table}
@@ -97,7 +97,7 @@ We use these performance counters to try to analyze the interference and explain
        pgfault  & count minor (or soft) page faults. \\
        \hline
 \end{tabular}
-\caption{Virtual memory paging performance counters\ref{memory}}
+\caption{Virtual memory paging performance counters \cite{memory}}
 \label{fig:memory}
 \end{subtable}
 \hfill
@@ -110,7 +110,7 @@ We use these performance counters to try to analyze the interference and explain
        r\_total & Total number of reads completed. \\
        \hline
 \end{tabular}
-\caption{I/O read performance counters \ref{iostats}}
+\caption{I/O read performance counters \cite{iostats}}
 \label{fig:io}
 \end{subtable}
 \caption{Test result data collected from guest and hypervisor}
