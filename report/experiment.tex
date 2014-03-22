@@ -1,6 +1,4 @@
-end{figure}
-=======
-In the following test experiments we evaluate the benefits of passing additional information through the layers of the hypervisor and guests for profiling.  Unless otherwise noted, each experiment is performed on a \emph{personal} and \emph{business} scale virtualization platform (Table \ref{virtSize}).  Both systems have CentOS and Xen Server installed (Table \ref{softStack}) for the software stack installed.
+In the following test experiments we evaluate the benefits of passing additional information through the layers of the hypervisor and guests for profiling.  Unless otherwise noted, each experiment is performed on a \emph{Personal} and \emph{Business} scale virtualization platform (Table \ref{virtSize}).  Both systems have CentOS and Xen Server installed (Table \ref{softStack}) for the software stack installed.
 
 \subsection{External machine interference}
 In this experiment, we show the memory and I/O interference from external systems, without overcommitting the resources.  From the guest domain running the benchmark, there is a significant drop in the application performance when run concurrently with external systems.  Additionally, monitoring resources in the guest domain provides little information about the performance problems. 
@@ -9,7 +7,6 @@ First we divide the physical memory and CPUs into four equal parts and create fo
 
 \subsubsection{Database Size}
 We start by initializing a Small DB and run PGBench and collect the TPS.  Then we increase the DB size slightly and run the benchmark again.  After repeating this process several times, we can see that when the DB size changes to an I/O bound system its performance drops significantly.  This is due to the fact that it must fetch database rows from the disk and it is much slower.  The Dom1 on both servers begin to degrade significantly to I/O when the DB size is close to the available vRAM.
->>>>>>> PCchanges
 
 \begin{description}
   \item[Small DB] The working set can fit into main memory.  Performance is based on Memory.
@@ -17,17 +14,15 @@ We start by initializing a Small DB and run PGBench and collect the TPS.  Then w
   \item[Large DB] Most reads need to go to disk.  Performance is based on Disk I/O.
 \end{description}
 
-<<<<<<< HEAD
 \subsubsection {Show Interference}
 Then we simulate external machine interference by running Dom1 concurrently with Dom2, Dom3, and Dom4. Each of the Dom2 - Dom4 systems are also configured with 2GB of RAM and 2 vCPUs.  We create a 2GB database on each external guest and run PG bench continuously to generate I/O interference.  
 
  We again measure the results of the benchmark on Dom1 at 3 different database sizes, while the other 3 guest domains are causing interference.  When the system is not I/O bound, there is about a 28\% drop in performance (4434 TPS - 3208 TPS) on the IBM server and little change in the Dell server (Figure \ref{fig:tps1}).  On both servers Dom1 drops to an I/O bound system faster, when there is external interference (90\% performance drop in both cases).  There is significant interference when it fully I/O bound in Dom1.
-=======
+
 \subsubsection{With Interference}
 Then we simulate external machine interference by running Dom1 concurrently with Dom2, Dom3, and Dom4. Each of the Dom2 - Dom4 systems are configured the same as Dom1.  We create a 2 GB database on each guest of the Dell, and a 1GB database on each guest of the IBM.  We run a PGBench in a loop to continuously create I/O interference on each external guest machine (Dom2 - Dom4) while going from a small DB to a large DB on Dom1.
 
  We again measure the results of the benchmark on Dom1, while the other 3 guest domains are causing interference.  When the system is not I/O bound (Small database) there is about a 28\% drop in performance (4434 TPS - 3208 TPS) on the IBM server and little change in the Dell server (Table \ref{fig:tps1}).  We can see that on both servers it drops to an I/O bound system much quicker.  And there is significant interference from the I/O on both servers for a large database.
->>>>>>> PCchanges
 
 \begin{table}[h]
 \begin{subtable}[h]{0.45\textwidth}
@@ -58,7 +53,6 @@ Then we simulate external machine interference by running Dom1 concurrently with
 \caption{Dom1 TPS (Transactions Per Second) for 3 database sizes, when run as a single VM and with 3 external guests running concurrently.}
 \end{table}
 
-<<<<<<< HEAD
 \subsubsection{Existing tools analysis}
 \indent Trying to analyze the performance drop in Dom1 without knowing about this external interference is difficult.  
 There were no changes to Dom1 when run by itself and run with other guests.  
@@ -67,12 +61,8 @@ Memory is not used as efficiently, the system almost completely elimiates swappi
 However, there is no indication that the problem was due to an external guest and hypervisor using those resources.
 A DBA looking at these numbers may conclude that kernel swap or DB tuning may fix the problem.  
 The root cause of the performance drop is due to external interference, which is not known from examining the data available.
+
 \begin{table}[h]
-=======
-\subsubsection{Anaylysis Using Current Tools}
-\indent Trying to analyze the performance drop in Dom1 without knowing about this external interference is difficult.  There were no changes to Dom1 when run by itself and run with other guests.  We now look at available memory, Swap In and Bytes In/S to see if we can determine why the application benchmark is degraded without collecting external information (Table \ref{fig:vmstat}).  We can see that memory is not used as efficiently, the system almost completely elimiates swapping data in, and also can't read as quickly from disk.  However, there is little that we can change or tune in the OS to improve the application.  The root cause of the performance drop is due to external interference, which is not known from examining the data available.
-\begin{table}
->>>>>>> PCchanges
   \begin{tabular}{ l | r | r | r }
     VMstat & Single & Multiple & Drop \\ \hline
 	Memory & 211Kb & 138Kb & 35\% \\
@@ -83,7 +73,6 @@ The root cause of the performance drop is due to external interference, which is
 \label{fig:vmstat}
 \end{table}
 
-<<<<<<< HEAD
 % Section 7.2
 \subsection{Equally sharing resources}
 In the previous experiment we showed the interference that can occur when exteranl I/O interference is applied to a guest domain.
@@ -100,13 +89,27 @@ Calculate the interference for the 6 counters.  Note the \emph{ms\_rd} counter w
 
 % Section 7.3
 \subsection{Overcommitting Resources}
-In this section we test our method while resources are overcommited.  As previously mentioned, overcommitting is a common practice in hosting centers.  This allows guests that need more resources for short periods of time to have access tothose resources.  The problem is that this may cause severe degredation if multiple guests all need these resources concurrently.  
+In this section we test our method while resources are overcommited.  
+As previously mentioned, overcommitting is a common practice in hosting centers.  
+This allows guests that need more resources for short periods of time to have access to those resources.  
+The problem is that this may cause severe degredation if multiple guests all need these resources concurrently.  
 
 \indent For this experiment we use our Dell with 8GB of physical RAM.  
-We configure all 4 domains from 2GB to 3GB of vRAM for a \emph{1.5x} overcommittment ratio.  We create a 3 GB database in each domain so that again the DB will need to read from disk often.  For this size of database expect to see a significant change in the application when the external guest domains begin 
+We configure all 4 domains from 2GB of vRAM for a \emph{1.5x} overcommittment ratio.  We create an I/O bound application by creating a 3 GB database in each domain.  For this size of database expect to see a significant change in the application when the external guest domains (Dom2 - Dom4) compete for physical resources with Dom1.
 
+\begin{figure}[h]
+\begin{Verbatim}
+# xm list
+Name                              ID   Mem VCPUs      State   Time(s)
+Domain-0                           0  1024    16     r-----  14638.2
+TestVM1                            8  2048     1     -b----   4434.7
+TestVM2                            9  2048     2     -b----    582.0
+TestVM3                           10  2048     1     -b----    492.3
+TestVM4                           11  2048     4     -b----    615.4
 \subsubsection{Overhead}
 Calculate the overhead for the 6 counters.
+\end{Verbatim}
+\end{figure}
 
 \subsubsection{Interference}
 Calculate the interference for the 6 counters.  Note the \emph{ms\_rd} counter which shows the interference from reading from physical disk.
@@ -122,10 +125,6 @@ In the previous two experiments, we showed how our method can give a guest domai
 
 
 
-
-
-=======
->>>>>>> PCchanges
 
 
 
