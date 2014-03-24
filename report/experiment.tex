@@ -95,21 +95,33 @@ This allows guests that need more resources for short periods of time to have ac
 The problem is that this may cause severe degredation if multiple guests all need these resources concurrently.  
 
 \indent For this experiment we use our Dell with 8GB of physical RAM.  
-We configure all 4 domains from 2GB of vRAM for a \emph{1.5x} overcommittment ratio.  We create an I/O bound application by creating a 3 GB database in each domain.  For this size of database expect to see a significant change in the application when the external guest domains (Dom2 - Dom4) compete for physical resources with Dom1.
+We configure all Dom1 to use 4GB of vRAM and keep Dom2 - Dom4 at 2GB of vRAM.  We create an I/O bound application by creating a 3 GB database in each domain.  For this size of database expect to see a significant change in the application when the external guest domains (Dom2 - Dom4) compete for physical resources with Dom1.
 
 \begin{figure}[h]
 \begin{Verbatim}
 # xm list
-Name                              ID   Mem VCPUs      State   Time(s)
-Domain-0                           0  1024    16     r-----  14638.2
-TestVM1                            8  2048     1     -b----   4434.7
-TestVM2                            9  2048     2     -b----    582.0
-TestVM3                           10  2048     1     -b----    492.3
-TestVM4                           11  2048     4     -b----    615.4
-\subsubsection{Overhead}
-Calculate the overhead for the 6 counters.
+Name                             ID   Mem VCPUs      State   Time(s)
+Domain-0                          0   868    16     r-----  15615.0
+TestVM1                          19  4096     2     -b----    129.0
+TestVM2                          13  2048     2     -b----    106.9
+TestVM3                          14  2048     2     -b----     83.7
+TestVM4                          18  2048     2     -b----     91.8
 \end{Verbatim}
 \end{figure}
+
+\subsubsection{Overhead}
+For the overhead we use the method defined in the design to calculate the overhead for the I/O and virtual memory counters.  We monitor the counters in the guest machines and the hypervisor.  Only TestVM1 runs while calculating the overhead.
+
+\begin{table}[h]
+\begin{tabular}{ l l p{5cm} }
+  Counter & Overhead \\
+  \hline
+  pgpgin & -100\%
+  pgpgout & -180\%
+
+  \hline
+\end{tabular}
+\caption{Disk I/O performance counters on Linux.}
 
 \subsubsection{Interference}
 Calculate the interference for the 6 counters.  Note the \emph{ms\_rd} counter which shows the interference from reading from physical disk.

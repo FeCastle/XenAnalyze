@@ -258,7 +258,7 @@ virsh dumpxml $VM > /tmp/Xen/${VM}.xml
 ----------------------- Change Memory (example 3GB) --------------------------
 VM="TestVM1"
 virsh setmaxmem $VM 3145737
-xm mem-set $VM 2048
+xm mem-set $VM 3072
 virsh dumpxml $VM > /tmp/Xen/${VM}.xml
 xm reboot $VM
 

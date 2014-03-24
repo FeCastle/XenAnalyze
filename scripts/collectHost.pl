@@ -15,8 +15,6 @@ $vmKeys[3] = "pgactivate";
 $vmKeys[4] = "pgdeactivate";
 $vmKeys[5] = "pgfree";
 
-
-
 sub doResults() {
 	$| = 1;    # Flush print 
 	print ("Finishing Collect Host Data.\n");
@@ -57,20 +55,35 @@ sub doResults() {
 	printf $hdrFormat, "Domain", @vmKeys;
 	printf $hdrFormat, "Dom-0", @hostVM;
 
+	my @VMtotals=();
+	foreach $statkey (@vmKeys) {
+		push(@VMtotals, 0);
+	}
 	$results = `xenstore-list $basePath`;
 	foreach $domID ( split (/\n/, $results)) {
 		my @guestVM=();
 		$cmd = "xenstore-list $basePath/$domID/$xenVmstat";
 		$stats = `$cmd 2>/dev/null`;
 		if ($? == 0) {
+			$i = 0;
 			foreach $statkey (@vmKeys) {
 				$value = `xenstore-read $basePath/$domID/$xenVmstat/$statkey`;
 				$value =~ s/^\s+|\s+$//g;
 				push(@guestVM, $value);
+				$VMtotals[$i] += $value;
+				$i++;
 			}
 			printf $hdrFormat, "Dom-$domID", @guestVM;
 		}
 	}
+	my @VMoverhead=();
+	$i = 0;
+	foreach $hostVal (@hostVM) {
+		$VMoverhead[$i] = 100 * ($VMtotals[$i] - $hostVal) / $VMtotals[$i];
+		$i++;
+	}
+	printf $hdrFormat, "Dom_sum", @VMtotals;
+	printf "%-8s %2.1f %2.1f %2.1f\n", "Overhd", @VMoverhead;
 
 }
 
