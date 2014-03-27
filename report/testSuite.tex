@@ -72,7 +72,7 @@ However, when the \emph{working set}  approaches (or exceeds) the size of main m
 Our initial experiments to find an I/O workload highlight this fact by changing the database size under load in a virtual environment.
 Before running the entire test suite we need to create a test database that will exceed the \emph{working set} and increase the probability that a database read will need to fetch the data from disk storage.  With PGbench the "-i" flag \emph{scaling factor} is used to initialize a database at a specified size (prior to running the benchmark) so that our results can show changes between a memory bound system and I/O bound system.  
 
-We created a script to find the size of database required for a force I/O.  It runs and creates a small database then runs a benchmark and collects the results of the benchmark - TPS.  The script then creates a slighly larger database and runs the benchmark again.  This process is repeated until the TPS drop significantly, and the CPU time is almost idle.  At this point we can determine an adequate database size for an I/O bound system.
+We created a script to find the size of database that would generate a high I/O rate.  It runs and creates a small database then runs a benchmark and collects the results of the benchmark - TPS.  The script then creates a slighly larger database and runs the benchmark again.  This process is repeated until the TPS drop significantly, and the CPU time is almost idle.  At this point we can determine an adequate database size for an I/O bound system.
 
 \begin{figure}[!h]
   \begin{center}
@@ -81,7 +81,6 @@ We created a script to find the size of database required for a force I/O.  It r
   \label{smallIO}
   \end{center}
 \end{figure}
-
 
 \subsection{Test Data}
 \indent We can use the TPS to show how the database performs at the application layer when external environment changes are made to the system.  Our tests will select Memory and I/O resources to monitor.  For measuring disk I/O it is a good to also collect virtual memory (in this case we are talking about OS virtual memory, not virtualization) as well as I/O data.  We selected to measure paging performance counters \ref{fig:memory} across all layers for the memory resource.  We selected disk read counters \ref{fig:io} as our data at all layers to measure interference from I/O. 

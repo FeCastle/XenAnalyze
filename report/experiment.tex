@@ -3,7 +3,7 @@ In the following test experiments we evaluate the benefits of passing additional
 \subsection{External machine interference}
 In this experiment, we show the memory and I/O interference from external systems, without overcommitting the resources.  From the guest domain running the benchmark, there is a significant drop in the application performance when run concurrently with external systems.  Additionally, monitoring resources in the guest domain provides little information about the performance problems. 
 
-First we divide the physical memory and CPUs into four equal parts and create four individual guest virtual machines (Dom1 - Dom4).  Each virtual machine is given 25\% of the availble resources so that no guest virtual machine would interfere with another machine if they were on separate physical systems.  We start only our Dom1 machine and run our experimental test with PGbench.  On our \emph{Business} Dell server, Dom1 is allocated 2GB vRAM and 2 vCPU, while on the IBM server is Dom1 is given 512MB vRAM and 1 vCPU.  
+First we divide the physical memory and CPUs into four equal parts and create four individual guest virtual machines (Dom1 - Dom4).  Each virtual machine is given 25\% of the available resources so that no guest virtual machine would interfere with another machine if they were on separate physical systems.  We start only our Dom1 machine and run our experimental test with PGbench.  On our \emph{Business} Dell server, Dom1 is allocated 2GB vRAM and 2 vCPU, while on the IBM server is Dom1 is given 512MB vRAM and 1 vCPU.  
 
 \subsubsection{Database Size}
 We start by initializing a Small DB and run PGBench and collect the TPS.  Then we increase the DB size slightly and run the benchmark again.  After repeating this process several times, we can see that when the DB size changes to an I/O bound system its performance drops significantly.  This is due to the fact that it must fetch database rows from the disk and it is much slower.  The Dom1 on both servers begin to degrade significantly to I/O when the DB size is close to the available vRAM.
@@ -14,15 +14,11 @@ We start by initializing a Small DB and run PGBench and collect the TPS.  Then w
   \item[Large DB] Most reads need to go to disk.  Performance is based on Disk I/O.
 \end{description}
 
-\subsubsection {Show Interference}
-Then we simulate external machine interference by running Dom1 concurrently with Dom2, Dom3, and Dom4. Each of the Dom2 - Dom4 systems are also configured with 2GB of RAM and 2 vCPUs.  We create a 2GB database on each external guest and run PG bench continuously to generate I/O interference.  
-
- We again measure the results of the benchmark on Dom1 at 3 different database sizes, while the other 3 guest domains are causing interference.  When the system is not I/O bound, there is about a 28\% drop in performance (4434 TPS - 3208 TPS) on the IBM server and little change in the Dell server (Figure \ref{fig:tps1}).  On both servers Dom1 drops to an I/O bound system faster, when there is external interference (90\% performance drop in both cases).  There is significant interference when it fully I/O bound in Dom1.
-
+% Section 7.1.2
 \subsubsection{With Interference}
 Then we simulate external machine interference by running Dom1 concurrently with Dom2, Dom3, and Dom4. Each of the Dom2 - Dom4 systems are configured the same as Dom1.  We create a 2 GB database on each guest of the Dell, and a 1GB database on each guest of the IBM.  We run a PGBench in a loop to continuously create I/O interference on each external guest machine (Dom2 - Dom4) while going from a small DB to a large DB on Dom1.
 
- We again measure the results of the benchmark on Dom1, while the other 3 guest domains are causing interference.  When the system is not I/O bound (Small database) there is about a 28\% drop in performance (4434 TPS - 3208 TPS) on the IBM server and little change in the Dell server (Table \ref{fig:tps1}).  We can see that on both servers it drops to an I/O bound system much quicker.  And there is significant interference from the I/O on both servers for a large database.
+We again measure the results of the benchmark on Dom1, while the other 3 guest domains are causing interference.  When the system is not I/O bound (Small database) there is about a 28\% drop in performance (4434 TPS - 3208 TPS) on the IBM server and little change in the Dell server (Table \ref{fig:tps1}).  We can see that on both servers it drops to an I/O bound system much quicker.  And there is significant interference from the I/O on both servers for a large database.
 
 \begin{table}[h]
 \begin{subtable}[h]{0.45\textwidth}
@@ -88,44 +84,89 @@ Calculate the interference for the 6 counters.  Note the \emph{ms\_rd} counter w
 
 
 % Section 7.3
-\subsection{Overcommitting Resources}
-In this section we test our method while resources are overcommited.  
-As previously mentioned, overcommitting is a common practice in hosting centers.  
-This allows guests that need more resources for short periods of time to have access to those resources.  
-The problem is that this may cause severe degredation if multiple guests all need these resources concurrently.  
+\subsection{Clearing Cache}
+In this test we test our measurements on a system that does not have any stable cache. This will force most of
+the reads to read from the disk IO. Before each test our driver script executes a command on the Linux guest
+to drop the cache before running the benchmark. Each benchmark runs for 30 seconds.
 
-\indent For this experiment we use our Dell with 8GB of physical RAM.  
-We configure all Dom1 to use 4GB of vRAM and keep Dom2 - Dom4 at 2GB of vRAM.  We create an I/O bound application by creating a 3 GB database in each domain.  For this size of database expect to see a significant change in the application when the external guest domains (Dom2 - Dom4) compete for physical resources with Dom1.
+\begin{Verbatim}
+    sync
+    echo 3 > /proc/sys/vm/drop_caches
+    echo 0 > /proc/sys/vm/drop_caches
+\end{Verbatim}
+
+\indent For this experiment we use our Dell server with 8GB of physical RAM. We configure all Dom1 to use
+4GB of vRAM and keep Dom2 - Dom4 at 2GB of vRAM. We create an I/O bound application by creating a
+3 GB database in each domain. For this size of database expect to see a significant change in the application
+when the external guest domains (Dom2 - Dom4) compete for physical resources with Dom1.
 
 \begin{figure}[h]
 \begin{Verbatim}
 # xm list
 Name                             ID   Mem VCPUs      State   Time(s)
 Domain-0                          0   868    16     r-----  15615.0
-TestVM1                          19  4096     2     -b----    129.0
-TestVM2                          13  2048     2     -b----    106.9
-TestVM3                          14  2048     2     -b----     83.7
-TestVM4                          18  2048     2     -b----     91.8
+TestVM1                           1   4096     2     -b----    129.0
+TestVM2                           2   2048     2     -b----    106.9
+TestVM3                           3   2048     2     -b----     83.7
+TestVM4                           4   2048     2     -b----     91.8
 \end{Verbatim}
 \end{figure}
 
 \subsubsection{Overhead}
-For the overhead we use the method defined in the design to calculate the overhead for the I/O and virtual memory counters.  We monitor the counters in the guest machines and the hypervisor.  Only TestVM1 runs while calculating the overhead.
+For the overhead we use Equation 1 defined in the design to calculate the OverheadV for the I/O and virtual
+memory counters. We monitor the counters in the guest machines and the hypervisor. Only TestVM1 runs
+while calculating the overhead.
 
 \begin{table}[h]
-\begin{tabular}{ l l p{5cm} }
-  Counter & Overhead \\
+\begin{tabular}{ l l l p{5cm} }
+  Counter & Dom0 & Dom1 & $Overhead_V$ \\
   \hline
-  pgpgin & -100\%
-  pgpgout & -180\%
-
+pgpgin    & 1,704,366 & 851,643 & -100\% \\
+pgpgout   & 4,925     & 1,751   & -181\% \\
+pgfault   & 50,991    & 93,843  & 46\%   \\
+r sectors & 1,704,425 & 1,703,286 & 0\%  \\
+\textbf{r\_ms} & 110,385 & 144,668 & \textbf{24\%} \\
+r total   & 41,182 & 48,988 & 16\% \\
   \hline
 \end{tabular}
-\caption{Disk I/O performance counters on Linux.}
+\caption{Overhead calculated average of four test runs.}
+\label{fig:OverheadMed}
+\end{table}
 
 \subsubsection{Interference}
-Calculate the interference for the 6 counters.  Note the \emph{ms\_rd} counter which shows the interference from reading from physical disk.
+Now we repeat the experiment and collect the same counters in all guests and the hypervisor, while all guests are running. 
+We collect the counters in the guest and the hypervisor for 30 seconds and stop and start the collection of counters between all guests and the hypervisor. 
+We calculate the overhead from all guests $Overhead_V$ (Equation 2) by calculating the sum of the counters from all guests and comparing that to the counters collected from the hypervisor. 
+Then we can calculate the $Interference$ (Equation 3) in the guest domain Dom1.
 
+\begin{table}[h]
+\begin{tabular}{ l l l l p{5cm} }
+  Counter & Dom0 & $\sum{DomU}$ & $Overhead_V$ & $Interference$ \\
+  \hline
+pgpgin    & 6,411,078 & 3,201,715 & -100\% & 0\% \\
+pgpgout   & 18,541     & 8,388   & -121\%  & 60\%\\
+pgfault   & 386,319    & 407,700  & 46\%   & -40\% \\
+r sectors & 1,704,425 & 1,703,286 & 0\%    & 0\%\\
+\textbf{r\_ms} & 1,190,041 & 1,649,907 & \textbf{28\%} & \textbf{4\%} \\
+r total   & 149,994 & 181,147 & 17\%  & 1\% \\
+  \hline
+\end{tabular}
+\caption{Interference calculated average of four test runs.}
+\label{fig:OverheadMed}
+\end{table}
+
+Our only counter that measure time of a resource (r ms) was consistently greater than when we ran it
+without interference. Although this does not account for all of the performance drop, it does contribute to
+the performance issues and is consistent across all tests. This shows a 4\% interference while the application showed a 48\% drop in overall performance while running this set of tests.
+
+From these results we can see that that the ratios are the same for the two counters that were directly
+related when collecting the overhead. We can assume in this case that these counters are not effected by
+interference, and our method shows a 0\% interference.   The total reads also remains fairly consistent although it is not directly related.  The pages out are too small in this case to make any conclusions.  We did not stress the writes when calculating the overhead, so pages out are probably not relevant for this case. 
+
+Using our current calculation methods page faults shows a negative value, but it could explain the
+additional interference. When only a single guest was running only about half of the page faults in the
+guest were also run in the hypervisor. When run with all exteranal guest domains almost all of the page faults
+resulted in page faults in the hypervisor.  Additional tests and analysis would need to be performed to see how page faults relate between the guests and the hypervisor.
 
 % Section 7.4
 \subsection{Verification without interference}
