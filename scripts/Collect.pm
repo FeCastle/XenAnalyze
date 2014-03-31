@@ -35,6 +35,14 @@ $diskKeys[8] = "IO_cur";
 $diskKeys[9] = "IO_ms";
 $diskKeys[10]= "IO_weighted";
 
+my @vmKeys;    # /proc/vmtats has too much info
+$vmKeys[0] = "pgpgin";
+$vmKeys[1] = "pgpgout";
+$vmKeys[2] = "pgfault";
+$vmKeys[3] = "pgactivate";
+$vmKeys[4] = "pgdeactivate";
+$vmKeys[5] = "pgfree";
+
 ##############################################################################
 # findDisk
 #   The disk may be a full SCSI disk (sda) or a volume group (dm-0)
@@ -63,18 +71,30 @@ sub doPost() {
 	collectDisk(1);
 }
 
+
+###########################################################################
+# collectVM
+#   Collect VM statistics from /proc/vmstat
+#
+#   Example Data:
+# 		nr_free_pages 4104
+# 		nr_inactive_anon 36250
+# 		nr_active_anon 6393
+#		nr_inactive_file 66667
+#		nr_active_file 75303
+#   
+###########################################################################
 sub collectVM() {
 	$x = shift;
 	open (VMSTAT, "<", $vmstat) || die "Unable to read $!";
 	while (<VMSTAT>) {
-		@data = split (/\s+/);
+		$_ =~ s/^\s+//;    ## 
+		($vmKey, $vmVal) = split (/\s+/);
 		if ($x eq 0) {
-			print "PRE Collecting VM:  $data[0] -> $data[1]\n";
-			$vmPre{$data[0]} = $data[1];
+			$vmPre{$vmKey} = $vmVal;
 		}
 		else {
-			print "POST Collecting VM:  $data[0] -> $data[1]\n";
-			$vmPost{$data[0]} = $data[1];
+			$vmPost{$vmKey} = $vmVal;
 		}
 	}
 	close (VMSTAT);
@@ -82,8 +102,6 @@ sub collectVM() {
 
 ###########################################################################
 #
-# See Dom-0 /sys/bus/xen-backend/devices/vbd-26-51712/statistics/rd_req
-# See Dom-0 /sys/bus/xen-backend/devices/vbd-<ID>-51712/statistics/rd_req
 ###########################################################################
 sub collectDisk() {
 	$x = shift;
@@ -94,11 +112,11 @@ sub collectDisk() {
 		(scalar @diskKeys == scalar @data) || die "$diskstat - Mismatch";
 		for ($i=0; $i< scalar @diskKeys; ++$i) {
 			if ($x eq 0) {
-			#	print "PRE Collecting Disk:  $diskKeys[$i] -> $data[$i]\n";
+				print "PRE Collecting Disk:  $diskKeys[$i] -> $data[$i]\n";
 				$diskPre{$diskKeys[$i]} = $data[$i];
 			}
 			else {
-			#	print "POST Collecting Disk:  $diskKeys[$i] -> $data[$i]\n";
+				print "POST Collecting Disk:  $diskKeys[$i] -> $data[$i]\n";
 				$diskPost{$diskKeys[$i]} = $data[$i];
 			}
 		}
