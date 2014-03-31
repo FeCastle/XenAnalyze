@@ -6,7 +6,8 @@
 ## Domain-0 is used to collect and pars the data
 ##
 ## The xen tools need to be present in DomU for this to work
-##  See HowTo.txt or http://silviud.blogspot.com/2011/09/from-domu-read-xenstore-ec2-linode-etc.html
+##  See HowTo.txt or 
+##  http://silviud.blogspot.com/2011/09/from-domu-read-xenstore-ec2-linode-etc.html
 ##
 ## Author:  Deron Jensen
 ## Date:    01/16/2014

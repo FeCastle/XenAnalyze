@@ -54,11 +54,11 @@ SCALEFACTOR=25
 # while [ $SCALEFACTOR -le $END ]; do
 # for SCALEFACTOR in 10 25 50; do
     LOGFILE=$LOGDIR/$HOSTNAME.$SCALEFACTOR
-    #echo "Init DB with Scale Factor of $SCALEFACTOR" | tee $LOGFILE
-    #pgbench -i -s $SCALEFACTOR $DBNAME > /dev/null 2>&1
-    vacuumdb --analyze $DBNAME >/dev/null 2>&1
-    psql -d $DBNAME -c "checkpoint;" >/dev/null 2>&1
-    setup
+    # echo "Init DB with Scale Factor of $SCALEFACTOR" | tee $LOGFILE
+    # pgbench -i -s $SCALEFACTOR $DBNAME > /dev/null 2>&1
+    # vacuumdb --analyze $DBNAME >/dev/null 2>&1
+    # psql -d $DBNAME -c "checkpoint;" >/dev/null 2>&1
+    # setup
     echo "Starting Test with $CLIENTS clients" | tee $LOGFILE
     vmstat 5 >> $LOGFILE &
     pgbench -T 30 -c $CLIENTS -S $DBNAME | grep tps | grep excluding >> $LOGFILE

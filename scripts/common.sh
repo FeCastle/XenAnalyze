@@ -24,4 +24,4 @@ benchmark="data/analysis/benchmark"   # Generate a load
 benchCmd="./getScaleFactor"
 
 ## Guest Machines DomIDs to run ##
-domIDs=(2)
+domIDs=(20)
