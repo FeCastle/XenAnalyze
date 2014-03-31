@@ -70,17 +70,65 @@ The root cause of the performance drop is due to external interference, which is
 \end{table}
 
 % Section 7.2
-\subsection{Equally sharing resources}
+\subsection{Personal Server}
 In the previous experiment we showed the interference that can occur when exteranl I/O interference is applied to a guest domain.
 In this experiment, we repeat the previous previous experiment and pass kernel resource counter data between the hypervisor and domains.  
 The results are from our IBM where each guest is configured to use 512MB of vRAM.
-We run this against a 1 GB database \textbf{Large DB} in Dom1 and measure the I/O interference using the method in Section 5.  
+We run this against a \textbf{Medium DB} at 320MB in Dom1 and measure the I/O interference using the method in Section 5.  
+
+\begin{Verbatim}
+# xm list
+Name                                        ID   Mem VCPUs      State   Time(s)
+Domain-0                                     0  1988     4     r-----  88871.2
+Test_VM1                                    25   512     1     -b----  60187.0
+Test_VM2                                    26   512     1     -b----   5722.0
+Test_VM3                                    27   512     1     -b----   5273.0
+Test_VM4                                    28   512     1     -b----   5203.5
+\end{Verbatim}
 
 \subsubsection{Overhead}
-Calculate the overhead for the 6 counters.
+We calculate the overhead for the guest OS paging and the I/O reads using the resource counters defined in our test suite.  While calculating the overhead we also collected the application performance at 260 TPS without and external interfernece.
 
-\subsubsection{Interference}
-Calculate the interference for the 6 counters.  Note the \emph{ms\_rd} counter which shows the interference from reading from physical disk.
+\begin{table}[h]
+\begin{tabular}{ l l l p{5cm} }
+  Counter & Dom0 & Dom1 & $Overhead_V$ \\
+  \hline
+r sectors & 764,629 & 768,101 & 0\%  \\
+\textbf{r\_ms} & 68,669 & 85,133 & \textbf{19\%} \\
+r total   & 19,113 & 23,012 & 17\% \\
+  \hline
+\end{tabular}
+\caption{I/O Overhead calculated average of four test runs on the IBM x3650.}
+\label{fig:OverheadSmall}
+\end{table}
+
+From this table we can see that the \emph{r\_sectors} has a direct relation between the hypervisor and the guest VM.  The \emph{r\_ms} is a conter that we will use to determine the inteference from I/O since it tracks the time spent in the guest and hypervisor.  We calculate the virtualization overhead for this at 19\%.
+
+\subsubsection{Memory Interference}
+Since the DB size is 320MB and there is 512MB of vRAM on Dom1, we want to measure the interference when the working set can fit into memory.  
+It is starting to switch from a memory bound system to an I/O system.
+We repeat the previous experiment with 4 guest domains all running at the same time.
+By using Equation 2 and 3 we can calculate the $Overhead_Vall$ and the $Interference$ for each counter.
+While collecting the perormance counters, we also collected the application performance on DOM1 at 197 TPS.  A performance drop of 24\% when compared to running without any interfernce.
+
+\begin{table}[h]
+\begin{tabular}{ l l l l p{5cm} }
+  Counter & Dom0 & $\sum{DomU}$ & $Overhead_Vall$ & $Interference$ \\
+  \hline
+       r sectors & 3,216,853 & 3,259,568 & \%    & 1\%\\
+  \textbf{r\_ms} & 371,515 & 463,979 & \textbf{20\%} & \textbf{1\%} \\
+       r total   & 49,306 & 64,668 & 24\%  & 7\% \\
+  \hline
+\end{tabular}
+\caption{Interference calculated average of four test runs.}
+\label{fig:InterferenceSm}
+\end{table}
+
+The \emph{r\_sectors} still shows a direct relation even when run with interference.  The emph{r\_ms} only shows a 1\% change in interference.  The total reads may not be related to the interference.  From these results we do not see I/O interference.  Or very little interference from I/O.  We suspect that it may be paging or memory management between the domains that causes 
+
+\subsubsection{I/O Interference}
+Since the previous experiment did not show very much interference from I/O we repeat that experiment with a larger database.  We change the database size in Dom1 - Dom4 to 640MB.  This is greater than the available ram and will cause significant I/O reads.
+
 
 
 % Section 7.3
@@ -152,7 +200,7 @@ r total   & 149,994 & 181,147 & 17\%  & 1\% \\
   \hline
 \end{tabular}
 \caption{Interference calculated average of four test runs.}
-\label{fig:OverheadMed}
+\label{fig:InterferenceMed}
 \end{table}
 
 Our only counter that measure time of a resource (r ms) was consistently greater than when we ran it
