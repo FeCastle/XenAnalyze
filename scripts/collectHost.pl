@@ -8,8 +8,8 @@ $hdrFormat  = "%-8s %2s %10s %10s %10s %10s %10s\n";
 $lineFormat = "%-8s %2d %10d %10d %10d %10d %10d\n";
 
 ### Reporting:  Which VM data do we report ###
-my @vmKeys = ("pgpgin", "pgpgout", "pgfault", );
-my @diskKeys = ("r_ms", "r_total", "r_sectors");
+my @vmKeys = ("pgpgin", "pgpgout", "pgfault" );
+my @diskKeys = ("r_sectors", "r_ms", "r_total" );
 my %report;
 
 sub doResults() {
@@ -54,7 +54,7 @@ sub doResults() {
 	print ("--- Report ---\n");
 	@allKeys = (@vmKeys, @diskKeys);
 	printf $hdrFormat, "Domain", @allKeys;
-	foreach $domID (keys %report) {
+	foreach $domID (@domIDs, "0", "U") {
 		@domVals = ();
 		foreach $key (@allKeys) {
 			push(@domVals, $report{$domID}{$key});
@@ -71,13 +71,12 @@ sub doResults() {
 		# $overhead = 100 * ($guestVal - $hostVal) / $guestVal;
 		
 		# New method 
-		$overhead = 100 * ($hostVal - $guestVal) / $guestVal;
-		printf ("%2.1f      ", $overhead);
+		$overhead = ($hostVal - $guestVal) / $guestVal;
+		printf ("%1.3f     ", $overhead);
 	}
 	print ("\n");
 
 	return 0;
-
 
 }
 

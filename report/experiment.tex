@@ -1,12 +1,12 @@
 In the following test experiments we evaluate the benefits of passing additional information through the layers of the hypervisor and guests for profiling.  Unless otherwise noted, each experiment is performed on a \emph{Personal} and \emph{Business} scale virtualization platform (Table \ref{virtSize}).  Both systems have CentOS and Xen Server installed (Table \ref{softStack}) for the software stack installed.
 
 \subsection{External machine interference}
-In this experiment, we show the memory and I/O interference from external systems, without overcommitting the resources.  From the guest domain running the benchmark, there is a significant drop in the application performance when run concurrently with external systems.  Additionally, monitoring resources in the guest domain provides little information about the performance problems. 
+In this experiment, we show the memory and I/O interference from external systems.  From the guest domain running the benchmark, there is a significant drop in the application's performance when run concurrently with external systems.  Additionally, monitoring resources in the guest domain provides little information about the performance problems. 
 
-First we divide the physical memory and CPUs into four equal parts and create four individual guest virtual machines (Dom1 - Dom4).  Each virtual machine is given 25\% of the available resources so that no guest virtual machine would interfere with another machine if they were on separate physical systems.  We start only our Dom1 machine and run our experimental test with PGbench.  On our \emph{Business} Dell server, Dom1 is allocated 2GB vRAM and 2 vCPU, while on the IBM server is Dom1 is given 512MB vRAM and 1 vCPU.  
+First we divide the physical memory and CPUs into four equal parts and create four individual guest virtual machines (Dom1 - Dom4).  Each virtual machine is given 25\% of the available resources so that no guest virtual machine would interfere with another machine if they were on separate physical systems.  We start only our Dom1 machine and run our experimental test with PGbench.  On our \emph{Business} Dell server, Dom1 is allocated 2GB vRAM and 2 vCPU, while on the IBM server Dom1 is given 512MB vRAM and 1 vCPU.  
 
 \subsubsection{Database Size}
-We start by initializing a Small DB and run PGBench and collect the TPS.  Then we increase the DB size slightly and run the benchmark again.  After repeating this process several times, we can see that when the DB size changes to an I/O bound system its performance drops significantly.  This is due to the fact that it must fetch database rows from the disk and it is much slower.  The Dom1 on both servers begin to degrade significantly to I/O when the DB size is close to the available vRAM.
+We start by initializing a Small DB and run PGBench and collect the TPS.  Then we increase the DB size slightly and run the benchmark again.  After repeating this process several times, we can see that when the DB size changes to an I/O bound system its performance drops significantly (Table \ref{fig:tps1}) .  This is due to the fact that it must fetch database rows from the disk and it is much slower.  The Dom1 on both servers begin to degrade significantly to I/O when the DB size is close to the available vRAM.
 
 \begin{description}
   \item[Small DB] The working set can fit into main memory.  Performance is based on Memory.
@@ -72,63 +72,85 @@ The root cause of the performance drop is due to external interference, which is
 % Section 7.2
 \subsection{Personal Server}
 In the previous experiment we showed the interference that can occur when exteranl I/O interference is applied to a guest domain.
-In this experiment, we repeat the previous previous experiment and pass kernel resource counter data between the hypervisor and domains.  
-The results are from our IBM where each guest is configured to use 512MB of vRAM.
-We run this against a \textbf{Medium DB} at 320MB in Dom1 and measure the I/O interference using the method in Section 5.  
+In this experiment, we create large I/O bound database, which is greater than the size of virtual RAM on the Dom1 test machine.  
+The results are from our IBM x3650, where each guest is configured to use 512MB of vRAM.
+First, we run the benchmark and measure the overhead on a \textbf{Large DB} at 640MB in Dom1 using the method in Section 5.  
+Then we start Dom2 - Dom4 with two different database sizes in the guest machines and measure the interference these servers cause on an I/O bound system.  We compare the results of the calculated interference with the performance drop in the application.
 
 \begin{Verbatim}
 # xm list
 Name                                        ID   Mem VCPUs      State   Time(s)
 Domain-0                                     0  1988     4     r-----  88871.2
-Test_VM1                                    25   512     1     -b----  60187.0
-Test_VM2                                    26   512     1     -b----   5722.0
-Test_VM3                                    27   512     1     -b----   5273.0
-Test_VM4                                    28   512     1     -b----   5203.5
+Test_VM1                                     1   512     1     -b----  60187.0
+Test_VM2                                     2   512     1     -b----   5722.0
+Test_VM3                                     3   512     1     -b----   5273.0
+Test_VM4                                     4   512     1     -b----   5203.5
 \end{Verbatim}
 
 \subsubsection{Overhead}
-We calculate the overhead for the guest OS paging and the I/O reads using the resource counters defined in our test suite.  While calculating the overhead we also collected the application performance at 260 TPS without and external interfernece.
+We calculate the overhead for the guest OS paging and the I/O reads using the resource counters defined in our test suite.  While calculating the overhead we also collected the application performance at 415 TPS without any external interfernece.
 
+% See Test7_1Results.xls (Barbaro - Exp7.2(P2))
 \begin{table}[h]
 \begin{tabular}{ l l l p{5cm} }
   Counter & Dom0 & Dom1 & $Overhead_V$ \\
   \hline
-r sectors & 764,629 & 768,101 & 0\%  \\
-\textbf{r\_ms} & 68,669 & 85,133 & \textbf{19\%} \\
-r total   & 19,113 & 23,012 & 17\% \\
+	pgpgin    & 332,504 & 165,901 & 100\% \\
+	pgfault   &  25,648 & 132,691 & -81\% \\
+	r sectors & 332,504 & 331,803 &   0\% \\
+	r\_ms     &  63,356 &  72,428 & -13\% \\
+	r total   &  11,145 &  12,166 &  -8\% \\
   \hline
 \end{tabular}
 \caption{I/O Overhead calculated average of four test runs on the IBM x3650.}
 \label{fig:OverheadSmall}
 \end{table}
 
-From this table we can see that the \emph{r\_sectors} has a direct relation between the hypervisor and the guest VM.  The \emph{r\_ms} is a conter that we will use to determine the inteference from I/O since it tracks the time spent in the guest and hypervisor.  We calculate the virtualization overhead for this at 19\%.
+The first thing to notice on this is that the pages in and the read sectors are exactly  the same in the hypervisor, but in the guest domain the read sectors are about twice as much as the pages in.  The other counters all show a negative overhead because the hypervisor performs less physical requests to disk and page faults than were completed in the guest.  For example the guest issued about 12 thousand reads, but the hypervior only actually executed 11 thousand total read requests.  This is likely due to optimizations in the hypervisor to cache data.
 
 \subsubsection{Memory Interference}
-Since the DB size is 320MB and there is 512MB of vRAM on Dom1, we want to measure the interference when the working set can fit into memory.  
-It is starting to switch from a memory bound system to an I/O system.
 We repeat the previous experiment with 4 guest domains all running at the same time.
+Since the DB size in Dom1 is 640MB and there is 512MB of vRAM on Dom1, we can say that Dom1 is bound by disk I/O speed.
+We run an experiments with the other 3 guest domains running a memory bound database.  Dom2 - Dom4 still has 512MB vRAM.  
+We create a Small DB of 128MB in each of the other domains to generate memory interference on Dom1.
 By using Equation 2 and 3 we can calculate the $Overhead_Vall$ and the $Interference$ for each counter.
-While collecting the perormance counters, we also collected the application performance on DOM1 at 197 TPS.  A performance drop of 24\% when compared to running without any interfernce.
 
 \begin{table}[h]
 \begin{tabular}{ l l l l p{5cm} }
   Counter & Dom0 & $\sum{DomU}$ & $Overhead_Vall$ & $Interference$ \\
   \hline
-       r sectors & 3,216,853 & 3,259,568 & \%    & 1\%\\
-  \textbf{r\_ms} & 371,515 & 463,979 & \textbf{20\%} & \textbf{1\%} \\
-       r total   & 49,306 & 64,668 & 24\%  & 7\% \\
+	pgpgin    & 328,144 & 163,784 & 100\% &   0\% \\
+	pgfault   &  57,293 & 481,541 & -88\% &  -7\% \\
+	r sectors & 328,144 & 256,352 &  28\% &  28\% \\
+	r ms      & 103,483 &  70,751 &  46\% &  59\% \\
+	r total   &  13,365 &   9,547 &  40\% &  48\% \\
   \hline
 \end{tabular}
-\caption{Interference calculated average of four test runs.}
+\caption{Interference calculated from Small 128MB DB in Dom2 - Dom4.  TPS dropped by 20\%} 
 \label{fig:InterferenceSm}
 \end{table}
 
-The \emph{r\_sectors} still shows a direct relation even when run with interference.  The emph{r\_ms} only shows a 1\% change in interference.  The total reads may not be related to the interference.  From these results we do not see I/O interference.  Or very little interference from I/O.  We suspect that it may be paging or memory management between the domains that causes 
+From these tests, Dom1 had 331 TPS, and was degraded from 415 TPS.  We see significant interference in the read counters.  It is not shown in these results, but Dom2 - Dom4 was able to cache the entire working set in memory and did not issue any read requests.  Dom1 was the only domain to issue read request. The totals from all guests domains for each of the three read counters is exactly the same as Dom1.  We can see that the hypervisor read statistics were significantly greater than when we calcualted the overhead.  We also notice that there are less page faults in the hypervisor than there was when collecting overhead.
 
 \subsubsection{I/O Interference}
-Since the previous experiment did not show very much interference from I/O we repeat that experiment with a larger database.  We change the database size in Dom1 - Dom4 to 640MB.  This is greater than the available ram and will cause significant I/O reads.
+Now we create I/O Interference in the three guest domains by creating a 640MB Large DB in Dom2 - Dom4.  Since each guest has 512MB vRAM, this should cause significant I/O contention in Dom1.
 
+\begin{table}[h]
+\begin{tabular}{ l l l l p{5cm} }
+  Counter & Dom0 & $\sum{DomU}$ & $Overhead_Vall$ & $Interference$ \\
+  \hline
+	pgpgin    & 549,419 & 274,533 & 100\% &   0\% \\
+	pgfault   &  58,201 & 255,232 & -77\% &   3\% \\
+	r sectors & 549,419 & 378,075 &  46\% &  46\% \\
+	r ms      & 285,334 & 184,588 &  55\% &  67\% \\
+	r total   &  20,723 &  14,169 &  47\% &  55\% \\
+  \hline
+\end{tabular}
+\caption{Interference calculated Large 640MB DB in Dom2 - Dom4.  TPS dropped by 39\%}
+\label{fig:InterferenceLg}
+\end{table}
+
+During these tests, Dom1 showed 254 TPS, degraded much more than when compared to running with memory Interference.  All of the read counters showed significant interference.  Additionally we are showing some interference from page faults.  The overhead is still negative for all of the page faults compared to the page faults in Dom0.  But it is less than it was when originally collecting the overhead.
 
 
 % Section 7.3
