@@ -49,6 +49,7 @@ We again measure the results of the benchmark on Dom1, while the other 3 guest d
 \caption{Dom1 TPS (Transactions Per Second) for 3 database sizes, when run as a single VM and with 3 external guests running concurrently.}
 \end{table}
 
+% Section 7.1.3
 \subsubsection{Existing tools analysis}
 \indent Trying to analyze the performance drop in Dom1 without knowing about this external interference is difficult.  
 There were no changes to Dom1 when run by itself and run with other guests.  
@@ -87,6 +88,7 @@ Test_VM3                                     3   512     1     -b----   5273.0
 Test_VM4                                     4   512     1     -b----   5203.5
 \end{Verbatim}
 
+% Section 7.2.1
 \subsubsection{Overhead}
 We calculate the overhead for the guest OS paging and the I/O reads using the resource counters defined in our test suite.  While calculating the overhead we also collected the application performance at 415 TPS without any external interfernece.
 
@@ -108,6 +110,7 @@ We calculate the overhead for the guest OS paging and the I/O reads using the re
 
 The first thing to notice on this is that the pages in and the read sectors are exactly  the same in the hypervisor, but in the guest domain the read sectors are about twice as much as the pages in.  The other counters all show a negative overhead because the hypervisor performs less physical requests to disk and page faults than were completed in the guest.  For example the guest issued about 12 thousand reads, but the hypervior only actually executed 11 thousand total read requests.  This is likely due to optimizations in the hypervisor to cache data.
 
+% Section 7.2.2
 \subsubsection{Memory Interference}
 We repeat the previous experiment with 4 guest domains all running at the same time.
 Since the DB size in Dom1 is 640MB and there is 512MB of vRAM on Dom1, we can say that Dom1 is bound by disk I/O speed.
@@ -132,6 +135,7 @@ By using Equation 2 and 3 we can calculate the $Overhead_Vall$ and the $Interfer
 
 From these tests, Dom1 had 331 TPS, and was degraded from 415 TPS.  We see significant interference in the read counters.  It is not shown in these results, but Dom2 - Dom4 was able to cache the entire working set in memory and did not issue any read requests.  Dom1 was the only domain to issue read request. The totals from all guests domains for each of the three read counters is exactly the same as Dom1.  We can see that the hypervisor read statistics were significantly greater than when we calcualted the overhead.  We also notice that there are less page faults in the hypervisor than there was when collecting overhead.
 
+% Section 7.2.3
 \subsubsection{I/O Interference}
 Now we create I/O Interference in the three guest domains by creating a 640MB Large DB in Dom2 - Dom4.  Since each guest has 512MB vRAM, this should cause significant I/O contention in Dom1.
 
@@ -150,25 +154,140 @@ Now we create I/O Interference in the three guest domains by creating a 640MB La
 \label{fig:InterferenceLg}
 \end{table}
 
-During these tests, Dom1 showed 254 TPS, degraded much more than when compared to running with memory Interference.  All of the read counters showed significant interference.  Additionally we are showing some interference from page faults.  The overhead is still negative for all of the page faults compared to the page faults in Dom0.  But it is less than it was when originally collecting the overhead.
+During these tests, the application benchmark Dom1 showed 254 TPS.  This is much less than when run without interference (415 TPS) and with memory interference (331TPS).  All of the read counters showed significant interference.  Additionally we are showing some interference from page faults.  The overhead is still negative for all of the page faults compared to the page faults in Dom0.  But it is less than it was when originally collecting the overhead.
 
 
 % Section 7.3
-\subsection{Clearing Cache}
-In this test we test our measurements on a system that does not have any stable cache. This will force most of
-the reads to read from the disk IO. Before each test our driver script executes a command on the Linux guest
-to drop the cache before running the benchmark. Each benchmark runs for 30 seconds.
+\subsection{Business Server}
+\indent For this experiment we use our Dell server with 12GB of physical RAM. We configure all Dom1 to use 2GB of vRAM and keep Dom2 - Dom4 at 1GB of vRAM. We create an I/O bound application by creating a 3 GB database in each domain. For this size of database expect to see a significant change in the application
+when the external guest domains (Dom2 - Dom4) compete for physical resources with Dom1.
 
+\begin{Verbatim}
+Name                 ID   Mem VCPUs      State   Time(s)
+Domain-0              0  2048    16     r-----  22461.6
+TestVM1               1  2048     1     -b----   1100.6
+TestVM2               2  1024     2     -b----   1095.0
+TestVM3               3  1024     1     -b----   1037.5
+TestVM4               4  1024     2     -b----   1170.8
+\end{Verbatim}
+
+We calculate the overhead in Dom1 using the same method as described previously. We create a 2GB database to force I/O operations.  
+
+\begin{table}[h]
+\begin{tabular}{ l r r r r r p{5cm} }
+	         & pgpgin & pgfault & r sectors & r ms	& r total & TPS \\
+	\hline
+	Overhead & 100\%  & -61\%	 &      0\%	 & -10\% &    -8\% &  327 \\
+\end{tabular}
+\caption{Average Overhead in Dom1 with 2GB vRAM}
+\end{table}
+
+This time we run Dom2 - Dom4 individually so that we can determine if each individual domain contributes to the interference.  So we run 3 separate tests in pairs with each Domain.  We calculate the Overhead and interference in these configurations.
+
+\begin{table}[h]
+\begin{tabular}{ l r r r r r p{5cm} }
+	Domain  & pgpgin & pgfault & r sectors & r ms	& r total & TPS \\
+	\hline
+	Dom2    &	0\%	 & -3\%    & 0\%    &-1\%    & 1\%    & 152  \\
+    Dom3    &  	0\%	 & -9\%	   & 0\%	& 0\%	 & 0\%	  & 158  \\
+    Dom4 	&   0\%  & -8\%    & 0\%	& 1\%	 & 2\%    & 161  \\
+\end{tabular}
+\caption{Interference and application performance Dom1 when only 1 external guest domain was running concurrently.}
+\end{table}
+
+According to these results this did not generate the same type of performance problems as when run in the previous sets of experiments.  There was a significant drop in the application TPS, but these performance counters did not show why there was a significant application performance degradation.  We decided to run all 4 guest domains concurrently to see if we could get the same type of results.
+
+\begin{table}[h]
+\begin{tabular}{ l r r r r r p{5cm} }
+	Domain  & pgpgin & pgfault & r sectors & r ms	& r total & TPS \\
+	\hline
+	Dom-0	& 174560 &	55192 &	174560 &	325579 &	5560 & N/A \\
+    Dom-U	& 87280	 & 213934 & 174560 &    374942 &    5951 & N/A \\
+	Overhead& 100\%  &   -74\%&  0\%   &    -13\% &    -6\%  & N/A \\
+    Interference & 0\% & -13\% & 0\%   &     -3\% &     1\%  & 71 \\
+\end{tabular}
+\caption{Overhead and Interference with all 4 guest domains running concurrently.}
+\end{table}
+
+Again there is a significant performance drop from the application in Dom1, but the method did not show the interference using these counters.  There could be other counters that would show this interference?   
+
+We calculated the reads per second during the calculation of the overhead and the calculation of the Interference by using the total reads divided by the time spent reading.  We can see a performance drop in the three different experments, but they are nearly identical between the guests and the hypervisor.  
+
+\begin{table}[!h]
+\begin{tabular}{ l r r p{5cm} }
+	Experiment     & Dom0 & DomU  & TPS(Dom1) \\
+	\hline
+    Dom1 (Only)    & 67 & 65 & 327 \\
+    Dom1 + 1 guest & 32 & 33 & 152 \\
+    Dom1 + 3 guests& 16 & 17 &  71 \\
+\end{tabular}
+\caption{Reads/second from the view of the hypervisor and guests}
+\end{table}
+
+From this we can see that the hypervisor is degraded, and the application does not read as quickly.  There is interference from the external guest machines, but it does not appear to be from I/O type problems as in the previous experiment on the smaller size server. The information obtained here is not enough to distinguish between a slow running guest application and external interference.
+
+
+% Section 7.4
+\subsection{Verification without interference}
+In the previous two experiments, we showed how our method can give a guest domain vital information when it is degraded from external interference.  However, what if the guest domain was degraded due to an application bug, DB change, or misconfiguration?   In that case we want our method to show that there is not any external interference.
+
+\indent As shown previously, we use the fact that an application will degrade significantly from a memory bound system to an I/O bound system.  This is a real problem as DB can grow and needs to be purged or partitioned.  From our previous experiment with the Dell and Dom1 using 3GB vRAM.  We can use the overhead previously calculated and run 2 different tests.  The first test will use a 2GB database which will be bound by memory and will have a high TPS. The second test will have a 3GB database and will have have a much lower TPS.  Dom2 - Dom4 will be running but will not have any load or benchmark running (basically idle).
+
+
+
+
+
+
+
+
+\begin{comment}
+\begin{table}[h]
+\begin{tabular}{ l l p{5cm} }
+  Statistics & Description \\
+  \hline
+  /proc/diskstat & I/O statistics of block devices \\
+  /proc/vmstat & Detailed virtual memory statistics\\
+  \hline
+\end{tabular}
+\caption{Disk I/O performance counters on Linux.}
+\label{tab:iocounters}
+\end{table}
+
+\subsection{}
+Here we repeat the previous experiment with a large database, which is larger than available memory. We use the framework described in section 5.5 to collect I/O and virtual memory data from the /proc/diskstat and /proc/vmstat kernel statistics from all domains and the hypervisor.  From this data we can determine the impact of external I/O interference on our guest domain.\\
+Before running the experiment, we need to calculate the I/O overhead by running the "dd" utility in a guest domain and collecting data without any interference.  After 3 runs we can see that the 
+
+
+In this experiment we are a small virtual system: an IBM x3650 single socket quad core Intel Xeon CPU.   This machine runs CentOS 6.4 with a Xen configured kernel at 3.4.54 for Domain 0, and the Xen 4.2 hypervisor complied and packaged as part of the CentOS add on packages.   In this case Only the Dom0 is used and 3 separate memory configurations are used to show the difference between a system configured with 512MB, 1024MB, and 2048MB of ram.
+
+\subsection{External Guest Interference}
+In this experiment there we show the interference caused by running multiple virtual machines at the same time.  The following experiments are run with 4 CPUs and 2GB ruam divided between 4 virtual machines.  Each machine has 512MB and a single CPU.   In the Independent test all 4 tests are run at different times, while the concurrent test all 4 machines are run at the same time.  The reslts of the Physical machine are shown to show the Possible Maximum. 
+Figure for the 512MB TPS is reported as the SUM of 4 machines.
+
+\subsection{Guest Application Problem}
+To similate a problem with a guest application we use use a misconfigured postgres database by changing the default blocksize to misalign with the guest OS ( and physical) page size.  
+\textbf{--with-blocksize=BLOCKSIZE}
+Set the block size, in kilobytes. This is the unit of storage and I/O within tables. The default, 8 kilobytes, is suitable for most situations; but other values may be useful in special cases. The value must be a power of 2 between 1 and 32 (kilobytes). Note that changing this value requires an initdb.  This will cause excessive reads and writes [40].  By default, the PG Block size is 8K and most (Linux) OS are configured to use 4k or 8k pages.   We use PGbench to generate an IO based workload which shows a performance degradation.  When the analyzer is run it will show a problem with the Guest Application.
+
+\subsection{Cache Contention Problem}
+Running multiple IO and memory intensive guests on the same core can result in LLC cache contention causing a performance degredation below the SLA.  PGbench can be run in a “select only” mode, in which most of the DB relations will be cached in memory.  If another DB guest is run on the same CPU socket the memory intesive application will interfere with the DB server [10].   We schedule two guest machines to run on CPU Socket 0 (core 0 and 1).  The analyzer detects the LLC cache interference and the DB server is significantly degraded below the SLA.  When moved onto separate sockets (socket 0 and 1) both the DB server and “Select Only” DB server run within the SLA.
+4.6  I/O Contention 
+In many cases multiple database servers could be shared on a system with multiple guests if each database only reaches peak throughput seldomly.  In this experiment we run 1 DB server per core and run the PGbench benchmark on each guest simultaneously.  If a single DB server can perform at x TPS, then it may be expected that 4 DB servers can operate at peak capacity at x/4 TPS.   Additionally, we can use PGreplay to see if we can run each system at a fraction of its speed (in this case 25\%) and achieve the same throughput on 4 separate guests.  Since there is additional overhead with the virtualiztion in DOM 0, there will be some overhead associated with the IO, and this will not be achievable.   Since a DB server synchronizes and journals the writes, each guest server will need to wait for the disk writes to complete.  The analyzer will detect the IO bottleneck issue and report problems.
+
+\subsection{I/O Contention with ‘Disk Pinning’}
+In virtualiztion it is possible to “Pin” a guest OS to a single core.  This is a way to make certain that each guest OS interference is known.  This may not be ideal in all cases, since the hypervisor may be able to better schedule guest machines on various cores (or give more cores to guests that need them).    An idea of disk pinning is similar and may (partially) alleviate some overhead in the previous experiment.  In this case, each physical disk is dedicated to a particular virtual machine, instead of a volume or raid group configured by the hypervisor.   Theoritcally, repeating the above experiment could come close to x/4 TPS except for memory cache contention.  Additionally each guest could possibly replay at 25\% of the optimal throughput on a system with 4 cores.    The issue would not be with the phyical disk I/O but with the overhead of Dom0 to schedule the disk writes.
+
+\subsection{Virtual Cluster}
+In this experiment we use a cluster of more than 1 server with a shared storage SAN server.  Each node needs an HBA with fiber connected to a fiber switch.   By running multiple guests with PG bench on the cluster server simultaneously, we can simulate an I/O contention with the shared backing store.   In a virtual cluster environment the analyzer should be able to determine that one or more guests on a particular server is exceeding their expected SLA.  Disk Pinning can also be analyzed with a large distributed backing store with multiple Logical disks (LUNs) connected with HBAs and virtualized to the guest systems.
+\end{comment}
+
+% This was the original 7.3
+\begin{comment}
 \begin{Verbatim}
     sync
     echo 3 > /proc/sys/vm/drop_caches
     echo 0 > /proc/sys/vm/drop_caches
 \end{Verbatim}
-
-\indent For this experiment we use our Dell server with 8GB of physical RAM. We configure all Dom1 to use
-4GB of vRAM and keep Dom2 - Dom4 at 2GB of vRAM. We create an I/O bound application by creating a
-3 GB database in each domain. For this size of database expect to see a significant change in the application
-when the external guest domains (Dom2 - Dom4) compete for physical resources with Dom1.
 
 \begin{figure}[h]
 \begin{Verbatim}
@@ -224,70 +343,4 @@ r total   & 149,994 & 181,147 & 17\%  & 1\% \\
 \caption{Interference calculated average of four test runs.}
 \label{fig:InterferenceMed}
 \end{table}
-
-Our only counter that measure time of a resource (r ms) was consistently greater than when we ran it
-without interference. Although this does not account for all of the performance drop, it does contribute to
-the performance issues and is consistent across all tests. This shows a 4\% interference while the application showed a 48\% drop in overall performance while running this set of tests.
-
-From these results we can see that that the ratios are the same for the two counters that were directly
-related when collecting the overhead. We can assume in this case that these counters are not effected by
-interference, and our method shows a 0\% interference.   The total reads also remains fairly consistent although it is not directly related.  The pages out are too small in this case to make any conclusions.  We did not stress the writes when calculating the overhead, so pages out are probably not relevant for this case. 
-
-Using our current calculation methods page faults shows a negative value, but it could explain the
-additional interference. When only a single guest was running only about half of the page faults in the
-guest were also run in the hypervisor. When run with all exteranal guest domains almost all of the page faults
-resulted in page faults in the hypervisor.  Additional tests and analysis would need to be performed to see how page faults relate between the guests and the hypervisor.
-
-% Section 7.4
-\subsection{Verification without interference}
-In the previous two experiments, we showed how our method can give a guest domain vital information when it is degraded from external interference.  However, what if the guest domain was degraded due to an application bug, DB change, or misconfiguration?   In that case we want our method to show that there is not any external interference.
-
-\indent As shown previously, we use the fact that an application will degrade significantly from a memory bound system to an I/O bound system.  This is a real problem as DB can grow and needs to be purged or partitioned.  From our previous experiment with the Dell and Dom1 using 3GB vRAM.  We can use the overhead previously calculated and run 2 different tests.  The first test will use a 2GB database which will be bound by memory and will have a high TPS. The second test will have a 3GB database and will have have a much lower TPS.  Dom2 - Dom4 will be running but will not have any load or benchmark running (basically idle).
-
-
-
-
-
-
-
-
-\begin{comment}
-\begin{table}[h]
-\begin{tabular}{ l l p{5cm} }
-  Statistics & Description \\
-  \hline
-  /proc/diskstat & I/O statistics of block devices \\
-  /proc/vmstat & Detailed virtual memory statistics\\
-  \hline
-\end{tabular}
-\caption{Disk I/O performance counters on Linux.}
-\label{tab:iocounters}
-\end{table}
-
-\subsection{}
-Here we repeat the previous experiment with a large database, which is larger than available memory. We use the framework described in section 5.5 to collect I/O and virtual memory data from the /proc/diskstat and /proc/vmstat kernel statistics from all domains and the hypervisor.  From this data we can determine the impact of external I/O interference on our guest domain.\\
-Before running the experiment, we need to calculate the I/O overhead by running the "dd" utility in a guest domain and collecting data without any interference.  After 3 runs we can see that the 
-
-
-In this experiment we are a small virtual system: an IBM x3650 single socket quad core Intel Xeon CPU.   This machine runs CentOS 6.4 with a Xen configured kernel at 3.4.54 for Domain 0, and the Xen 4.2 hypervisor complied and packaged as part of the CentOS add on packages.   In this case Only the Dom0 is used and 3 separate memory configurations are used to show the difference between a system configured with 512MB, 1024MB, and 2048MB of ram.
-
-\subsection{External Guest Interference}
-In this experiment there we show the interference caused by running multiple virtual machines at the same time.  The following experiments are run with 4 CPUs and 2GB ruam divided between 4 virtual machines.  Each machine has 512MB and a single CPU.   In the Independent test all 4 tests are run at different times, while the concurrent test all 4 machines are run at the same time.  The reslts of the Physical machine are shown to show the Possible Maximum. 
-Figure for the 512MB TPS is reported as the SUM of 4 machines.
-
-\subsection{Guest Application Problem}
-To similate a problem with a guest application we use use a misconfigured postgres database by changing the default blocksize to misalign with the guest OS ( and physical) page size.  
-\textbf{--with-blocksize=BLOCKSIZE}
-Set the block size, in kilobytes. This is the unit of storage and I/O within tables. The default, 8 kilobytes, is suitable for most situations; but other values may be useful in special cases. The value must be a power of 2 between 1 and 32 (kilobytes). Note that changing this value requires an initdb.  This will cause excessive reads and writes [40].  By default, the PG Block size is 8K and most (Linux) OS are configured to use 4k or 8k pages.   We use PGbench to generate an IO based workload which shows a performance degradation.  When the analyzer is run it will show a problem with the Guest Application.
-
-\subsection{Cache Contention Problem}
-Running multiple IO and memory intensive guests on the same core can result in LLC cache contention causing a performance degredation below the SLA.  PGbench can be run in a “select only” mode, in which most of the DB relations will be cached in memory.  If another DB guest is run on the same CPU socket the memory intesive application will interfere with the DB server [10].   We schedule two guest machines to run on CPU Socket 0 (core 0 and 1).  The analyzer detects the LLC cache interference and the DB server is significantly degraded below the SLA.  When moved onto separate sockets (socket 0 and 1) both the DB server and “Select Only” DB server run within the SLA.
-4.6  I/O Contention 
-In many cases multiple database servers could be shared on a system with multiple guests if each database only reaches peak throughput seldomly.  In this experiment we run 1 DB server per core and run the PGbench benchmark on each guest simultaneously.  If a single DB server can perform at x TPS, then it may be expected that 4 DB servers can operate at peak capacity at x/4 TPS.   Additionally, we can use PGreplay to see if we can run each system at a fraction of its speed (in this case 25\%) and achieve the same throughput on 4 separate guests.  Since there is additional overhead with the virtualiztion in DOM 0, there will be some overhead associated with the IO, and this will not be achievable.   Since a DB server synchronizes and journals the writes, each guest server will need to wait for the disk writes to complete.  The analyzer will detect the IO bottleneck issue and report problems.
-
-\subsection{I/O Contention with ‘Disk Pinning’}
-In virtualiztion it is possible to “Pin” a guest OS to a single core.  This is a way to make certain that each guest OS interference is known.  This may not be ideal in all cases, since the hypervisor may be able to better schedule guest machines on various cores (or give more cores to guests that need them).    An idea of disk pinning is similar and may (partially) alleviate some overhead in the previous experiment.  In this case, each physical disk is dedicated to a particular virtual machine, instead of a volume or raid group configured by the hypervisor.   Theoritcally, repeating the above experiment could come close to x/4 TPS except for memory cache contention.  Additionally each guest could possibly replay at 25\% of the optimal throughput on a system with 4 cores.    The issue would not be with the phyical disk I/O but with the overhead of Dom0 to schedule the disk writes.
-
-\subsection{Virtual Cluster}
-In this experiment we use a cluster of more than 1 server with a shared storage SAN server.  Each node needs an HBA with fiber connected to a fiber switch.   By running multiple guests with PG bench on the cluster server simultaneously, we can simulate an I/O contention with the shared backing store.   In a virtual cluster environment the analyzer should be able to determine that one or more guests on a particular server is exceeding their expected SLA.  Disk Pinning can also be analyzed with a large distributed backing store with multiple Logical disks (LUNs) connected with HBAs and virtualized to the guest systems.
 \end{comment}
