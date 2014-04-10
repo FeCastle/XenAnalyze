@@ -403,7 +403,7 @@ By looking at this additional layer of information we can determine where the in
 \subsubsection{How to calculate}
 The utilization (\emph{\%util}) is the time spent in the I/O (CPU Wait Time) divided by the sample period.  The Linux kernel tracks the CPU wait time in 2.6 and later kernels.  Since our method controls the frequecy at which to calculate this information we can track the sample and calcualte the utilization.
 
-The service time (\emph{svctime}) is the utilization percentage divided by the throghput.  The throughput is the number of I/O operations per second (IOPS).  When the utilization is near 100\%, this is just the inverse of the throughput. This is supposed to represent the time when a request leaves the queue until it has completed processing.  However, the man page warns that this is not an accurate measurement of the actual service time.
+The service time (\emph{svctime}) is the utilization percentage divided by the throughput.  The throughput is the number of I/O operations per second (IOPS).  When the utilization is near 100\%, the service time is just the inverse of the throughput. This is supposed to represent the time when a request leaves the queue until it has completed processing.  However, the man page warns that this is not an accurate measurement of the actual service time.
 
 The average wait time (\emph{await}) is the time the I/O request was in queue and the time it took to process the request.  One of the counters in /proc/diskstat shows the "weighted" time in milliseconds \cite{iostats}.  
 
@@ -432,5 +432,17 @@ We have previously demonstrated that the database TPS can become degraded as the
 
 We begin by using Table \ref{1guest} as the value for the $Overhead$, and then increase the DB size in Dom1 and calculate the external $Interference$ as well as the TPS when the DB increases.  Our Dom1 has 4GB of vRAM available.
 
+\begin{table}[htbp]
+\begin{tabular}{|l|r|l|r|r|r|r|}
+\hline
+DBSize (GB) & \multicolumn{1}{l|}{TPS} & \multicolumn{1}{l|}{avgqu-sz} & \multicolumn{1}{l|}{await} & \multicolumn{1}{l|}{svctm} & \multicolumn{1}{l|}{\%util} \\ \hline
+3.0GB & 2148 & 0.00\% & 0.00\% & 0.00\% & 0.00\% \\ \hline
+3.2GB & 1567 & 7.38\% & 0.31\% & -6.62\% & 1.28\% \\ \hline
+3.5GB  & 866 & -4.84\% & -24.20\% & -18.52\% & 0.92\% \\ \hline
+3.8GB & 513 & -2.21\% & -10.38\% & -7.37\% & 0.88\% \\ \hline
+\end{tabular}
+\caption{Increase DB size can drop performance but does not effect interference calculation}
+\label{DBsize}
+\end{table}
 
-
+According to these tables we can see that the application can be degraded due to high IO, but the \emph{svctm} and \emph{await} calculated interference does not show interference from external servers.
