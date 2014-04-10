@@ -1,8 +1,8 @@
 Virtualization is a way for a data center to reduce cost and power by overcommitting and sharing system resources across disparate operating systems with common hardware.  
-In a single server environment or HPC cluster there can be \emph{interference} \cite{paul} or \emph{system noise}\cite{tsafrir} caused by complex software layers (Application, OS, and Hardware), which contributes to poor application performance.  
+In a single server environment or HPC cluster there can be \emph{interference} \cite{paul} or \emph{system noise}\cite{tsafrir} caused by complex software layers (Application, OS, and Hardware), which contribute to poor application performance.  
 The hypervisor, as well as multiple external guest virtual machines (Figure \ref{virtStack}), compete for system resources and add to this interference.  
 Existing performance tools do not show interference from the hypervisor or external guests.  
-System-wide Profiling tools are available on limited platforms, and require significant guest kernel support, configuration, and coordination.  
+System-wide profiling tools are available on limited platforms, and require significant guest kernel support, configuration, and coordination.  
 Additionally, profiling is a great tool for test and development, but may not be a great solution for production systems.
 \textbf{Thesis:  }Performance monitoring tools from the virtual guests do not currently provide essential information about external systems.  By passing resource utilization counters across all layers of virtualization, we can dynamically measure the interference from virtualization and external systems.
 
@@ -29,7 +29,7 @@ Additionally, profiling is a great tool for test and development, but may not be
 \item \textbf{Counters} Examine some common counters, and metrics which can measure resource utilization.
 \item \textbf{Framework} Design a framework to collect resource metrics at several layers and quantify the interference from virtualization.
 \item \textbf{Test Suite} Virtualization test suite that causes I/O interference.
-\item \textbf{I/O Tool} Example tool which dynamically analyzes runtime interference from an I/O bound application.
+\item \textbf{I/O Example} Example program which dynamically analyzes runtime interference from an I/O bound application.
 \end{enumerate}
 
-\indent The rest of this document is organized as follows:  In section 2, we review a real problem example in a large data center, and the challenges faced with existing tools.  In section 3, we examine the current state of tools and techniques used to profile and analyze performance issues with virtualization.  Section 4 looks at related works that have identified interference and methods of root cause analysis.  In section 5 we define the needed data and an example tool that can collect and analyze this data.  The last sections are dedicated to the test suite infrastructure to both create the interference and show the accuracy of the analysis.  We also look at possible other uses and what needs further investigation.
+\indent The rest of this document is organized as follows:  In section 2, we review a real problem example in a large data center, and the challenges faced with existing tools.  In section 3, we examine the current state of tools and techniques used to profile and analyze performance issues with virtualization.  Section 4 looks at related works that have identified interference and methods of root cause analysis.  In section 5 we define the needed data and an example program that can collect and analyze this data.  The last sections are dedicated to the test suite infrastructure to both create the interference and show the accuracy of the analysis.  We also look at possible other uses and what needs further investigation.
