@@ -1,0 +1,90 @@
+Test_VM1 512MB Scale Factor = 50
+     relname      |  reltuples  | relpages 
+------------------+-------------+----------
+ pgbench_accounts | 4.99995e+06 |    81968
+(1 row)
+
+Do not drop cache
+Do not create new DB 
+
+----------------------------  Run 1 --------------------------------------------------
+tps = 412.652906 (excluding connections establishing)
+---Host Physical Disk---
+Domain  r_sectors w_merged r_merged  w_total    r_ms w_sectors    r_total     w_ms
+Dom-0     335984        0        0      146    64359     1608       11318     3372
+Dom-29    335240        0        0       71    73487      568       12319      899
+
+Domain  pgpgin  pgpgout  pgfault         
+Dom-0   335984     1200    24583            
+Dom-29  167620      284   132984          
+Dom_sum 167620      284   132984         
+
+----------------------------  Run 2 --------------------------------------------------
+tps = 413.023581 (excluding connections establishing)
+---Host Physical Disk---
+Domain  IO_msr_sectors w_merged r_merged  w_total     r_msw_sectors   r_total     w_ms
+Dom-0   30139   327360        0        0       91    62781     1136     11047     3351
+Dom-29  30159   326752        0        0       67    71620      536     12043     1414
+
+---Host Virtual Memory---
+Domain  pgpgin  pgpgout  pgfaultpgactivatepgdeactivate   pgfree 
+Dom-0   327360      944    24521      119        0    14247    
+Dom-29  163376      268   132349    21995    19168    66352   
+Dom_sum 163376      268   132349    21995    19168    66352  
+
+----------------------------  Run 3 --------------------------------------------------
+tps = 418.674670 (excluding connections establishing)
+---Host Physical Disk---
+Domain  IO_msr_sectors w_merged r_merged  w_total     r_msw_sectors   r_total     w_ms
+Dom-0   30161   334168        0        0       96    62929     1208     11070     3023
+Dom-29  30143   333416        0        0       59    72176      472     12135      929
+
+---Host Virtual Memory---
+Domain  pgpgin  pgpgout  pgfaultpgactivatepgdeactivate   pgfree 
+Dom-0   334168      924    27841      129        0    16467    
+Dom-29  166708      236   132740    22407    21952    66024   
+Dom_sum 166708      236   132740    22407    21952    66024  
+
+
+--------------------------------------------------------------------------------
+--------------------------- Test With Interference -----------------------------
+--------------------------------------------------------------------------------
+Scaling Factor = 50
+tps = 265.006356 (excluding connections establishing)
+Domain  IO_msr_sectors w_merged r_merged  w_total     r_ms w_sectors  r_total     w_ms
+Dom-0   30945   601368        0        0      218   232351     3000     19445   371813
+Dom-26  29871   105144        0        0       68    70320      544      3611    20079
+Dom-27  29629   103568        0        0       71    65937      568      3736    78944
+Dom-28  30331   170416        0        0       73    71282      584      5899    12600
+Dom-29  30049   208912        0        0       44    72365      352      7644     2800
+Getting delta for VM
+---Host Virtual Memory---
+Domain  pgpgin  pgpgout  pgfault pgactivatepgdeactivate   pgfree                                             
+Dom-0   601368     2528    56756     133        0    30782                                             
+Dom-26  53388      272    80390     7709     1393    29267                                             
+Dom-27  55856      284    81229     8399      732    29374                                             
+Dom-28  85844      292    96122    11259      304    37355                                             
+Dom-29  104456      176    87932    14105    14368    42106                                             
+Dom_sum 299544     1024   345673    41472    16797   138102                                             
+Overhd   -100.8 -146.9 83.6
+
+Scaling Factor = 75 (In domain 26, 27, 28)
+Scaling Factor = 50 (In Domain 29
+tps = 229.401533 (excluding connections establishing)
+Domain  IO_msr_sectors w_merged r_merged  w_total     r_msw_sectors   IO_curIO_weighted  r_total     w_ms
+Dom-0   31604   633512        0        0      250   304640     9936        0   373001    22832    68314
+Dom-26  26402    57920        0        0      951    44280     7608        0  1487024     2488  1442746
+Dom-27  21713    54640        0        0       76    33865      608        0    36861     2407     2996
+Dom-28  22260    60648        0        0       67    35532      536        0    40270     2607     4738
+Dom-29  30037   178008        0        0       76    72053      608        0   105690     6517    33637
+Getting delta for VM
+---Host Virtual Memory---
+Domain  pgpgin  pgpgout  pgfaultpgactivatepgdeactivate   pgfree                                             
+Dom-0   633512     9708    57164      144        0    29867                                             
+Dom-26  61112     3804    72087     6905     4496    32701                                             
+Dom-27  80664      304    70190     6043     7621    36540                                             
+Dom-28  79932      268    71999     6680     7105    36026                                             
+Dom-29  89036      304    83346    14051    13920    38108                                             
+Dom_sum 310744     4680   297622    33679    33142   143375    
+
+                

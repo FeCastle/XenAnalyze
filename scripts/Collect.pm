@@ -98,6 +98,36 @@ sub collectVM() {
 		}
 	}
 	close (VMSTAT);
+
+	collectMem($x);
+}
+
+###########################################################################
+# collectMem
+#   Collect Memory statistics from /proc/meminfo
+#
+#   Example Data:
+#		Cached:           572848 kB
+# 		SwapCached:        72516 kB
+# 		Buffers:          167700 kB
+#   
+###########################################################################
+sub collectMem() {
+	$x = shift;
+	open (VMSTAT, "<", "/proc/meminfo") || die "Unable to read $!";
+	while (<VMSTAT>) {
+		$_ =~ s/^\s+//;    ## 
+		($vmKey, $vmVal, $kBstring) = split (/:*\s+/);
+		if ($x eq 0) {
+			print "PRE Collecting Memory:  $vmKey -> $vmVal\n";
+			$vmPre{$vmKey} = $vmVal;
+		}
+		else {
+			print "POST Collecting Memory:  $vmKey -> $vmVal\n";
+			$vmPost{$vmKey} = $vmVal;
+		}
+	}
+	close (VMSTAT);
 }
 
 ###########################################################################

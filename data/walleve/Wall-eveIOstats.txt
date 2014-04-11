@@ -1,0 +1,222 @@
+Guests = 1
+Guest   procs -----------memory---------- ---swap-- -----io---- --system-- -----cpu-----
+       r  b   swpd   free   buff  cache   si   so    bi    bo   in    cs us sy  id wa st
+1)     2  1      0  19292  26944 3616396    0    0  3619    18  990 8385 34 33   0 33  0	
+2)     2  1      0  19404  27412 3615728    0    0  1491    16  474 4075 16 16   0 69  0	
+3)     0  2      0  19184  19984 3623456    0    0  1008     4  326 2750 12 10   0 78  0
+4)     1  1      0  20316  12296 3629916    0    0    62    14   43  279  1  1   0 98  0
+
+(1 Guest)
+tps = 2148.126936 (excluding connections establishing)
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sda               0.40     4.80  287.40    2.00  3456.00    28.00    24.08     3.54   12.23   2.85  82.52
+tda               0.00     0.40  290.60    2.60  3456.00    12.00    23.66     3.67   12.51   2.79  81.80
+tdb               0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
+tdc               0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
+tdd               0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
+
+Device:         avgqu-sz   await  svctm  %util
+sda                 3.54   12.23   2.85  82.52
+tda                 3.67   12.51   2.79  81.80
+
+(2 Guests)
+tps = 1038.937346 (excluding connections establishing)
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sda               2.60     4.40  230.20    3.80  3228.80    61.60    28.12     8.38   36.05   4.27 100.00
+tda               0.00     2.40  125.80    1.00  1497.60    13.60    23.84     5.25   42.44   7.27  92.22
+tdb               0.00     2.40  116.20    1.00  1708.80    13.60    29.39     3.40   28.78   8.53 100.00
+
+Device:         avgqu-sz   await  svctm  %util
+sda                 8.38   36.05   4.27 100.00
+tda                 5.25   42.44   7.27  92.22
+tdb                 3.40   28.78   8.53 100.00
+
+(3 Guests)
+tps = 765.290445 (excluding connections establishing)
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sda               2.00     1.60  198.20    2.80  2811.20    28.80    28.26    10.36   48.15   4.98 100.00
+tda               0.00     0.40   76.40    0.60  1020.80     4.00    26.62     4.47   56.48  12.31  94.76
+tdb               0.00     0.20   97.80    0.60  1518.40     3.20    30.93     3.59   36.66  10.16 100.00
+tdc               0.00     0.20   33.80    0.60   272.00     3.20    16.00     2.02   58.81  29.06  99.98
+
+Device:         avgqu-sz   await  svctm  %util
+sda                10.36   48.15   4.98 100.00
+tda                 4.47   56.48  12.31  94.76
+tdb                 3.59   36.66  10.16 100.00
+tdc                 2.02   58.81  29.06  99.98
+
+(4 Guests)
+tps = 378.710733 (excluding connections establishing)
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sda               0.40     1.00  142.20    1.80  1430.40    30.40    20.29     9.83   60.87   6.94 100.00
+tda               0.00     0.40   24.60    0.00   377.60     0.00    30.70     2.81  139.50  40.24  99.00
+tdb               0.00     0.00   14.40    0.00   212.80     0.00    29.56     2.31  210.11  69.44 100.00
+tdc               0.00     2.20   53.00    0.80   422.40    12.00    16.15     2.11   39.25  18.59 100.00
+tdd               0.00     2.60   53.00    0.80   424.00    13.60    16.27     2.13   39.52  18.59 100.00
+
+
+Device:         avgqu-sz   await  svctm  %util
+sda                 9.83   60.87   6.94 100.00
+tdb                 2.31  210.11  69.44 100.00
+tdc                 2.11   39.25  18.59 100.00
+tdd                 2.13   39.52  18.59 100.00 
+tda                 2.81  139.50  40.24  99.00
+
+
+
+
+------------------------------------------------------------------------------------------------------------
+---------------- 7.5 Increase DB Size ----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------
+Pages = 393443    (DB Size 3.0 GB)
+tps = 2148.126936 (excluding connections establishing)
+Device:          avgqu-sz   await  svctm  %util
+sda                  3.54   12.23   2.85  82.52
+tda                  3.67   12.51   2.79  81.80
+
+SCALEFACTOR=250
+Pages = 409837  (DB Size = 3.2GB)
+tps = 1567.879426 (excluding connections establishing)
+Device:          avgqu-sz   await  svctm  %util
+sda                  2.12   10.31   4.34  89.08
+tda                  2.38   10.58   3.99  89.44
+
+SCALEFACTOR=275
+Pages = 450820  (DB Size = 3.5 GB)
+tps = 865.866829 (excluding connections establishing)
+Device:          avgqu-sz   await  svctm  %util
+sda                  2.34   13.77   5.78  98.14
+tda                  2.31   11.29   4.79  98.18
+
+SCALEFACTOR=300
+Pages = 491804 (DB Size = 3.8GB)
+tps = 513.302903 (excluding connections establishing)
+Device:         avgqu-sz   await  svctm  %util
+sda                 2.23   14.48   6.44  99.32
+tda                 2.26   13.39   5.88  99.32
+
+
+
+
+/sys/devices/vbd-22-51712/statistics
+while true; do
+  for i in *; do
+    echo -n $i:
+    cat $i
+  done
+  sleep 5
+done
+
+await - The average time (in milliseconds) for I/O requests issued to the device to be served. This includes the time spent by the requests in queue and the time spent servicing them.
+svctime - The average service time (in milliseconds) for I/O requests that were issued to the device.
+avgqu-sz - The average queue length of the requests that were issued to the device.
+
+(One system running)
+[root@TestVM1 scripts]# cat $LOGDIR/Test*.25
+Starting Test with 2 clients
+procs -----------memory---------- ---swap-- -----io---- --system-- -----cpu-----
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
+ 2  0      0  23488  27600 3615468    0    0    36   288   30   73  0  0 99  0  0	
+ 1  2      0  19384  27604 3615680    0    0  3190    20  972 8597 35 35  0 29  0	
+ 0  3      0  19124  27616 3615928    0    0  3413     5 1012 9011 35 37  0 28  0	
+ 1  1      0  19288  27624 3615652    0    0  3245     4  964 8520 35 33  0 32  0	
+ 1  1      0  19428  27628 3615564    0    0  3579     4  970 8213 34 32  0 34  0	
+ 2  1      0  19292  26944 3616396    0    0  3619    18  990 8385 34 33  0 33  0	
+ 1  1      0  19292  26944 3616400    0    0  3371    14 1010 8875 35 35  0 29  0	
+tps = 2148.126936 (excluding connections establishing)
+     relname      | reltuples | relpages 
+------------------+-----------+----------
+ pgbench_accounts |   2.4e+07 |   393443
+
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sda               0.14     0.72    2.23    2.26    96.45   149.88   109.63     0.05   11.77   2.50   1.12
+tda               0.00     0.01    0.02    0.10     0.54     4.27    79.57     0.00   14.16   0.82   0.01
+
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sda               0.20     3.20  136.60    2.40  1750.40    32.80    25.66     1.52   10.89   2.90  40.26
+tda               0.00     1.00  138.60    0.60  1750.40     6.40    25.24     1.56   11.16   2.84  39.58
+
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sda               0.20     2.80  267.20    2.40  3263.20    30.40    24.43     2.89   10.75   2.78  74.96
+tda               0.00     2.80  268.60    1.00  3263.20    15.20    24.32     2.94   10.93   2.80  75.38
+
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sda               0.00     3.20  284.20    2.60  3297.60    27.20    23.19     3.20   11.15   2.65  76.10
+tda               0.00     0.40  284.60    0.60  3297.60     4.00    23.15     3.24   11.33   2.67  76.24
+
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sda               0.20     2.20  283.20    6.60  3454.40    36.80    24.09     3.91   13.50   2.81  81.54
+tda               0.00     0.40  285.80    0.60  3454.40     4.00    24.15     3.35   11.68   2.84  81.34
+
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sda               0.00     1.80  312.00    2.80  3555.20    35.20    22.81     3.49   11.10   2.59  81.50
+tda               0.00     1.00  312.80    1.20  3555.20    12.00    22.72     3.52   11.23   2.58  81.14
+
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sda               0.00     4.40  290.80    2.60  3451.20    40.80    23.80     3.12   10.62   2.56  74.98
+tda               0.00     2.00  292.80    0.60  3449.60    10.40    23.59     3.18   10.80   2.55  74.78
+
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sda               0.40     4.80  157.40    5.60  2016.00    56.80    25.43     1.76   10.87   2.65  43.26
+tda               0.00     1.00  161.60    2.60  2017.60    14.40    24.75     1.77   10.85   2.58  42.40
+
+(Test with 4 guests)
+[root@TestVM1 scripts]# cat $LOGDIR/Test*.25
+Starting Test with 2 clients
+procs -----------memory---------- ---swap-- -----io---- --system-- -----cpu-----
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
+ 1  0      0  22208  19368 3624384    0    0    38   274   30   78  0  0 99  0  0	
+ 0  2      0  24392  12280 3625808    0    0  1117    31  395 3156 13 14  0 73  0	
+ 0  2      0  20672  12288 3629552    0    0   715    10  237 1876  7  8  0 85  0	
+ 1  1      0  20316  12296 3629916    0    0    62    14   43  279  1  1  0 98  0	
+ 0  2      0  19300  11920 3631448    0    0   283     4  129 1029  4  4  0 92  0	
+ 0  2      0  19004   8912 3634668    0    0   702     5  213 1633  6  7  0 87  0	
+ 0  2      0  19080   8584 3634964    0    0   509     4  165 1307  5  5  0 90  0	
+
+tps = 378.710733 (excluding connections establishing)
+     relname      | reltuples | relpages 
+------------------+-----------+----------
+ pgbench_accounts |   2.4e+07 |   393443
+
+Domain   Cached SwapCached    Buffers  r_sectors       r_ms    r_total
+Dom-0    172          0         44     184016     424635       7118
+Dom-13   340          0         32      45032     130355       1577
+Dom-14    0          0          0      51552     105630       2698
+Dom-18    0          0          0      48048      91087       2441
+Dom-22   10212          0          0      33888     161607       1490
+Dom-0    172          0         44     184016     424635       7118
+Dom-U    10552          0         32     178520     488679       8206
+Overhd     -0.984     xxxx    0.375     0.031     -0.131     -0.133     
+
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sda              35.20     3.80  153.80    9.80  3024.80    91.20    38.09     5.77   34.86   3.66  59.82
+tda               0.00     3.80   57.80    2.20   644.80    24.00    22.29     3.17   52.19   8.83  52.96
+
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sda              27.60     4.00  239.60    4.60  4863.20    84.80    40.52    12.35   49.75   4.10 100.00
+tda               0.00     1.80   79.80    1.00   921.60    17.60    23.25     4.82   58.53  11.65  94.16
+
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sda               3.80     3.40  156.00    2.80  1960.80    41.60    25.22    13.02   72.26   6.30 100.00
+tda               0.00     0.00   24.60    0.00   265.60     0.00    21.59     4.44  149.71  40.28  99.08
+
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sda               0.60     4.20  150.20    5.60  1585.60    54.40    21.05    14.52  100.16   6.42 100.00
+tda               0.00     0.00   13.00    2.60   148.80    13.60    20.82     4.43  296.45  64.10 100.00
+
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sda               1.40     0.60  167.80    1.00  1841.60     5.60    21.89    28.10   74.89   5.92 100.00
+tda               0.00     0.20   44.60    1.00   516.80     4.80    22.88     5.43  128.90  21.20  96.66
+
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sda               1.00     6.60  168.00    9.80  1777.60    71.20    20.80    17.81  184.21   5.62 100.00
+tda               0.00     0.40   51.60    0.80   580.80     4.80    22.35     6.42  108.98  18.66  97.78
+
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sda               0.60     3.60  152.00    5.20  1564.80    42.40    20.45    10.73   64.72   6.36 100.00
+tda               0.00     1.40   26.60    0.60   310.40     4.00    23.12     4.02  143.49  30.10  81.86
+
+
+
+
+

@@ -1,0 +1,187 @@
+[root@Wall-eve scripts]# xm list
+Name                                        ID   Mem VCPUs      State   Time(s)
+Domain-0                                     0  2048    16     r-----  22461.6
+TestVM1                                     20  2048     1     -b----   1100.6
+TestVM2                                     13  1024     2     -b----   1095.0
+TestVM3                                     14  1024     1     -b----   1037.5
+TestVM4                                     18  1024     2     -b----   1170.8
+
+TestVM1
+--------
+pgbench -i -s 150 $DBNAME 
+relpages = 245902
+DB Size = 1.9GB
+
+Without Interference:
+tps = 333.964307 (excluding connections establishing)
+Domain   pgpgin    pgpgout    pgfault  r_sectors       r_ms    r_total
+Dom-20   106152        300      61420     212304      99265       7189
+Dom-0    212304       1396      23596     212304      90197       6707
+Overhd     1.000     3.653     -0.616     0.000     -0.091     -0.067     
+
+tps = 319.719322 (excluding connections establishing)
+Domain   pgpgin    pgpgout    pgfault  r_sectors       r_ms    r_total
+Dom-20   80700        304      66342     161400      84892       5457
+Dom-0    161400       1572      24397     161400      76351       5030
+Overhd     1.000     4.171     -0.632     0.000     -0.101     -0.078     
+
+tps = 320.752639 (excluding connections establishing)
+Domain   pgpgin    pgpgout    pgfault  r_sectors       r_ms    r_total
+Dom-20   86424        220      61564     172848      88128       5724
+Dom-0    172848       1248      24969     172848      79057       5260
+Overhd     1.000     4.673     -0.594     0.000     -0.103     -0.081     
+
+------------------------------------------------------------------
+------ Interference from TestVM2 ---------------------------------
+------------------------------------------------------------------
+TestVM2 
+--------
+pgbench -i -s 75 $DBNAME 
+relpages = 122951
+DB Size = 960MB
+
+tps = 152.315309 (excluding connections establishing)
+Domain   pgpgin    pgpgout    pgfault  r_sectors       r_ms    r_total
+Dom-0    175752       1852      42646     175808     166925       5510
+Dom-13   36368        156      54355      72736      80102       2708
+Dom-14    0          0          0          0          0          0
+Dom-18    0          0          0          0          0          0
+Dom-20   51480        264      66725     102960     107234       3204
+Dom-0    175752       1852      42646     175808     166925       5510
+Dom-U    87848        420     121080     175696     187336       5912
+Overhd     1.001     3.410     -0.648     0.001     -0.109     -0.068     
+
+
+------------------------------------------------------------------
+------ Interference from TestVM3 ---------------------------------
+------------------------------------------------------------------
+TestVM3 pgbench -i -s 75 $DBNAME relpages = 122951 DB Size = 960MB
+
+tps = 157.646111 (excluding connections establishing)
+Domain   pgpgin    pgpgout    pgfault  r_sectors       r_ms    r_total
+Dom-0    196160       1804      34754     196160     205558       5970
+Dom-13    0          0          0          0          0          0
+Dom-14   47328        296      56801      94656     114201       3173
+Dom-18    0          0          0          0          0          0
+Dom-20   50752        232      59839     101504     112994       3261
+Dom-0    196160       1804      34754     196160     205558       5970
+Dom-U    98080        528     116640     196160     227195       6434
+Overhd     1.000     2.417     -0.702     0.000     -0.095     -0.072     
+
+------------------------------------------------------------------
+------ Interference from TestVM4 ---------------------------------
+------------------------------------------------------------------
+TestVM4 pgbench -i -s 75 $DBNAME relpages = 122951 DB Size = 960MB
+tps = 161.148315 (excluding connections establishing)
+Domain   pgpgin    pgpgout    pgfault  r_sectors       r_ms    r_total
+Dom-0    164304       2012      34172     164304     177869       5417
+Dom-13    0          0          0          0          0          0
+Dom-14    0          0          0          0          0          0
+Dom-18   25780        352      53023      51560      70760       2209
+Dom-20   56300        268      59862     112600     123574       3551
+Dom-0    164304       2012      34172     164304     177869       5417
+Dom-U    82080        620     112885     164160     194334       5760
+Overhd     1.002     2.245     -0.697     0.001     -0.085     -0.060     
+
+
+------------------------------------------------------------------
+------ Interference from All 4 VMs ---------------------------------
+------------------------------------------------------------------
+tps = 71.248089 (excluding connections establishing)
+Domain   pgpgin    pgpgout    pgfault  r_sectors       r_ms    r_total
+Dom-0    174560       2536      55192     174560     325579       5560
+Dom-13   16312        228      51559      32624      84154       1164
+Dom-14   34828        212      56158      69656     112777       2350
+Dom-18   10896        364      48944      21792      74340        858
+Dom-20   25244        304      57273      50488     103671       1579
+Dom-0    174560       2536      55192     174560     325579       5560
+Dom-U    87280       1108     213934     174560     374942       5951
+Overhd     1.000     1.289     -0.742     0.000     -0.132     -0.066     
+
+-----------------------------------------------------
+-- Increase External Guests to 125 
+------ Interference from All 4 VMs ---------------------------------
+-----------------------------------------------------
+tps = 99.282873 (excluding connections establishing)
+Domain   pgpgin    pgpgout    pgfault  r_sectors       r_ms    r_total
+Dom-0    176728       2864      59394     176728     308385       5685
+Dom-13   11832        328      50140      23664      74205       1066
+Dom-14   17896        260      48504      35792      75056       1455
+Dom-18   16180        348      51088      32360      82712       1369
+Dom-20   37156        292      60069      74312     135806       2300
+Dom-0    176728       2864      59394     176728     308385       5685
+Dom-U    83064       1228     209801     166128     367779       6190
+Overhd     1.128     1.332     -0.717     0.064     -0.161     -0.082     
+
+-----------------------------------------------------
+-- Increase VM1 to 200 (Scale Factor)
+-- Interference from All 4 VMs ---------------------------------
+-----------------------------------------------------
+TestVM1 - Relpages = 327869, 2.5GB
+(Without Interference)
+tps = 208.409654 (including connections establishing)
+tps = 215.571143 (excluding connections establishing)
+tps = 203.025226 (excluding connections establishing)
+
+(Without Interference from all 4)
+tps = 53.548652 (excluding connections establishing)
+Domain   pgpgin    pgpgout    pgfault  r_sectors       r_ms    r_total
+Dom-0    142440       2420      57603     142440     249997       4918
+Dom-13   9728        188      48502      19456      71647        798
+Dom-14   17652        188      50361      35304      74543       1432
+Dom-18   18660        288      51131      37320      76664       1439
+Dom-20   23456        352      54603      46912      85527       1621
+Dom-0    142440       2420      57603     142440     249997       4918
+Dom-U    69496       1016     204597     138992     308381       5290
+Overhd     1.050     1.382     -0.718     0.025     -0.189     -0.070     
+
+
+
+
+---------------------------------------------------------------------------
+---------------------------------------------------------------------------
+[root@Wall-eve scripts]# xm mem-set TestVM3 3072
+Error: I need 1048576 KiB, but dom0_min_mem is 262144 and shrinking to 262144 KiB would leave only 631576 KiB free.
+Usage: xm mem-set <Domain> <Mem>
+
+[root@Wall-eve scripts]# xm list
+Name                            ID   Mem VCPUs      State   Time(s)
+Domain-0                         0   872    16     r-----  24216.0
+TestVM1                         21  4096     1     -b----    462.3
+TestVM2                         13  3072     2     -b----   1413.3
+TestVM3                         14  3072     1     -b----   1338.2
+TestVM4                         18  2048     2     -b----   1511.0
+
+tps = 66.102067 
+Domain   numa_hit pgmajfault     pgfree  r_sectors       r_ms    r_total
+Dom-0    11029          0      10813      95616      61704       4474
+Dom-13    0          0          0          0          0          0
+Dom-14    0          0          0          0          0          0
+Dom-18    0          0          0          0          0          0
+Dom-21   27630        121      28258      94520      67866       5084
+Dom-0    11029          0      10813      95616      61704       4474
+Dom-U    27630        121      28258      94520      67866       5084
+Overhd     -0.601     -1.000     -0.617     0.012     -0.091     -0.120     
+
+(Test with 4 domains)
+Domain   numa_hit  numa_miss    pgfault  r_sectors       r_ms    r_total
+Dom-0    40483          0     101811     204248     316879       8279
+Dom-13   22556          0      56110      44456     367987       2179
+Dom-14   26133          0      66115      52224      96262       2673
+Dom-18   26370          0      67068      50392      99063       2617
+Dom-21   22481          0      54248      51952     248313       2815
+Dom-0    40483          0     101811     204248     316879       8279
+Dom-U    97540          0     243541     199024     811625      10284
+Overhd     -0.585     Illegal division by zero at ./collectHost.pl line 81.
+
+----------------------------------------------------------------------- 
+Why is pgpgin 2x in Dom0?
+linux kernel .../mm/vmstat.c
+#ifdef CONFIG_VM_EVENT_COUNTERS
+        all_vm_events(v);
+        v[PGPGIN] /= 2;         /* sectors -> kbytes */
+        v[PGPGOUT] /= 2;
+#endif
+----------------------------------------------------------------------- 
+
+

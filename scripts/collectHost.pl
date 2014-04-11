@@ -8,9 +8,19 @@ $hdrFormat  = "%-8s %2s %10s %10s %10s %10s %10s\n";
 $lineFormat = "%-8s %2d %10d %10d %10d %10d %10d\n";
 
 ### Reporting:  Which VM data do we report ###
-my @vmKeys = ("pgpgin", "pgpgout", "pgfault" );
+# my @vmKeys = ("pgpgin", "pgpgout", "pgfault" );
 my @diskKeys = ("r_sectors", "r_ms", "r_total" );
+
+
+### Try some other counters for 7.3 ###
+# my @vmKeys = ("numa_hit", "pgmajfault", "pgfree" );
+
+### Try some stuff from /proc/meminfo ###
+my @vmKeys = ("Cached", "SwapCached", "Buffers" );
+
 my %report;
+
+
 
 sub doResults() {
 	$| = 1;    # Flush print 
@@ -71,8 +81,14 @@ sub doResults() {
 		# $overhead = 100 * ($guestVal - $hostVal) / $guestVal;
 		
 		# New method 
-		$overhead = ($hostVal - $guestVal) / $guestVal;
-		printf ("%1.3f     ", $overhead);
+		if ($guestVal != 0) {
+			$overhead = ($hostVal - $guestVal) / $guestVal;
+			printf ("%1.3f     ", $overhead);
+		}
+		else {
+			print ("xxxx    ");
+		}
+
 	}
 	print ("\n");
 
@@ -82,7 +98,9 @@ sub doResults() {
 
 ############################## MAIN #################################
 $SIG{'HUP'} = 'doResults';
+`iostat -dxk /dev/sda /dev/tda /dev/tdb /dev/tdc /dev/tdd 5 > /tmp/iostat.txt &`;
 doPre();
 sleep;
 
+`killall iostat`;
 print "Complete!"

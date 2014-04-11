@@ -1,0 +1,32 @@
+---getScale 25---
+Domain  IO_ms r_sectors w_merged r_merged  w_total  r_ms w_sectors   IO_cur IO_weighted  r_total     w_ms
+Dom-0   51690  2231240        0        0      711   323446    13496        0   482469    51073   159007
+Dom-25  47050   595368        0        0      371    98018     2968        0   165640    17452    67624
+Dom-26  49641   569512        0        0      457   111487     3656        0   124634    15841    13147
+Dom-27  48918   533440        0        0      346   110340     2768        0   133844    14966    23766
+Dom-28  49235   526512        0        0      332   112728     2656        0   138806    14757    26078
+
+
+-- dd_write --
+Domain Write   Read    IO_ms r_sectors w_merged r_merged  w_total  r_ms w_sectors   IO_cur IO_weighted  r_total     w_ms
+Dom-0                  3961     7400        0        0     2221      757   378368        0    85589      105    84832
+Dom-25 5.8MB/s 3.2GB/s 2056      120        0        0    11816        4    94528        0  2949232        3  2949228
+Dom-26 5.8MB/s 2.5GB/s 2173      120        0        0    11539       16    92312        0  3200228        3  3200212
+Dom-27 5.7MB/s 3.4GB/s 1854      192        0        0    10916       32    87328        0  2323539        8  2323507
+Dom-28 5.2MB/s 3.1GB/s 3542      472        0        0    12981      114   103848        0  4227551       19  4227437
+
+Domain IO_ms r_sectors w_merged r_merged  w_total  r_ms w_sectors   IO_cur IO_weighted  r_total     w_ms
+Dom-0   3961     7400        0        0     2221      757   378368        0    85589      105    84832
+Dom-25  2056      120        0        0    11816        4    94528        0  2949232        3  2949228
+Dom-26  2173      120        0        0    11539       16    92312        0  3200228        3  3200212
+Dom-27  1854      192        0        0    10916       32    87328        0  2323539        8  2323507
+Dom-28  3542      472        0        0    12981      114   103848        0  4227551       19  4227437
+
+--dd_write fdatasync ---
+Domain IO_ms r_sectors w_merged r_merged  w_total  r_ms  w_sectors   IO_cur IO_weighted  r_total     w_ms
+Dom-0   4253       16        0        0     1836       15   616304        0    41334        2    41319
+Dom-25  2082       16        0        0    19237       53   153896        0  2807422        2  2807369
+Dom-26  2640        0        0        0    19236        0   153888        0  3994170        0  3994170
+Dom-27  1100        0        0        0    19227        0   153816        0  1531515        0  1531515
+Dom-28  1885        0        0        0    19267        0   154136        0  2729949        0  2729949
+
