@@ -84,34 +84,4 @@ We created a script to find the size of database that would generate a high I/O 
 
 \subsection{Test Data}
 \indent We can use the TPS to show how the database performs at the application layer when external environment changes are made to the system.  Our tests will select Memory and I/O resources to monitor.  For measuring disk I/O it is a good to also collect virtual memory (in this case we are talking about OS virtual memory, not virtualization) as well as I/O data.  We selected to measure paging performance counters \ref{fig:memory} across all layers for the memory resource.  We selected disk read counters \ref{fig:io} as our data at all layers to measure interference from I/O. 
-We use these performance counters to try to analyze the interference and explain the degredation from virtualization.
-
-\begin{table}[h]
-\begin{subtable}[h]{0.45\textwidth}
-\begin{tabular}{ l p{5cm} }
-       measurement & description \\
-       \hline
-       pgpgin  &  count of pages in. \\
-       pgpgout  & count pages out. \\
-       pgfault  & count minor (or soft) page faults. \\
-       \hline
-\end{tabular}
-\caption{Virtual memory paging performance counters \cite{memory}}
-\label{fig:memory}
-\end{subtable}
-\hfill
-\begin{subtable}[h]{0.45\textwidth}
-\begin{tabular}{ l p{5cm} }
-       measurement & description \\
-       \hline
-       r\_sectors & The number block sectors read \\
-       r\_ms & The time spent reading \\
-       r\_total & Total number of reads completed. \\
-       \hline
-\end{tabular}
-\caption{I/O read performance counters \cite{iostats}}
-\label{fig:io}
-\end{subtable}
-\caption{Test result data collected from guest and hypervisor}
-\end{table}
 
