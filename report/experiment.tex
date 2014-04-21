@@ -16,14 +16,6 @@ Then we increase the DB size slightly and run the benchmark again.
 After repeating this process several times, we can see that when the DB size changes to an I/O bound system its performance drops significantly (Figure \ref{fig:smallIO}).  
 This is due to the fact that it must fetch database rows from the disk and it is much slower.  
 
-\begin{figure}[!h]
-  \begin{center}
-  \includegraphics[width=4in]{images/SmallScale.png}
-  \caption{TPS on our IBM x3650 system with 1 vCPU and 512KB vRAM. It changes from a memory bound application to an I/O bound application when the DB size approache the available RAM.}
-  \label{fig:smallIO}
-  \end{center}
-\end{figure}
-
 \begin{description}
   \item[Small DB] The working set can fit into main memory.  Performance is based on Memory.
   \item[Medium DB] The working set is swapped to disk occasionally. Performance is moving from Memory to I/O.
