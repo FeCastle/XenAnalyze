@@ -85,13 +85,16 @@ Our method will collect, aggregate, and analyze the statistics kept by the OS ke
 \caption{Statistics collected from all guests and hypervisor}
 \end{table}
 
-By collecting these statistics at two points in time as in algorithm \ref{alg1}, we can infer other data such as the throughput in reads per second \emph{r/s}.  However, the most import data we can infer is the disk I/O latency or the average wait time for reads \emph{AvgRdWait}.  
+By collecting these statistics at two points in time as in algorithm \ref{alg1}, we can infer other data such as the throughput in reads per second \emph{r/s}.  We can also calculate the disk I/O latency or the average wait time for reads \emph{AvgRdWait}.  
 Since \emph{r\_ms} is the total number of milliseconds spent by all reads, we can divide this by the total number or read requests to get the average wait time.  This is very important since external guests may cause I/O delays in a shared disk.
 \newline\newline
+\Large
 	$AvgRdWait = \frac{r\_ms}{r\_total}$ \\
+	$read/s = \frac{r\_total}{TotalTime}$ \\
+\normalsize
 
 % 4 A method to calculate the overhead and theoritical maximum performance using an offline modeling technique.
-\subsection{Virtualization Overhead}
+\subsection{I/O Virtualization Overhead}
 For each virtual resource (Table \ref{tab:resources}) there is a performance cost to making that resource virtualized.  If the guest had direct access to the hardware, at all times, the virtualization cost would be zero.  Since most system calls from the guest kernel need to go through the hypervisor, we need to account for this additional time.
 
 Several researchers \cite{cherkasova, huber1} have called this cost the \emph{overhead}, and have quantified the overhead for a given configuration.  This previous research used an offline modeling technique by running a benchmark with and without virtualization.  By calculating the percent difference of these two benchmarks they can calculate the overhead.
@@ -107,7 +110,7 @@ In large scale datacenters and cloud systems, templates are usually created befo
 
 To calculate the virtualization overhead, create a single virtual machine with dedicated resources on isolated hardware.  
 There are many performance benchmarks that can be used \cite{katcher, tikotekar, hplBench} to place a desired load on the virtual machine. 
-Then place the load on the virtual machine and begin monitoring the performance statistics for that resource using the algorithm in Figure \ref{alg1} in BOTH the guest OS and hypervisor. 
+Then run the benchmark or load on the virtual machine and begin monitoring the performance statistics for that resource using the algorithm in Figure \ref{alg1} in BOTH the guest OS and hypervisor. 
 Save the results of the guest, hypervisor, and time in the guest as this is the baseline statistic without external interference.
 It is important that both the guest and hypervisor collect PRE and POST statistics as close to the same time as possible.  
 
@@ -118,73 +121,67 @@ For some statistics such as the \emph{AvgRdWait}, we can approximate the overhea
   Overhead_{IO} = \frac{AgvRdWait_G - AvgRdWait_H}{AvgRdWait_H} 
 \end{equation}
 
-\begin{figure}[h]
-  \begin{center}
-  \includegraphics[width=3in]{images/RPS_single.png}
-  \caption{The time waiting for I/O in the guest is greater than the I/O in the hypervisor. $Overhead_{IO}=10.2\%$}
-  \label{RPSsingle}
-  \end{center}
-\end{figure}
-
 % Simple method %
-\subsection{Virtualization Interference}
-The primary goal of the interference is to distinguish between a guest that is degraded because of an issue with the hypervisor layer (including external interference) and a guest that is degraded because of an application or OS layer issue.  In other words we should be able to distinguish between a problem in the guest and a problem which the guest has no control.  An secondary goal is to measure or analyze the interference.  We should be able to answer the question, "How much of the resource is available to the guest?".
+\subsection{I/O Virtualization Interference}
+We should be able to distinguish between a guest that is degraded because the hypervisor layer (including external interference) is using the resource and a guest that is degraded because of an application or OS layer issue within the guest.  In other words we should be able to distinguish between a problem inside the guest and a problem where the guest has no control.  An secondary goal is to measure or analyze the interference.  We should be able to answer the question, "How much of the resource is available to the guest?".
 
-A simple approach would simply show the interference from external machines by calculating the $AvgRdWait$ for the guest domain when calculating the overhead and when run with additional system and conclude that the interference is the difference between the two.  However, this would not (necessarily) describe the interference.  This would only show us that the resource is degraded for some reason.  In other words, by simply observing the time spent waiting in the guest or the quest I/O queue, we could not distinguish between a problem in the guest, hypervisor, or external system.
+It may seem possible to that we can deteremine degredation by examining only the resource statistics inside of the guest machine.  However, with some simple tests, we were able to change the I/O latency and throughput in a guest domain by only changing the guest workload and data (Table \ref{tab:guestOnly})
+ 
+\begin{table}[h]
+  \begin{tabular}{ l l p{10cm} }
+    Test & $AvgRdWait$ & $reads/ms$  \\
+    \hline
+    Baseline                     & 5.95 & 406 \\
+    Increase DB size             & 8.04 & 563 \\
+    Increase DB Connections      & 20.3 & 875 \\
+    Baseline with Interference   & 9.86 & 242 \\
+    \hline
+  \end{tabular}
+\caption{Only calculate based on guest view of virtual resources.  The first 3 tests are without interference from external domains.}
+\label{tab:guestOnly}
+\end{table}
 
-\subsection{External Interference}
-When there is external interference the guest machine will be significantly degraded. 
-When we also look at external layers (Figure \ref{int1}), we can see that other machines are sending data as well.  We can calculate the interference from external machines by calculating the sum of all the $ms/rd$ from all guest
-
+When an application is running in the guest domain the availablity of the resource may not be available to the guest at some time.  From this information it is difficult to determine whether the increase is due to external interference or application changes. We could also decrease the $reads/ms$ simply by reducing the I/O load.  In order to quickly determine if the guest domain is experiencing interference we need to also examine the counters in the hypervisor.  We can examine the throughput of the guest $read/s_G$ and the throughput of the hypervisor $read/s_H$ over the same time period calculate the interference as:
 \begin{equation}
-  Overhead_V = \frac{count_G - count_H}{count_H} 
+	Interference_{RPS} = \frac{read/s_H - read/s_G}{read/s_H} 
 \end{equation}
 
-% Picture with All guest numbers, "?" in hypervisor 
+% See Test7_1Results.xls - Barbaro Exp7.2 and Barbaro_Dom29.txt
+\begin{table}[h]
+  \begin{tabular}{ l l l p{6cm} }
+    Test & Guest & Hypervisor  & $Interference_{RPS}$ \\
+    \hline
+    Baseline                     & 406 & 372 & -6\% \\
+    Increase DB size             & 563 & 538 & -6\%  \\
+    Decrease DB Connections      & 875 & 836 & -5\%  \\
+    Baseline with Interference   & 242 & 691 & 60\%  \\
+    \hline
+  \end{tabular}
+\caption{Reads per ms of Virtual Guest machine and hypervisor.}
+\label{tab:HypervisorGuest}
+\end{table}
+By looking at the throughput from the hypervisor view, we can quickly determine if a guest application is degraded due to external interference from external domains.  
+
+There is a case when this could erroneously tell us there is interference when there is not any interference.  So far we have only examined systems where the application is running at 100\% of possible throughput.  One reason virtualization is so successful is that not all guests run at full capacity at all times.  In a perfect virtualization a physical resource $R$ would be divided between $n$ guests, and each guest would use $1/n$ of resource $R$ at any given time.  For example, if a physical disk could handle a throughput rate of 400 reads per second, and 4 virtual machines each requested data at a rate of 100 reads per second, then the previous method would report 75\% interference.  
+
+Since the guest has previously calculated the latency through the hypervisor $AvgRdWait$ when we calculated $Overhead_V$, we can use that information to determine if the guest is degraded due to interference from external systems.  When external systems are exceeding the I/O throughput, the $AvgRdWait$ time will increase significantly.  We can calculate the interference by calculating the controlled average wait time (without interference) and the average wait time when run with additional external domains.  Since we are trying to determine if the hypervisor is the root cause, we need to use the information from the view of the hypervisor.
+\begin{equation}
+	Interference_{ARW} = \frac{AvgRdWait_{Current} - AvgRdWait_{Overhead}}{AvgRdWait_{Current}} 
+\end{equation}
+
+\subsubsection{IO Example Method}
+First, the guest machine needs to calculate the $Overhead_V$ and save the $AvgRdWait_H$ for later reference.  Then when the guest machine is put into production, it can calculate the interference when requested from a user space tool.  Both the guest virtual machine and hypervisor can calculate the resource statistics according to algorithm in \ref{alg1} when requested.  It is important that they collect $PRE$ and $POST$ statistics concurrently.  Then the hypervisor can return the $AvgRdWait$ and the $reads/s$ back to the guest.   The guest VM can calculate $Interference_{RPS}$ and $Interference_{ARW}$ as described previously.   Then the guest can report external interference as follows.
+
 \begin{figure}[h]
-  \begin{center}
-  \includegraphics[width=3in]{images/RPS_int1.png}
-  \caption{Guest 1 is degraded due to external interference.}
-  \label{int1}
-  \end{center}
+\begin{algorithmic}[H]
+ \STATE $Interference_{EXT} \gets Interference_{RPS} X Interference_{ARW}$  
+ \IF{$Interference_{EXT} < 0$ } 
+ 	\STATE $Interference_{EXT} \gets 0$
+ \ENDIF
+\end{algorithmic}
+\label{alg2}
+\caption{User tool for guest domain to show read I/O interference.}
 \end{figure}
-
-% A method to analyze performance of a guest machine which may be experiencing degredation from external interference.
-\subsection{Hypervisor Interference}
-It would not tell us if the resource was available to the guest.
-We need to collect the same statistics from all guest systems, aggregate those counters, and compare that to the hypervisor.  We need to collect data from all of the layers of virtualization.
-
-Since the guest has previously calculated $ Overhead_V $ we can use that information to calculate the interference when multiple guests are run concurrently $ Overhead_{Vall}$.  If all \emph{n} guests have been modified to collect and pass information to the hypervisor, each guest can reply with their counters when asked by the hypervisor.  It is important that all guests and the hypervisor start and stop counting concurrently to provide accurate results.  
-
-\begin{equation}
-Overhead_{Vall} = \frac{count_{Gall} - count_H}{count_{Gall}} 
-\label{eq2}
-\end{equation}
-
-\indent We can see that when the number of guests machines is 1 (as when we collected the overhead with 1 machine), this is exactly as equation 1.  After the hypervisor calculates the count and overhead for all machines running and passes this information to the original guest, the guest can then calculate the interference.  
-The interference from other virtual machines $Interference_V$ is calculated by subtracting the overhead from all guests from the original overhead found without any external interference. 
-
-\begin{equation}
-Interference_V = Overhead_{Vall} - Overhead_V
-\label{eq3}
-\end{equation}
-
-
-\begin{equation}
-	Count_{Gall} = \sum_{i=1}^n{count_G} 
-\end{equation}
-
-% TODO Algoritm 
-\begin{enumerate}
-	\item Guest tool requests OS permance counter statistics.
-	\item Guest OS forwards request to hypervisor.
-	\item Hypervisor forwards request to all guests.
-	\item Hypervisor begins monitoring for specified time and waits determined time.
-	\item Each Guest responds with individual statistics.
-	\item Hypervisor calculates $Overhead_{Vall}$ (Equation 2) of resource used.
-	\item Hypervisor returns $Overhead_{Vall}$ to original requestor.
-	\item Guest calculates the $Interference$ (Equation 3).
-\end{enumerate}
 
 \indent As an example: the userspace tool \emph{iostat} reads disk performance counters in /proc/diskstats and will report transfers, bytes read, and bytes written per second.  If an application was experiencing I/O performance problems this would be a tool an administrator or application developer may monitor.  Without knowing the interference this could be misleading as to the root cause of the problem.  The following example shows a possible output from the perspective of the running guest when experiencing I/O interference from external guest machines.
 
@@ -197,4 +194,14 @@ sda   577.20     41388.00    148073.00
 \label{fig:iostat}
 \caption{Example:  \emph{iostat} with additional calculated interference.}
 \end{figure}
+
+\subsection{Other Considerations}
+There are three other issues that need to be considered with this type of method.  First, we examine the implications of mulitple different types of virtualization platforms and guests running.  Second, we see if there are any performance issues with the method we describe.  Finally, we look at security concerns as passing information about external machines may reduce the security guarantees when a system is virtualized.
+
+Most virtualization platforms have a message passing API native to the system.  Usually this is to automatically configure the guest domain when it is provisioned or when changes are needed.  For Xen Server, this is done through the Xenbus and Xenstore.  VMware guest tools has a guest API (vmware-tools-guestlib package), and even has a setting to pass Host resource counter data to the guest.  However, this is disabled by default and security tuning documents encourage explicitly setting it off for security reasons \cite{vmwarepubs}.  If there were not any native mechanism to pass data between the guest and the host system, we could still use some message passing over TCP/IP such as SOAP or Rest service wiht HTTP.
+%https://www.vmware.com/support/developer/guest-sdk/guest_sdk_40.pdf
+
+There is some performance overhead with this additional data collection, as with any method that attempts to measure performance.  We do not want a tool to negatively impact the performance, or report degredation from the tool itself.  For I/O performance issues we believe that our method will not have a measurable impact.  For a system that is waiting on I/O from disk, it should have CPU cycles available for data processing.   Both the guest and the hypervisor need to read in memory kernel data twice.  Then each needs to compute the difference of the two statistics after they are collected.  The hypervisor needs to pass the data to the guest VM, and then the guest needs to do a few calculations on the data.  There are several tools in Windows and Linux that perform similar to this now, and are widely accepted.
+
+Obviously security is a major concern for any system.  The more information an attacker can gain about the system, the better chance that a vulnerability can be found.  There is similar precendence for sending this type of data in a standard kernel.  Currently (by default) all users can see the sum of all the I/O and cpu processes.  This is the same type of data where we want to know how our virtual machine is effected by other virtual machines.  An attacker may be able to gain knowledge about the run state of external machines, and possibly execute some side channel attacks.  More research would be required to see what types of exploits would be possible.  
 
