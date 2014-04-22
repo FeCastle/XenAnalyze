@@ -13,9 +13,9 @@ On a single physical server, the application, OS, and hardware layers need to be
   \label{PhysicalLayers}
 \end{figure}
 
-In a virtual environment, an OS kernel in the guest virtual machine does not have direct access to the physical resources.  Instead the hypervisor divides the physical resources between the guest systems and presents a virtual resource to the guest OS.  
+In a virtual environment, an OS kernel in the guest virtual machine does not have direct access to the physical resources.  Instead the hypervisor divides the physical resources between the guest systems and presents a virtual resource to the guest OS (Figure \ref{LayersAndResources}).
 This is similar to an OS kernel dividing up the CPU time between multiple processes, where each process only runs for a portion of the total CPU time.  
-The major difference between an OS kernel dividing up a physical resource for multiple processes and the hypervisor dividing up a resource for multiple virtual machines is that the OS kernel provides APIs and user space tools to monitor the resources.  By default (on Linux and Windows) any process can determine the percentage of resources that it is using.  Unlike the OS kernel layer, the hypervisor layer provides little or no information to the layer above it about the true availability and use of the resource.
+The major difference between an OS kernel dividing up a physical resources, and the hypervisor dividing up a resources is that the OS kernel provides APIs and user space tools to the processes in order to monitor the resources.  By default (on Linux and Windows) any process can determine the percentage of resources that it is using.  Unlike the OS kernel layer, the hypervisor layer provides little or no information to the layer above it about the true availability and use of the resource.
 
 \begin{figure}[!h]
   \begin{center}
@@ -25,7 +25,8 @@ The major difference between an OS kernel dividing up a physical resource for mu
   \end{center}
 \end{figure}
 
-The physical resource may be used by an external virtual machine or by the hypervisor, and there is little information that a guest OS or application can see about the physical resource.
+The physical resource may be used by an external virtual machine or by the hypervisor, and there is little information that a guest OS or application can see about the availability of the physical resource.
+Additionally, the hypervisor view does not know about specific processes running in the guest.  So if VMM performance tools could identify the resource availability, there is not any way to relate that to a specific guest process.  Both the virtual guest and hypervisor would need to monitor resources concurrently. 
 Additional information is needed from hypervisor about the physical resource so that the administrator, OS, or application can make better decisions about the availability of the resource. 
 
 \begin{table}[h]
@@ -43,7 +44,7 @@ Additional information is needed from hypervisor about the physical resource so 
 
 % 3 Identify the performance counters which can be used to measure I/O performance on a virtual guest machine.
 \subsection{Performance statistics}
-To monitor applications and the kernel, administration tools will read kernel statistics over some period of time.  Then the tool will aggregate and relate the data for that time period.  In some cases, additional inference can be made from different parts of the data.  For example the \emph{sar} utility can show the average wait time, average service time, and \emph{bandwidth utilization} for I/O.  On a physical server, where the hardware availability is relatively static, this information is valuable for analyzing and tuning applications.  However, when the resource is virtualized, these kernel resource statistics for virtual resources are almost meaningless.  Our tests will show that for disk I/O statistics, there is no difference between application changes and interference from external virtual guests. 
+To monitor applications and the kernel, administration tools will read kernel statistics over some period of time.  Then the tool will aggregate and relate the data for that time period.  In some cases, additional inference can be made from different parts of the data.  For example the \emph{sar} utility can show the average wait time, average service time, and \emph{bandwidth utilization} for I/O.  On a physical server, where the hardware availability is relatively static, this information is valuable for analyzing and tuning applications.  However, when the resource is virtualized, these kernel resource statistics for virtual resources are almost meaningless.  Our tests will show that for disk I/O statistics, there is little difference in these counters when comparing application changes and interference from external virtual guests. 
 
 \begin{figure}[h]
 \begin{algorithmic}[H]
@@ -62,7 +63,7 @@ To monitor applications and the kernel, administration tools will read kernel st
 \label{alg1}
 \end{figure}
 
-Our method will collect, aggregate, and analyze the statistics kept by the OS kernel the guest domain and the hypervisor in order to measure interference from external domains and the hypervisor.  We find that there are kernel statistics that will show the interference from external machines, when collected from all layers.  For our examples we choose disk read and virtual memory statistics to analyze I/O bottlenecks.  However, this method could be used for identifying other types of performance problems if the data was available to the guest.
+Our method will collect, aggregate, and analyze the statistics kept by the guest OS and hypervisor layers in order to measure interference from external domains and the hypervisor.  We find that there are statistics that will show the interference from external machines, when collected from all layers.  For our examples we choose disk read and virtual memory statistics to analyze I/O read bottlenecks.  However, this method could be used for identifying other types of performance problems if the data was available to the guest.
 
 \begin{table}[h]
 \begin{subtable}[h]{0.45\textwidth}
@@ -87,12 +88,12 @@ Our method will collect, aggregate, and analyze the statistics kept by the OS ke
 \caption{Statistics collected from all guests and hypervisor}
 \end{table}
 
-By collecting these statistics at two points in time as in algorithm \ref{alg1}, we can infer other data such as the throughput in reads per second \emph{r/s}.  We can also calculate the disk I/O latency or the average wait time for reads \emph{AvgRdWait}.  
+By collecting these statistics at two points in time as in Figure \ref{alg1}, we can infer other data such as the throughput in reads per second \emph{r/s}.  We can also calculate the average wait time for reads \emph{AvgRdWait}.  
 Since \emph{r\_ms} is the total number of milliseconds spent by all reads, we can divide this by the total number or read requests to get the average wait time.  This is very important since external guests may cause I/O delays for a shared disk accessed concurrently by multiple guests.
 \newline\newline
 \Large
-	$AvgRdWait = \frac{r\_ms}{r\_total}$ \\
-	$read/s = \frac{r\_total}{TotalTime}$ \\
+	$AvgRdWait = \frac{r\_ms}{r\_total}$   Average Read Wait Time\\
+	$read/s = \frac{r\_total}{TotalTime}$  Average Read Throuhput \\
 \normalsize
 
 % 4 A method to calculate the overhead and theoritical maximum performance using an offline modeling technique.
@@ -130,7 +131,7 @@ We should be able to distinguish between a guest that is degraded because the hy
 It may seem possible to that we can deteremine degredation by examining only the resource statistics inside of the guest machine.  However, with some simple tests, we were able to change the I/O latency and throughput in a guest domain by only changing the guest workload and data size (Table \ref{tab:guestOnly}).
  
 \begin{table}[h]
-  \begin{tabular}{ l l p{10cm} }
+  \begin{tabular}{ l l p{5cm} }
     Test & $AvgRdWait$ & $reads/ms$  \\
     \hline
     Baseline                     & 5.95 & 406 \\
@@ -139,7 +140,7 @@ It may seem possible to that we can deteremine degredation by examining only the
     Baseline with Interference   & 9.86 & 242 \\
     \hline
   \end{tabular}
-\caption{Only calculate based on guest view of virtual resources.  The first 3 tests are without interference from external domains.}
+\caption{Statistics from only the guest view of virtual resources.  The first 3 tests are without interference from external domains. }
 \label{tab:guestOnly}
 \end{table}
 
@@ -172,37 +173,42 @@ By analyzing the throughput from both the guest view and hypervisor view, we can
   \end{center}
 \end{figure}
 
-There is a case when this could erroneously tell us there is interference when there is not any interference.  So far we have only examined systems where the application is running at 100\% of possible throughput.  One reason virtualization is so successful is that not all guests run at full capacity at all times.  In a perfect virtualization a physical resource $R$ would be divided between $n$ guests, and each guest would use $1/n$ of resource $R$ at any given time.  For example, if a physical disk could handle a throughput rate of 400 reads per second, and 4 virtual machines each requested data at a rate of 100 reads per second, then the previous method would report 75\% interference.  
+There is a case when this could erroneously tell us there is interference when there is not any interference.  So far we have only examined systems where the application is running at 100\% of possible throughput.  One reason virtualization is successful is that not all guests run at full capacity at all times.  In a theoretically perfect virtualization, a physical resource $R$ would be divided between $n$ guests, and each guest would use $1/n$ of resource $R$ at any given time.  For example, if a physical disk could handle a throughput rate of 400 reads per second, and 4 virtual machines each requested data at a rate of 100 reads per second. In this case, our method may inacurrately report 75\% interference.  
 
-Since the guest has previously calculated the latency through the hypervisor $AvgRdWait$, we can use that information to determine if the guest is degraded due to interference from external systems.  When external systems are exceeding the I/O throughput, the $AvgRdWait$ time will increase significantly.  We can calculate the interference by using the average wait time (without interference) and the average wait time when run with additional external domains.  Since we are trying to determine if the hypervisor layer is the root cause, we need to use the information from the view of the hypervisor.
+Since the guest has previously calculated the read wait time through the hypervisor $AvgRdWait$, we can use that information to determine if the guest is degraded due to interference from external systems.  When external systems are exceeding the I/O throughput, the $AvgRdWait$ time will increase significantly.  We can calculate the interference by using the average wait time (without interference) and the average wait time when run with additional external domains.  Since we are trying to determine if the hypervisor layer is the root cause, we need to use the information from the view of the hypervisor.
+
 \begin{equation}
 	Interference_{ARW} = \frac{AvgRdWait_{Current} - AvgRdWait_{Overhead}}{AvgRdWait_{Current}} 
 \end{equation}
 
-\subsubsection{IO Example Method}
+If both of the calculated interference results are positive then we can assume that the hypervisor is waiting for I/O, and there is something in the external layer that is the guest domain is not generating all of the I/O throughput.
+Only when both of these values increase, can we accurately determine there is external interference.
+We conclude that the interfernce from I/O reads is the lower of these two values.
+
+\subsubsection{I/O Read Example Method}
 First, the guest machine needs to calculate the $Overhead_V$ and save the $AvgRdWait_H$ for later reference.  When the guest machine is put into production, it can calculate the interference when requested from a user space tool.  Both the guest virtual machine and hypervisor can calculate the resource statistics according to algorithm in \ref{alg1} when requested.  It is important that they collect $PRE$ and $POST$ statistics concurrently.  Then the hypervisor can return the $AvgRdWait$ and the $reads/s$ back to the guest.   The guest VM can calculate $Interference_{RPS}$ and $Interference_{ARW}$ as described previously.   Then the guest can report external interference as follows.
 
 \begin{figure}[h]
 \begin{algorithmic}[H]
- \STATE $Interference_{EXT} \gets Interference_{RPS} X Interference_{ARW}$  
- \IF{$Interference_{EXT} < 0$ } 
- 	\STATE $Interference_{EXT} \gets 0$
+ \STATE $Interference_{EXT} \gets 0$
+ \IF{$Interference_{RPS} > 0$ \AND $Interference_{ARW} > 0$ } 
+ 	\STATE $Interference_{EXT} \gets FLOOR(Interference_{RPS}, Interference_{ARW})$  
  \ENDIF
 \end{algorithmic}
 \label{alg2}
-\caption{User tool for guest domain to show read I/O interference.}
+\caption{User tool for guest domain to calculate external read I/O interference.}
 \end{figure}
 
-\indent As an example: the userspace tool \emph{iostat} reads disk performance counters in /proc/diskstats and will report transfers, bytes read, and bytes written per second.  If an application was experiencing I/O performance problems this would be a tool an administrator or application developer may monitor.  Without knowing the interference this could be misleading as to the root cause of the problem.  The following example shows a possible output from the perspective of the running guest when experiencing I/O interference from external guest machines.
+The userspace tool \emph{iostat} reads disk performance counters in /proc/diskstats and will report transfers, bytes read, and bytes written per second.  If an application was experiencing I/O performance problems this would be a tool an administrator or application developer may monitor.  Without knowing the interference this could be misleading as to the root cause of the problem.  The following example shows a possible output from the perspective of the running guest when experiencing I/O interference from external guest machines.
 
 \begin{figure}[h]
 \begin{Verbatim}
 Device:  tps    kB_read/s    kB_wrtn/s
 sda   577.20     41388.00    148073.00
- virtual I/O interference 22.4%     
+  I/O interference 22.4%     
 \end{Verbatim}
 \label{fig:iostat}
-\caption{Example:  \emph{iostat} with additional calculated interference.}
+\caption{Example:  Possible \emph{iostat} output in a virtual guest experiencing external interference.  This is similar to the new \emph{steal time} for the CPU resource.}
 \end{figure}
 
 \subsection{Other Considerations}
@@ -211,7 +217,7 @@ There are three other issues that need to be considered with this type of method
 Most virtualization platforms have a message passing API native to the system.  Usually this is to automatically configure the guest domain when it is provisioned or when changes are needed.  For Xen Server, this is done through the Xenbus and Xenstore.  VMware guest tools has a guest API (vmware-tools-guestlib package), and even has a setting to pass Host resource counter data to the guest.  However, this is disabled by default and security tuning documents encourage explicitly setting it off for security reasons \cite{vmwarepubs}.  If there were not any native mechanism to pass data between the guest and the host system, we could still use some message passing over TCP/IP such as SOAP or Rest service wiht HTTP.
 %https://www.vmware.com/support/developer/guest-sdk/guest_sdk_40.pdf
 
-There is some performance overhead with this additional data collection, as with any method that attempts to measure performance.  We do not want a tool to negatively impact the performance, or report degredation from the tool itself.  For I/O performance issues we believe that our method will not have a measurable impact.  For a system that is waiting on I/O from disk, it should have CPU cycles available for data processing.   Both the guest and the hypervisor need to read in memory kernel data twice.  Then each needs to compute the difference of the two statistics after they are collected.  The hypervisor needs to pass the data to the guest VM, and then the guest needs to do a few calculations on the data.  There are several tools in Windows and Linux that perform similar to this now, and are widely accepted.
+There is some performance overhead with this additional data collection, as with any method that attempts to measure performance.  We do not want a tool to negatively impact the performance, or report degredation from the tool itself.  For I/O performance issues we believe that our method will not have a measurable impact.  For a system that is waiting on I/O from disk, it should have CPU cycles available for data processing.  Both the guest and the hypervisor need to read in memory kernel data twice.  Then each needs to compute the difference of the two statistics after they are collected.  The hypervisor needs to pass the data to the guest VM, and then the guest needs to do a few calculations on the data.  There are several tools in Windows and Linux that perform similar to this now, and are widely accepted.
 
-Obviously security is a major concern for any system.  The more information an attacker can gain about the system, the better chance that a vulnerability can be found.  There is similar precendence for sending this type of data in a standard kernel.  Currently (by default) all users can see the sum of all the I/O and cpu processes.  This is the same type of data where we want to know how our virtual machine is effected by other virtual machines.  An attacker may be able to gain knowledge about the run state of external machines, and possibly execute some side channel attacks.  More research would be required to see what types of exploits would be possible.  
+Obviously, security is a major concern for a virtual machine that may be running concurrently with untrusted external systems.  The more information an attacker can gain about the system, the better chance that a vulnerability can be found.  There is similar precendence for sending this type of data in a standard kernel.  Currently (by default) all users can see the sum of the I/O and CPU processes.  The OS kernel has the resposibility to provide protection, yet it provides access to global data about the system.  This is the same type of data where we want to know how our virtual machine is effected by other virtual machines.  An attacker may be able to gain knowledge about the run state of external machines, and possibly execute some covert channel attacks.  It may be beneficial to limit the guest to only requesting data from the hypervisor at known time intervals.  More research would be needed to see what types of vulnerabilities would be possible, and what types of controls could be added to reduce the risk of an exploit.  
 
