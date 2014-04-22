@@ -102,7 +102,7 @@ We calculate the overhead for the guest OS paging and the I/O reads using the re
 	r sectors & 332,504 & 331,803  &\\
 	r\_ms     &  63,356 &  72,428  & \\
 	r total   &  11,145 &  12,166  & \\
-    \textbf{read/ms}    & 637 & 767 & \\
+    \textbf{reads/s}    & 637 & 767 & \\
     \textbf{AvgRdWait}  & 3.59 & 3.70 & 2.9\% \\ 
   \hline
 \end{tabular}
@@ -129,7 +129,7 @@ We create a Small DB of 128MB in each of the external domains to generate memory
 	r sectors & 328,144 & 256,352 &  \\
 	r ms      & 103,483 &  70,751 &  \\
 	r total   &  13,365 &   9,547 &  \\
-    \textbf{read/ms}    & 446 & 318 & 28.6\%  \\
+    \textbf{reads/s}    & 446 & 318 & 28.6\%  \\
     \textbf{AvgRdWait}  & 7.74 & 7.41 & \\ 
   \hline
 \end{tabular}
@@ -153,7 +153,7 @@ Now we create I/O Interference in the three guest domains by creating a 640MB La
 	r sectors & 549,419 &194,163 &  \\
 	r ms      & 285,334 & 71,585 &  \\
 	r total   &  20,723 &  7,259 &  \\
-    \textbf{read/ms}    & 691 & 242 &   65\% \\
+    \textbf{reads/s}    & 691 & 242 &   65\% \\
     \textbf{AvgRdWait}  & 13.8 & 9.86 &  \\ 
   \hline
 \end{tabular}
@@ -165,39 +165,39 @@ We calculate $Interference_{ARW} = 74\%$  Since this is greater than the interfe
 During these tests, the application benchmark in Dom1 decreased to 254 TPS.  This is much less than when run without interference (415 TPS) and with memory interference (331 TPS).  All of the read counters showed significant interference.  Additionally we are showing some interference from page faults.  
 
 \subsection{Business Server}
-For this experiment we use our Dell server with 12GB of physical RAM. We configure all Dom1 to use 2GB of vRAM and keep Dom2 - Dom4 at 1GB of vRAM. We create an I/O bound application by creating a 3 GB database in each domain. For this size of database expect to see a significant change in the application
-when the external guest domains (Dom2 - Dom4) compete for physical resources with Dom1.
+For this experiment we use our Dell server with 12GB of physical RAM. We configure all Dom1 to use 4GB of vRAM and configure Dom2 - Dom4 as noted below.  We assign some different CPUs to the guest machines. We create a medium database of 3.2GB in Dom1.   And create Medium and Large databases in the external guest domains to change the different workloads in the guests.
 
-\subsubsection{Overhead}
 \begin{Verbatim}
-Name                 ID   Mem VCPUs      State   Time(s)
-Domain-0              0  2048    16     r-----  22461.6
-TestVM1               1  2048     1     -b----   1100.6
-TestVM2               2  1024     2     -b----   1095.0
-TestVM3               3  1024     1     -b----   1037.5
-TestVM4               4  1024     2     -b----   1170.8
+Name                       ID   Mem VCPUs      State   Time(s)
+Domain-0                    0   872    16     r-----  27116.4
+TestVM1                     1  4096     1     -b----   1127.7
+TestVM2                     2  3072     2     -b----   1735.8
+TestVM3                     3  2048     1     -b----   1588.1
+TestVM4                     4  2048     2     -b----   1906.1
 \end{Verbatim}
 
-We calculate the $Overhead_V$ in Dom1 using the same method as described previously. 
+\subsubsection{Overhead}
+We calculate the $Overhead_V$ in Dom1 using the same method as described previously (Table \ref{tab:OverheadBus}).  We can see that the overhead from virtualization on this platform (2.9\%) is about the same as the overhead on the previous serer even though the wait time was increased significantly.  We also see that our reads/s was decreased, but our datase throghput was faster at 1,348 TPS.  This is because in this server the database size is smaller than the available memory.
 
 \begin{table}[h]
 \begin{tabular}{ l l l p{5cm} }
   Counter     & Dom0 & Dom1 & $Overhead_V$ \\
   \hline
-    \textbf{read/ms}    & 275  & 281 & \\
+    \textbf{reads/s}    & 275  & 281 & \\
     \textbf{AvgRdWait}  & 14.0 & 13.6 & 2.9\% \\ 
   \hline
 \end{tabular}
 \caption{Overhead on the IBM x3650.}
-\label{tab:OverheadSmall}
+\label{tab:OverheadBus}
 \end{table}
 
 \subsubsection{Interference}
 % See WallEve_4_16_14.txt 
-Now we see how adding a external guest domains effect the interference by adding 1 domain at a time and calculating the interference and the drop in application performance.
+In the previous experiment for calculating interference we used 3 external guest domains, and changed the workload in the guest domains.  In this experiment, we create interference using 1 external domain at a time.  The first result is the same as the overhead calculation above.  This is a single guest domain Dom1 without external interference.  Then we run Dom1 with Dom2 and calculate the interference with a single external domain.  We continue to add domains and calculate the interference and application performance drop in TPS (Table \ref{tab:domains}).
+
 \begin{table}[!h]
 \begin{tabular}{ l l l l l l p{9cm} }
-                   & TPS   & reads/ms & reads/ms & AvgRdWait & $Interference_{RPS}$ & $Inteference_{AWR}$ \\
+                   & TPS   & reads/s & reads/s & AvgRdWait & $Interference_{RPS}$ & $Inteference_{AWR}$ \\
 	Experiment     & Dom 1 & Dom0     & Dom1     & Dom0      & $Interference_{EXT}$ &             \\
 	\hline
     Dom1 (Only)     & 1348 & 275      & 281      & 14.0     &  -2.1\%  &   0.0\%   \\
@@ -206,7 +206,7 @@ Now we see how adding a external guest domains effect the interference by adding
     Dom1 + 3 guests &  378 & 259      &  76      & 59.5    &  70.7\%  &   80.2\%  \\
 \end{tabular}
 \caption{Interference generated from 1, 2, and 3 external guest domains.}
-\label{fig:rps}
+\label{tab:domains}
 \end{table}
 
 From this we can see that as more external domains are added, our test benchmark degrades as expected.  We are also able to measure the interference which increases as more domains are added.  This is critical information to guest domains when they are experiencing performance problems and can quickly identify the root cause of problems for I/O.
@@ -215,6 +215,31 @@ From this we can see that as more external domains are added, our test benchmark
 \subsection{Verification without interference}
 In the previous two experiments, we showed how our method can give a guest domain vital information when it is degraded from external interference.  However, what if the guest domain was degraded due to an application bug, DB change, or misconfiguration?   In that case we want our method to show that there is not any external interference.
 
-We have previously demonstrated that the database TPS can become degraded as the size of the database increases.  Now we show that by simply increasing the I/O load from a single domain, that our method does not report external interfernce.  In this case the application is degraded because the working set exceeds the available memory.  The application depends on the I/O system for performance, but it is not degraded from external interference.
+We have previously demonstrated that the database TPS can become degraded as the size of the database increases.  Now we show that by simply increasing the I/O load from a single domain, that our method does not report external interfernce. In this case the application is degraded because the working set exceeds the available memory. We also change the number of DB connections to change the read wait time.  The application depends on the I/O system for performance, but it is not degraded from external interference.
 
-\todo{Add this back in}
+% See Test7_1Results.xls - Barbaro Exp7.2 and Barbaro_Dom29.txt
+\begin{table}[h]
+\begin{tabular}{ l l l l l l p{9cm} }
+                   & reads/s & reads/s & AvgRdWait & $Interference_{RPS}$ & $Inteference_{AWR}$ \\
+	Experiment     & Dom0     & Dom1     & Dom0      & $Interference_{EXT}$ &             \\
+
+    Test & Guest & Hypervisor  & $Interference_{RPS}$ \\
+    \hline
+    Baseline                   & 372 & 406 & 5.7 & -6\% & 0.0\%   \\  %Test 1
+    Increase DB size           & 538 & 563 & 7.8 & -6\% & 26.9\% \\  %Test 3
+    Increase DB Connections    & 836 & 875 &15.4 & -5\% & 63.0\% \\  %Test 4
+	Decrease DB Connections    & 279 & 144 & 4.7 & 48\% & -17\%  \\  %Test 5
+    With 3 ext domains         & 691 & 242 &13.8 & 65\% & 59.0\% \\  % From above
+    \hline
+  \end{tabular}
+\caption{4 tests without interference. }
+\label{tab:HypervisorGuest}
+\end{table}
+One interesting result is that when we decreased the number of DB connections, we experienced a significant increase in reads in the hypervisor.  We ran this experiment several times, and verified that this was accurate.  For some reason the hypervisor increased the reads.  Since our calculation determines interference from external domains, it did not show interference because there was no increase in the wait time.
+
+By analyzing the throughput from both the guest layer and hypervisor layer, we can see that our method reports interference only when external interference is applied to the guest domain.  When we showed the guest view (Table \ref{tab:guestOnly}) it was difficult to determine if the problem was from a change in the guest application or an external domain.  With these tests we can see that we need to have both an increase in wait time in the hypervisor as well as additional throughput from external domains.
+
+
+\subsection{Results Analysis}
+We completed several different experiments on two different virtualization platforms.  In section 7.1 we verified our test method and showed how performance can decrease without interference by increasing the size of the database.  We also showed that for each database size when external guest domains run concurrently they cause interference and degrade the guest application.  In section 7.2 we looked at our \emph{Personal} size server which had 2 GB ram and 4 CPUs.  We were able to calcuate the interference from external domains that only used memory, and external domains that were also I/O bound.  Our calculations for interference changed at the same rate of application degredation.  In section 7.3 we used our \emph{Business} server and calculated the overhead and interference from virtualization.  We created external interference from different numbers of guest domains, and found as more external guests are added our calculated interference increases at the same rate as the application performance decreases.  Finally, in section 7.5 we validated that when the application degrades due to internal changes, our method does not report it as external interference from virtualization.
+

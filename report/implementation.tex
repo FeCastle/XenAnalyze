@@ -130,39 +130,28 @@ We should be able to distinguish between a guest that is degraded because the hy
 
 It may seem possible to that we can deteremine degredation by examining only the resource statistics inside of the guest machine.  However, with some simple tests, we were able to change the I/O latency and throughput in a guest domain by only changing the guest workload and data size (Table \ref{tab:guestOnly}).
  
+% See barbaro_Dom29.txt %
 \begin{table}[h]
   \begin{tabular}{ l l p{5cm} }
     Test & $AvgRdWait$ & $reads/ms$  \\
     \hline
-    Baseline                     & 5.95 & 406 \\
-    Increase DB size             & 8.04 & 563 \\
-    Increase DB Connections      & 20.3 & 875 \\
-    Baseline with Interference   & 9.86 & 242 \\
+    Baseline                     & 5.96 & 376 \\   % Test 1
+    Increase DB size             & 8.04 & 563 \\   % Test 3
+    Increase DB Connections      & 20.3 & 875 \\   % Test 4
+    Decrease DB Connections      & 4.94 & 144 \\   % Test 5
+    Baseline with Interference   & 9.86 & 242 \\   % Barbaro Exp7.2 (P2)
     \hline
   \end{tabular}
-\caption{Statistics from only the guest view of virtual resources.  The first 3 tests are without interference from external domains. }
+\caption{Statistics from only the guest view of virtual resources.  The first 4 tests are without interference from external domains. }
 \label{tab:guestOnly}
 \end{table}
 
-When an application is running in the virtual guest, the resource may not be available to the guest for some time.  From this information (Table \ref{tab:guestOnly}), it is difficult to determine whether the changes are due to external interference or application changes. We could also decrease the $reads/ms$ simply by reducing the I/O load.  In order to quickly determine if the guest domain is experiencing interference we need to also examine the counters in the hypervisor.  We can examine the throughput of the guest $read/s_G$ and the throughput of the hypervisor $read/s_H$ over the same time period calculate the interference as:
+When an application is running in the virtual guest, the resource may not be available to the guest for some time.  From this information (Table \ref{tab:guestOnly}), it is difficult to determine whether the changes are due to external interference or application changes. We can increase or decrease the $reads/ms$ simply by changing the number of connections to the database.  In our experimental results we show how or calcuation for intererference can distinguish these cases.  In order to quickly determine if the guest domain is experiencing interference we need to also examine the counters in the hypervisor.  We can examine the throughput of the guest $read/s_G$ and the throughput of the hypervisor $read/s_H$ over the same time period calculate the interference as:
+
 \begin{equation}
 	Interference_{RPS} = \frac{read/s_H - read/s_G}{read/s_H} 
 \end{equation}
 
-% See Test7_1Results.xls - Barbaro Exp7.2 and Barbaro_Dom29.txt
-\begin{table}[h]
-  \begin{tabular}{ l l l p{6cm} }
-    Test & Guest & Hypervisor  & $Interference_{RPS}$ \\
-    \hline
-    Baseline                     & 406 & 372 & -6\% \\
-    Increase DB size             & 563 & 538 & -6\%  \\
-    Decrease DB Connections      & 875 & 836 & -5\%  \\
-    Baseline with Interference   & 242 & 691 & 60\%  \\
-    \hline
-  \end{tabular}
-\caption{Reads per ms of Virtual Guest machine and hypervisor.}
-\label{tab:HypervisorGuest}
-\end{table}
 By analyzing the throughput from both the guest view and hypervisor view, we can quickly determine if a guest application is degraded due to external interference from external domains.  
 
 \begin{figure}[!h]
