@@ -1,10 +1,10 @@
 In order to test our design, two virtualization stacks, a test infrastructure, and several benchmarks were created.  Our test suite runs a load on the guest machines and coordinates the stop and start of the collection of multiple performance counters across the guests and hypervisor.     
-Our experiments, when run in this infrastructure, demonstrate the performance problems guest machines may experience, from external interference or changes to the workload.  The performance data collected from all layers of the virtualization stack can distinguish between these different perromance problems.  We run the benchmark at least three times and average the results.
+Our experiments, when run in this infrastructure, demonstrate the performance problems guest machines may experience, from external interference or changes to the workload.  The performance data collected from all layers of the virtualization stack can distinguish between these different performance problems.  We run the benchmark at least three times and average the results.
 
 Both virtualization platforms have the same software stack installed (Figure \ref{softStack}).  
 We use the Xen hypervisor and CentOS release for both the guest (DomU) and VMM (Dom0).  
 This software stack can be extended to mulptiple servers to produce a larger cluster of servers.  
-We chose Postgres as the database server for our tests because of its robustness and standard use in hosting facilities and applications.  
+We chose PostgreSQL as the database server for our tests because of its robustness and standard use in hosting facilities and applications.  
 It is a good general purpose application that can be used to stress I/O, memory, and CPU resources, although we focused our test suite to measure database read operations.
 
 The test suite can run in all sizes of virtualization environments (Table \ref{virtSize}).  
@@ -30,7 +30,7 @@ For our experiments we run on an IBM x3650 \emph{Personal} and Dell T410 \emph{B
   Size & Specifications \\
   \hline
   Personal & IBM x3650 Quad Core 2GB Ram \\
-  Business & Dell PowerEdge T410 dual quadcore Xeon processors, 8GB Ram. \\
+  Business & Dell PowerEdge T410 dual quad-core Xeon processors, 8GB Ram. \\
   Cluster & Multiple small or medium servers clustered together with shared SAN data store. \\
   Cloud & Amazon Cloud or similar PAAS provider. \\
   \hline
@@ -41,7 +41,7 @@ For our experiments we run on an IBM x3650 \emph{Personal} and Dell T410 \emph{B
 \caption{Software and Hardware stacks}
 \end{table}
 
-The test infrasture generates a consistent and reproducible system load by using a PostgreSQL database server with PGbench.  
+The test infrastructure generates a consistent and reproducible system load by using a PostgreSQL database server with PGbench.  
  PGbench creates a TPC-B similar style workload and calculates transactions per second (TPS), so we can track the performance of each guest system from the application layer \cite{pgTune}.  
  We use PGbench to both generate a load to measure overhead and create interference.  
  We can change the database size and the number of users that connect to the database to change the I/O workload from the guest perspective.
@@ -58,19 +58,19 @@ When the test runs, each guest VM starts a process which waits for the hyperviso
 
 One of the challenges of this test suite is the coordination of the starting and stopping of the test, collection of resource counters, and the information sharing between the guests and hypervisor.  
 Since we use Xen as our virtualization platform, we chose XenBus and XenStore \cite{xenbus} to both coordinate the stop and start of the benchmark, and the collection of data results between domains.
-In order for paravitualized guest domains to communicate with the hypervisor the XenStore tools for DomU domains had to be built as this is not currently part of the standard package of guest tools.  Other options were to use the TCP/IP stack to send and receive messages between the domains to coordinate the tests and information as well.
+In order for paravirtualized guest domains to communicate with the hypervisor the XenStore tools for DomU domains had to be built as this is not currently part of the standard package of guest tools.  Other options were to use the TCP/IP stack to send and receive messages between the domains to coordinate the tests and information as well.
 
 For I/O intensive workloads, the application tends to perform very well when the entire \emph{working set} can fit into main memory, and the OS will cache reads from disk.
 However, when the \emph{working set}  approaches (or exceeds) the size of main memory, the application tends to degrade quickly.  
 Our initial experiments to find an I/O workload highlight this fact by changing the database size under load in a virtual environment.
 Before running the entire test suite we need to create a test database that will exceed the \emph{working set} and increase the probability that a database read will need to fetch the data from disk storage.  With PGbench the "-i" flag \emph{scaling factor} is used to initialize a database at a specified size (prior to running the benchmark) so that our results can show changes between a memory bound system and I/O bound system.  
 
-We created a program to find the size of database that would generate a high I/O rate.  It creates a small database then runs a benchmark and collects the results of the benchmark in TPS.  Then it creates a slighly larger database and runs the benchmark again.  This process is repeated until the TPS drop significantly, and the CPU time is almost idle in a I/O wait state.  At this point we can determine an adequate database size for an I/O bound system.
+We created a program to find the size of database that would generate a high I/O rate.  It creates a small database then runs a benchmark and collects the results of the benchmark in TPS.  Then it creates a slightly larger database and runs the benchmark again.  This process is repeated until the TPS drop significantly, and the CPU time is almost idle in a I/O wait state.  At this point we can determine an adequate database size for an I/O bound system.
 
 \begin{figure}[!h]
   \begin{center}
   \includegraphics[width=4in]{images/SmallScale.png}
-  \caption{TPS on our IBM x3650 system with 1 vCPU and 512KB vRAM. It changes from a memory bound application to an I/O bound application when the DB size approache the available RAM.}
+  \caption{TPS on our IBM x3650 system with 1 vCPU and 512KB vRAM. It changes from a memory bound application to an I/O bound application when the DB size approached the available RAM.}
   \label{smallIO}
   \end{center}
 \end{figure}
