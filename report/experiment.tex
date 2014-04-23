@@ -118,8 +118,8 @@ We calculate the overhead for the guest OS using the resource counters defined i
 	r sectors & 332,504 & 331,803  &\\
 	r\_ms     &  63,356 &  72,428  & \\
 	r total   &  11,145 &  12,166  & \\
-    \textbf{reads/s}    & 637 & 767 & \\
-    \textbf{AvgRdWait}  & 3.59 & 3.70 & 2.9\% \\ 
+    \textbf{reads/s}    & 372 & 406 & \\
+    \textbf{AvgRdWait}  & 5.68 & 5.95 & 4.7\% \\ 
   \hline
 \end{tabular}
 \caption{Overhead on the IBM x3650.}
@@ -152,7 +152,7 @@ We create a Small DB of 128MB in each of the external domains to generate memory
 \caption{Interference calculated from Small 128MB DB in Dom2 - Dom4.  TPS dropped by 20\%} 
 \label{fig:InterferenceSm}
 \end{table}
-We calculate the increased wait time using the $AvgRdWait$ we collected previously. We calculate $Interference_{ARW} = 56\%$  Since this is greater than the interference from througput we calculate the $Interference_{EXT} = 28.6\%$.
+We calculate the increased wait time using the $AvgRdWait$ we collected previously. We calculate $Interference_{ARW} = 26.6\%$  Since this is slightly less than the interference from througput we calculate the $Interference_{EXT} = 26.6\%$.
 
 From these tests, Dom1 had 331 TPS, and was degraded from 415 TPS, a performance drop in the application of 20\%.  It is not shown in these results, but Dom2 - Dom4 was able to cache the entire working set in memory and did not issue any read requests.  Dom1 was the only domain to issue read request. The totals from all guests domains for each of the three read counters is exactly the same as Dom1.  
 
@@ -176,10 +176,24 @@ Now we create I/O interference in the three guest domains by creating a 640MB La
 \caption{Interference calculated Large 640MB DB in Dom2 - Dom4.  TPS dropped by 39\%}
 \label{fig:InterferenceLg}
 \end{table}
-We calculate $Interference_{ARW} = 74\%$  Since this is greater than the interference from througput we calculate the $Interference_{EXT} = 65\%$.
+We calculate $Interference_{ARW} = 58.7\%$  Since this is less than the interference from througput we calculate the $Interference_{EXT} = 58.7\%$.
 
 During these tests, the application benchmark in Dom1 decreased to 254 TPS.  This is much less than when run without interference (415 TPS) and with memory interference (331 TPS).  All of the read counters showed significant interference.  Additionally we are showing some interference from page faults.  
 
+\subsubsection{Results Analysis}
+
+% Test7_1Results.xls Barbaro-Exp7.2(P2)
+\begin{figure}[!h]
+  \begin{center}
+  \includegraphics[width=4in]{images/IBM_PerfDrop_Int.png}
+  \caption{Application performance drop compared to calculated interference, for two types of external interference.}
+  \label{fig:perfDrop}
+  \end{center}
+\end{figure}
+
+In both cases (Figure \ref{fig:perfDrop}) we calculate a higher interference than the application degrades.  At a minimum this implies that there is interference to the guest application.  Although the database is I/O bound there is still a percentage of the application that relies on the CPU speed which is not part of the interference.  
+
+% 7.3 Section - Dell T410
 \subsection{Business Server}
 For this experiment we use our Dell server with 12GB of physical RAM. We configure all Dom1 to use 4GB of vRAM and configure Dom2 - Dom4 as noted below.  We assign some different CPUs to the guest machines. We create a medium database of 3.2GB in Dom1.   And create Medium and Large databases in the external guest domains create different workloads in the guests.
 
