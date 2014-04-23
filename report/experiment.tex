@@ -24,6 +24,8 @@ This is due to the fact that it must fetch database rows from the disk and it is
 Then we create external machine interference by running Dom1 concurrently with Dom2, Dom3, and Dom4. Each of the Dom2 - Dom4 systems are configured the same as Dom1.  We create a 2 GB database on each guest of the Dell, and a 1GB database on each guest of the IBM.  We run a PGBench in a loop to continuously create I/O interference on each external guest machine (Dom2 - Dom4). Concurrently we run our benchmark, and collect performance statistics only from Dom-1.  When the system is not I/O bound (Small DB) there is about a 28\% drop in performance (4434 TPS - 3208 TPS) on the IBM server and little change in the Dell server (Table \ref{fig:tps1}).  On both servers the guest becomes an I/O bound system quicker with external interference.
 
 \begin{table}[h]
+\begingroup
+    \fontsize{10pt}{12pt}\selectfont
 \begin{subtable}[h]{0.45\textwidth}
   \begin{tabular}{ l | r | r | r }
     DB Size & Single & Interfernce & Drop \\
@@ -49,6 +51,7 @@ Then we create external machine interference by running Dom1 concurrently with D
 \end{subtable}
 \caption{Dom1 TPS difference from interference for 3 database sizes.}
 \label{fig:tps1}
+\endgroup
 \end{table}
 
 % Section 7.1.3
@@ -113,7 +116,7 @@ We calculate the overhead for the guest OS paging and the I/O reads using the re
 One thing to notice is that the pgpgin from the Dom1 is about half of the host in Dom0.  
 We also see in Dom0 that pgpgin is exactly the same as the sectors read.  
 After some research on this we believe that the Dom0 and guest kernels are reporting different units of measurements, and there is not really 2x overhead for the pgpgin statistic.  
-In the Linux 2.4 and later kernel blocks and sectors were both 512 bytes, and the unit of measurement for pages in were reported in 1K sizes.  Since the Dom0 kernel is version 3.5.54 and the guest kernel is 2.6.32, we believe that the guest is reporting 1KB pages, and the Dom0 is reporting 512 byte pages to match the sector (and block) size.  In order to report an accurate results, we would need to ensure that the unit of measurement for values reported between the guest and hypervisor are consistent.  
+In the Linux 2.4 and later kernel blocks and sectors were both 512 bytes, and the unit of measurement for pages in were reported in 1K sizes.  Since the Dom0 kernel is version 3.4.54 and the guest kernel is 2.6.32, we believe that the guest is reporting 1KB pages, and the Dom0 is reporting 512 byte pages to match the sector (and block) size.  In order to report an accurate results, we would need to ensure that the unit of measurement for values reported between the guest and hypervisor are consistent.  
 
 % Section 7.2.2 - Test7_1Resultx.xls (Barabaro- Exp7.2(P2))
 \subsubsection{Memory Interference}
@@ -219,6 +222,8 @@ We have previously demonstrated that the database TPS can become degraded as the
 
 % See Test7_1Results.xls - Barbaro Exp7.2 and Barbaro_Dom29.txt
 \begin{table}[h]
+\begingroup
+    \fontsize{10pt}{12pt}\selectfont
 \begin{tabular}{ l l l l l l p{9cm} }
                    & reads/s & reads/s & AvgRdWait & $Interference_{RPS}$ & $Inteference_{AWR}$ \\
 	Experiment     & Dom0     & Dom1     & Dom0      & $Interference_{EXT}$ &             \\
@@ -232,10 +237,12 @@ We have previously demonstrated that the database TPS can become degraded as the
     With 3 ext domains         & 691 & 242 &13.8 & 65\% & 59.0\% \\  % From above
     \hline
   \end{tabular}
-\caption{4 tests without interference. }
+\caption{Tests without interference, our method does not report interference. }
 \label{tab:HypervisorGuest}
+\endgroup
 \end{table}
-One interesting result is that when we decreased the number of DB connections, we experienced a significant increase in reads in the hypervisor.  We ran this experiment several times, and verified that this was accurate.  For some reason the hypervisor increased the reads.  Since our calculation determines interference from external domains, it did not show interference because there was no increase in the wait time.
+
+One interesting result is that when we decreased the number of DB connections, we experienced a significant increase in reads in the hypervisor.  We ran this experiment several times, and verified that this was accurate.  For some reason the hypervisor increased the reads (since there were not any external domains).  Since our calculation determines interference from external domains, it did not show interference because there was no increase in the wait time.
 
 By analyzing the throughput from both the guest layer and hypervisor layer, we can see that our method reports interference only when external interference is applied to the guest domain.  When we showed the guest view (Table \ref{tab:guestOnly}) it was difficult to determine if the problem was from a change in the guest application or an external domain.  With these tests we can see that we need to have both an increase in wait time in the hypervisor as well as additional throughput from external domains.
 

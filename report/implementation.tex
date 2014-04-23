@@ -5,7 +5,7 @@ Finally, we describe a method to analyze the additional data to determine if the
 
 % 1 Define the new layers of abstraction virtual environments.
 \subsection{Abstraction Layers and Resources}
-On a single physical server, the application, OS, and hardware layers need to be considered as a potential layer for application performance problems.  On a physical server, the resources are physical hardware such as a disk, memory (RAM), and the CPU cores.  Applications access the physical resources through the kernel, and the kernel tracks statistics about the usage of the resource.
+On a single physical server, the application, OS, and hardware layers need to be considered as a potential problem for application performance problems.  The resources are physical hardware such as a disk, memory (RAM), and the CPU cores (Figure \ref{PhysicalLayers}.  Applications access the physical resources through the kernel, and the kernel tracks statistics about the usage of the resource.  The availability of the physical resource is known or meets some sort of guarantee from the hardware.
 
 \begin{figure}[!h]
   \includegraphics[width=3in]{images/LayersPhysical.png}
@@ -15,7 +15,7 @@ On a single physical server, the application, OS, and hardware layers need to be
 
 In a virtual environment, an OS kernel in the guest virtual machine does not have direct access to the physical resources.  Instead the hypervisor divides the physical resources between the guest systems and presents a virtual resource to the guest OS (Figure \ref{LayersAndResources}).
 This is similar to an OS kernel dividing up the CPU time between multiple processes, where each process only runs for a portion of the total CPU time.  
-The major difference between an OS kernel dividing up a physical resources, and the hypervisor dividing up a resources is that the OS kernel provides APIs and user space tools to the processes in order to monitor the resources.  By default (on Linux and Windows) any process can determine the percentage of resources that it is using.  Unlike the OS kernel layer, the hypervisor layer provides little or no information to the layer above it about the true availability and use of the resource.
+The major difference between an OS kernel dividing up a physical resources, and the hypervisor dividing up a resources is that the OS layer provides APIs to the application layer in order to monitor the resources.  By default (on Linux and Windows) any process can determine the percentage of resources that it is using.  Unlike the OS kernel layer, the hypervisor layer provides little or no information to the layer above it about the true availability and use of the resource. 
 
 \begin{figure}[!h]
   \begin{center}
@@ -26,8 +26,8 @@ The major difference between an OS kernel dividing up a physical resources, and 
 \end{figure}
 
 The physical resource may be used by an external virtual machine or by the hypervisor, and there is little information that a guest OS or application can see about the availability of the physical resource.
-Additionally, the hypervisor view does not know about specific processes running in the guest.  So if VMM performance tools could identify the resource availability, there is not any way to relate that to a specific guest process.  Both the virtual guest and hypervisor would need to monitor resources concurrently. 
-Additional information is needed from hypervisor about the physical resource so that the administrator, OS, or application can make better decisions about the availability of the resource. 
+Additionally, the hypervisor view does not know about specific processes running in the guest.  If the VMM performance tools could identify the resource availability, there is not any way to relate that to a specific guest process.  Both the virtual guest administrator and hypervisor administrator would need to monitor resources concurrently and share infomration through an external channel. 
+Additional information is needed directly from hypervisor about the physical resource so that the administrator, OS, or application can make better decisions about the availability of the resource. 
 
 \begin{table}[h]
   \begin{tabular}{ l p{10cm} }
@@ -44,7 +44,7 @@ Additional information is needed from hypervisor about the physical resource so 
 
 % 3 Identify the performance counters which can be used to measure I/O performance on a virtual guest machine.
 \subsection{Performance statistics}
-To monitor applications and the kernel, administration tools will read kernel statistics over some period of time.  Then the tool will aggregate and relate the data for that time period.  In some cases, additional inference can be made from different parts of the data.  For example the \emph{sar} utility can show the average wait time, average service time, and \emph{bandwidth utilization} for I/O.  On a physical server, where the hardware availability is relatively static, this information is valuable for analyzing and tuning applications.  However, when the resource is virtualized, these kernel resource statistics for virtual resources are almost meaningless.  Our tests will show that for disk I/O statistics, there is little difference in these counters when comparing application changes and interference from external virtual guests. 
+To monitor applications and the kernel, administration tools will read kernel statistics over some period of time.  Then the tool will aggregate and relate the data for that time period.  In some cases, additional inference can be made from different parts of the data.  For example the \emph{sar} utility can show the average wait time, average service time, and bandwidth utilization for I/O.  On a physical server, where the hardware availability is deterministic, this information is valuable for analyzing and tuning applications.  However, when the resource is virtualized, these kernel resource statistics for virtual resources are almost meaningless.  Our tests will show that for disk I/O statistics, there is little difference in these counters when comparing application changes and interference from external virtual guests. 
 
 \begin{figure}[h]
 \begin{algorithmic}[H]
