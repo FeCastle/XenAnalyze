@@ -241,6 +241,19 @@ In the previous experiment for calculating interference we used 3 external guest
 
 From this we can see that as more external domains are added, the application performance degrades as expected.  We are also able to measure the interference which increases as more domains are added.  This is critical information to guest domains when they are experiencing performance problems and can quickly identify the root cause of problems for I/O.
 
+\subsubsection{Results Analysis}
+% Test7_1Results.xls 7.3(Deux)
+\begin{figure}[!h]
+  \begin{center}
+  \includegraphics[width=4in]{images/Dell_PerfDrop_Int.png}
+  \caption{Dell application performance drop compared to calculated interference, for one, two and three external domains.}
+  \label{fig:perfDropDell}
+  \end{center}
+\end{figure}
+
+These three results are much closer than with the previous set of experiments we calculate a higher interference when more domains are added.  
+
+
 % Section 7.5
 \subsection{Verification Without Interference}
 In the previous two experiments, we showed how our method can give a guest domain vital information when it is degraded from external interference.  However, what if the guest domain was degraded due to an application bug, DB change, or misconfiguration?   In that case we want our method to show that there is not any external interference.
