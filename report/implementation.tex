@@ -1,7 +1,9 @@
 In this section we present a framework to collect and analyze data needed for performance diagnosis from the point of view of a virtual guest system. 
-First, we define the new layers of abstraction and virtual resources unique to virtual environments.  
+First, we define the layers of abstraction and virtual resources unique to virtual environments.  
 Then we identify the additional information needed from these layers, and a method to collect the data.
 Finally, we describe a method to analyze the additional data to determine if the guest machine is experiencing external I/O interference.
+
+In order to accurately determine if interference is due to external interference, we need to first calculate the overhead and establish a known baseline for that configuration.  Then, when run in production with other systems, we can compare the latency and throughput at the guest and hypervisor layers.  
 
 % 1 Define the new layers of abstraction virtual environments.
 \subsection{Abstraction Layers and Resources}
@@ -27,7 +29,7 @@ The major difference between an OS kernel dividing up a physical resources, and 
 
 The physical resource may be used by an external virtual machine or by the hypervisor, and there is little information that a guest OS or application can see about the availability of the physical resource.
 Additionally, the hypervisor view does not know about specific processes running in the guest.  If the VMM performance tools could identify the resource availability, there is not any way to relate that to a specific guest process.  Both the virtual guest administrator and hypervisor administrator would need to monitor resources concurrently and share infomration through an external channel. 
-Additional information is needed directly from hypervisor about the physical resource so that the administrator, OS, or application can make better decisions about the availability of the resource. 
+Additional information is needed immediately from hypervisor about the physical resource so that the administrator, OS, or application can make better decisions about the availability of the resource. 
 
 \begin{table}[h]
   \begin{tabular}{ l p{10cm} }
@@ -174,8 +176,11 @@ If both of the calculated interference results are positive then we can assume t
 Only when both of these values increase, can we accurately determine there is external interference.
 We conclude that the interference from I/O reads is the lower of these two values.
 
-\subsubsection{I/O Read Example Method}
-First, the guest machine needs to calculate the $Overhead_V$ and save the $AvgRdWait_H$ for later reference.  When the guest machine is put into production, it can calculate the interference when requested from a user space tool.  Both the guest virtual machine and hypervisor can calculate the resource statistics according to algorithm in Figure \ref{alg1} when requested.  It is important that they collect $PRE$ and $POST$ statistics concurrently.  Then the hypervisor can return the $AvgRdWait$ and the $reads/s$ back to the guest.  Then the guest VM can calculate $Interference_{RPS}$ and $Interference_{ARW}$ as described previously.  The guest can report interference as the least of the two calculated interference measurements.
+\subsection{Hypervisor Interference}
+Another option we explored was not consistent between workloads and system architectures.  The idea is to calculate the $Overhead_V$ again during production when calculating interference.  Instead of only using one guest we can calculate the total time spent waiting in all guests, and compare that to the hypervisor.  We call this calculation the $Overhead_{VALL}$ Since for one guest the time in that guest was always greater than the time in the hypervisor, we assume that the total time for all guests would increase.   The problem was that for some tests the hypervisor would generate extra reads and take more time than the guests.  We believe that the $Overhead_{VALL}$ may be a useful statistic for other resources.
+
+\subsection{I/O Read Example Method}
+First, the guest machine needs to calculate the $Overhead_V$ and save the $AvgRdWait_H$ for later reference.  When the guest machine is put into production, it can calculate the interference when requested from a user space tool.  Both the guest virtual machine and hypervisor can calculate the resource statistics according to algorithm in Figure \ref{alg1} when requested.  It is important that they collect $pre$ and $post$ statistics concurrently.  Then the hypervisor can return the $AvgRdWait$ and the $reads/s$ back to the guest.  Then the guest VM can calculate $Interference_{RPS}$ and $Interference_{ARW}$ as described previously.  The guest can report interference as the least of the two calculated interference measurements.
 
 \begin{figure}[h]
 \begin{algorithmic}[H]
@@ -201,7 +206,7 @@ sda   577.20     41388.00    148073.00
 \end{figure}
 
 \subsection{Other Considerations}
-There are three other issues that need to be considered with this type of method.  First, we examine the implications of multiple different types of virtualization platforms and guests running.  Second, we see if there are any performance issues with the method we describe.  Finally, we look at security concerns since passing information about external machines may reduce the security guarantees when a system is virtualized.
+There are three other issues that need to be considered with this type of method.  First, we examine the methods of passing information between the guests and hypervisor.  Second, we see if there are any performance issues with the method we describe.  Finally, we look at security concerns since passing information about external machines may reduce the security guarantees when a system is virtualized.
 
 Most virtualization platforms have a message passing API native to the system.  Usually this is to automatically configure the guest domain when it is provisioned or when changes are needed.  For Xen Server, this is done through the Xenbus and Xenstore.  VMware guest tools has a guest API (vmware-tools-guestlib package), and even has a setting to pass host (hypervisor) resource counter data to the guest \cite{vmwarepubs}.  However, this is disabled by default and security tuning documents encourage explicitly setting it off for security reasons. If there were not any native mechanism to pass data between the guest and the host system, we could still use some message passing over TCP/IP such as SOAP or Rest service with HTTP.
 %https://www.vmware.com/support/developer/guest-sdk/guest_sdk_40.pdf

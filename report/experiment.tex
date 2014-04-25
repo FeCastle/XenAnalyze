@@ -91,7 +91,7 @@ The root cause of the performance drop is due to external interference, which is
 \end{table}
 
 % Section 7.2
-\subsection{Personal Server}
+\subsection{Personal Server - IBM}
 In the previous experiment we showed the interference that can occur when external I/O interference is applied to a guest domain, and only looking at the performance counters in the guest does not indicate the problem.  In this experiment, we verify our design to measure interference from external systems, when the system is I/O bound.  The results are from our IBM x3650, where each guest is configured to use 512MB of vRAM.  First, we run the benchmark with a large 640MB database without interference and calcuate the overhead.  Then we start Dom2 - Dom4, while running the benchmark in Dom1, and calculate the interference.  We compare the results of the calculated interference with the performance drop in the application.
 
 \begin{Verbatim}
@@ -194,7 +194,7 @@ During these tests, the application benchmark in Dom1 decreased to 254 TPS.  Thi
 In both cases (Figure \ref{fig:perfDrop}) we calculate a higher interference than the application degrades.  At a minimum this implies that there is interference to the guest application.  Although the database is I/O bound there is still a percentage of the application that relies on the CPU speed which is not part of the interference.  
 
 % 7.3 Section - Dell T410
-\subsection{Business Server}
+\subsection{Business Server - Dell}
 For this experiment we use our Dell server with 12GB of physical RAM. We configure all Dom1 to use 4GB of vRAM and configure Dom2 - Dom4 as noted below.  We assign some different CPUs to the guest machines. We create a medium database of 3.2GB in Dom1.   And create Medium and Large databases in the external guest domains create different workloads in the guests.
 
 \begin{Verbatim}
@@ -288,7 +288,7 @@ By analyzing the throughput from both the guest layer and hypervisor layer, we c
 
 
 \subsection{Results Analysis}
-We completed several different experiments on two different virtualization platforms.  In section 7.1 we verified our test method and showed how performance can decrease without interference by increasing the size of the database.  We also showed that for each database size when external guest domains run concurrently they cause interference and degrade the guest application.  In section 7.2 we looked at our \emph{Personal} size server which had 2 GB ram and 4 CPUs.  We were able to calcuate the interference from external domains that only used memory, and external domains that were also I/O bound.  Our calculations for interference increased as the application performance decreased.  In section 7.3 we used our \emph{Business} server and calculated the overhead and interference from virtualization.  We created external interference from different numbers of guest domains, and found as more external guests are added our calculated interference increased similar to the application performance drop.  Finally, in section 7.5 we validated that when the application degrades due to internal changes, our method does not report it as external interference from virtualization.
+We completed several different experiments on two different virtualization platforms.  In section 5.1 we verified our test method and showed how performance can decrease without interference by increasing the size of the database.  We also showed that for each database size when external guest domains run concurrently they cause interference and degrade the guest application.  In section 5.2 we looked at our \emph{Personal} size server which had 2 GB ram and 4 CPUs.  We were able to calcuate the interference from external domains that only used memory, and external domains that were also I/O bound.  Our calculations for interference increased as the application performance decreased.  In section 5.3 we used our \emph{Business} server and calculated the overhead and interference from virtualization.  We created external interference from different numbers of guest domains, and found as more external guests are added our calculated interference increased similar to the application performance drop.  Finally, in section 5.5 we validated that when the application degrades due to internal changes, our method does not report it as external interference from virtualization.
 
 
 

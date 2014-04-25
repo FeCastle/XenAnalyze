@@ -1,0 +1,18 @@
+\LARGE
+\textbf{Definitions}
+\normalsize
+\begin{description}
+  \item[Hypervisor] A thin kernel layer that abstracts the physical hardware and presents virtual hardware to the guests.\\
+  \item[VMM] Virtual Machine Manager. A kernel and OS that configures the hypervisor and virtual guests.  In Xen this is Dom0.\\
+  \item[Guest] A complete OS (with applications) that is running under a hypervisor.  In Xen this is DomU.\\
+  \item[Virtual Resource]  A physical resource (such as Disk, CPU or memory) that is managed by a hypervisor and allocated to a guest.\\
+  \item[Virtualized] Changing a physical system to a virtual guest system.\\
+  \item[Overcommit] Assigning more resources than are physically available.\\
+  \item[System-wide profiling] Both the guest and VMM are profiled.\\
+  \item[System noise] Interrupts from daemons or other kernel processes that need to perform some task. \cite{tsafrir}\\
+  \item[Paravirtualization] A virtualization technique where the native instruction set is not completely implemented.  Usually the Guest OS needs to be modified to know it is virtualized. This is the technique used by Xen. \cite{vmwareMem, du1}
+  \item[Working set] The size of most of the data an application needs.  For database servers if the working set can fit into RAM, it is much faster than going to disk and swapping data. 
+  \item[Overhead] The additional cost (time) required for virtualization.  For each operation, there may be additional resources required to virtualize the operation instead of interacting directly with the hardware.
+  \item[Snapshot] A complete state of the entire virtual machine saved to non-volatile disk for later use.  A snapshot is used to create a template or for configuration management and roll back to a previous state.
+  \item[PMU] Performance Monitoring Unit.  Physical hardware that counts various hardware events.
+\end{description}
