@@ -14,7 +14,7 @@ On our \emph{Business} Dell server, Dom1 is allocated 2GB vRAM and 2 vCPU, while
 
 The test starts by initializing a very small database and runs PGBench and collect the TPS.  
 Then we increase the DB size slightly and run the benchmark again.  
-After repeating this process several times, we can see that when the DB size changes to an I/O bound system its performance drops significantly (Figure \ref{smallIO}).  
+After repeating this process several times, we can determine when the DB size changes to an I/O bound system its performance drops significantly (Figure \ref{smallIO}).  
 This is due to the fact that it must fetch database rows from the disk and it is much slower.  
 
 \begin{figure}[!h]
@@ -162,7 +162,7 @@ Now we create I/O interference in the three guest domains by creating a 640MB La
 
 \begin{table}[h]
 \begin{tabular}{ l l l l p{5cm} }
-  Counter     & Dom0    & Dom1    & $Interference_RPS$ \\
+  Counter     & Dom0    & Dom1    & $Interference_{RPS}$ \\
   \hline
 	pgpgin    & 549,419 & 97,092 &  \\
 	pgfault   &  58,201 & 86,765 &  \\
@@ -207,14 +207,14 @@ TestVM4                     4  2048     2     -b----   1906.1
 \end{Verbatim}
 
 \subsubsection{Overhead}
-We calculate the $Overhead_V$ in Dom1 using the same method as described previously (Table \ref{tab:OverheadDell}).  We can see that the overhead from virtualization on this platform (2.9\%) is about the same as the overhead on the previous server even though the wait time was increased significantly.  We also see that our reads/s was decreased, but our database throghput was faster at 1,348 TPS.  This is because in this server the database size is smaller than the available memory.
+We calculate the $Overhead_V$ in Dom1 using the same method as described previously (Table \ref{tab:OverheadDell}).  The overhead from virtualization on this platform (2.4\%).  We also see that our reads/s was decreased, but our database throghput was faster at 1,348 TPS.  In this server the database size is slightly smaller than the available memory.
 
 \begin{table}[h]
 \begin{tabular}{ l l l p{5cm} }
   Counter     & Dom0 & Dom1 & $Overhead_V$ \\
   \hline
     \textbf{reads/s}    & 275  & 281 & \\
-    \textbf{AvgRdWait}  & 14.0 & 13.6 & 2.9\% \\ 
+    \textbf{AvgRdWait}  & 13.6 & 13.9 & 2.4\% \\ 
   \hline
 \end{tabular}
 \caption{Overhead on the Dell T410.}
@@ -230,16 +230,16 @@ In the previous experiment for calculating interference we used 3 external guest
                    & TPS   & reads/s & reads/s & AvgRdWait & $Interference_{RPS}$ & $Inteference_{AWR}$ \\
 	Experiment     & Dom 1 & Dom0     & Dom1     & Dom0      & $Interference_{EXT}$ &             \\
 	\hline
-    Dom1 (Only)     &1,348 & 275      & 281      & 14.0     &  -2.1\%  &   0.0\%   \\
-    Dom1 + 1 guest  &  703 & 214      & 137      & 33.2     &  36.0\%  &   61.1\%  \\
-    Dom1 + 2 guests &  543 & 246      & 108      & 44.0     &  56.1\%  &   75.0\%    \\
-    Dom1 + 3 guests &  378 & 259      &  76      & 59.5     &  70.7\%  &   80.2\%  \\
+    Dom1 (Only)     &1,348 & 275      & 281      & 13.6     &  -2.1\%  &   0.0\%   \\
+    Dom1 + 1 guest  &  703 & 214      & 137      & 33.2     &  35.8\%  &   56.0\%  \\
+    Dom1 + 2 guests &  543 & 246      & 108      & 44.0     &  56.1\%  &   69.1\%    \\
+    Dom1 + 3 guests &  378 & 259      &  76      & 59.5     &  70.6\%  &   77.1\%  \\
 \end{tabular}
 \caption{Interference generated from 0, 1, 2, and 3 external guest domains.}
 \label{tab:domains}
 \end{table}
 
-From this we can see that as more external domains are added, the application performance degrades as expected.  We are also able to measure the interference which increases as more domains are added.  This is critical information to guest domains when they are experiencing performance problems and can quickly identify the root cause of problems for I/O.
+By examining these results \ref{fig:perfDropDell} as more external domains are added, the application TPS performance degrades as expected.  We are also able to measure the interference which increases as more domains are added.  The interference increases similar to the arate at which domains are added and the performaance drop.
 
 \subsubsection{Results Analysis}
 % Test7_1Results.xls 7.3(Deux)
@@ -250,8 +250,6 @@ From this we can see that as more external domains are added, the application pe
   \label{fig:perfDropDell}
   \end{center}
 \end{figure}
-
-These three results are much closer than with the previous set of experiments we calculate a higher interference when more domains are added.  
 
 
 % Section 7.5
