@@ -17,7 +17,7 @@ The hypervisor, as well as multiple external guest virtual machines, compete for
 
 % Section 1.2
 \subsection{Measurement Challenges}
-On a physical server, we can assume the hardware speed is known.  For a CPU we can measure in hertz or Floating Point Operations per Second (FLOPS), and for a disk we can measure in I/O per second (IOPS) or latency.  When that system is virtualized, the availability of the virtual resources are dynamic.  The resource may (or may not) be available to the guest and the performance tools become nearly meaningless.  Without knowledge of the availability, it is difficult to diagnose or find a root cause from a guest application. There is almost no way to distinguish between a poor running application, OS kernel issue, or external interference.  From the Hypervisor view, there is no information about the guest applications or guest kernel functions, so there is no way to relate a problem to a guest application.  Furthermore, the entity managing the hypervisor layer is likely a completely different organization than the entity managing the virtual guest. 
+On a physical server, we can assume the hardware speed is known.  For a CPU we can measure in hertz or floating point operations per second (FLOPS), and for a disk we can measure in I/O per second (IOPS) or latency.  When that system is virtualized, the availability of the virtual resources are dynamic.  The resource may (or may not) be available to the guest and the performance tools become nearly meaningless.  Without knowledge of the availability, it is difficult to diagnose or find a root cause from a guest application. There is almost no way to distinguish between a poor running application, OS kernel issue, or external interference.  From the Hypervisor view, there is no information about the guest applications or guest kernel functions, so there is no way to relate a problem to a guest application.  Furthermore, the entity managing the hypervisor layer is likely a completely different organization than the entity managing the virtual guest. 
 
 Since each guest machine only uses a portion of the available resources at any given time, the total resources allocated to all guest VMs can exceed the total physical resources \cite{huber2, amit, buell1}.   This idea of overcommitting resources is the same as preemptive multitasking, where multiple processes share a single CPU; and OS virtual memory, where the total memory available to applications exceeds the physical memory capacity.  In order to maximize resources, IT data centers overcommit the resources, with the hope that multiple virtual guest machines do not need all resources concurrently.  Even when the CPU and memory are not overcommitted there is still shared cache and memory bus.  For network and disk I/O multiple guests usually share access to a single physical resource, which can cause interference when accessed concurrently.
 
@@ -33,7 +33,7 @@ Due to the cost savings and decreased physical administration overhead, data cen
 This research presents a method for analyzing performance data at runtime in the guests and Virtual Machine Monitor (VMM).   With this framework we can detect the I/O interference by sharing physical and virtual I/O performance statistics between multiple guests.  We believe that this method can be extended to find interference from other resources.  This could significantly reduce time spent troubleshooting and analyzing performance problems in virtualized environments.
 \newline
 
-The thesis statement is that we can measure external interference by relating virtual and physical resource usage across multiple layers.
+\textbf{Thesis statement:}  We can measure external interference from a guest in a virtual environment by relating virtual and physical resource usage across multiple layers.
 \newline
 
 \noindent
@@ -42,9 +42,9 @@ The contributions of this thesis are:
 % \item \textbf{Layers} Define the layers of abstraction in virtual environments.
 % \item \textbf{Resources} Define the physical and virtual resources which need to be measured.
 % \item \textbf{Counters} Examine some common counters, and metrics which can measure resource utilization.
-\item \textbf{Overhead} We Designed a new method to measure the overhead of virtualization.
-\item \textbf{Interference} We Designed a method to collect resource metrics at several layers and quantify the I/O interference from virtualization.
-\item \textbf{Test Suite} Developed an interference test suite that causes measurable I/O interference in a virtualized server.
+\item \textbf{Overhead} We designed a new method to measure the overhead of virtualization.
+\item \textbf{Test Suite} We developed an interference test suite that causes measurable I/O interference in a virtualized server.
+\item \textbf{Interference} We designed a method to collect resource metrics at several layers and quantify the I/O interference from virtualization.
 \end{enumerate}
 
 The remainder of this document is organized as follows:  In section 2 we examine related work.  In section 3 we define our methodology.  Section 4 shows our experimental results for two different architectures.   We conclude and discuss future work in section 5.

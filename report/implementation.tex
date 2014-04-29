@@ -3,7 +3,7 @@ First, we define the layers of abstraction and virtual resources unique to virtu
 Then we identify the additional information needed from these layers, and a method to collect the data.
 Finally, we describe a method to analyze the additional data to determine if the guest machine is experiencing external I/O interference.
 
-In order to accurately determine if interference is due to external interference, we need to first calculate the overhead and establish a known baseline for that configuration.  Then, when run in production with other systems, we can compare the latency and throughput at the guest and hypervisor layers.  
+In order to accurately determine if interference is due to external interference, we need to first calculate the overhead and establish a known baseline for the resources in that configuration.  Then, when run in production with other systems, we can compare the latency and throughput of the resources at the guest and hypervisor layers.  
 
 % 1 Define the new layers of abstraction virtual environments.
 \subsection{Abstraction Layers and Resources}
@@ -28,8 +28,7 @@ The major difference between an OS kernel dividing up a physical resources, and 
 \end{figure}
 
 The physical resource may be used by an external virtual machine or by the hypervisor, and there is little information that a guest OS or application can see about the availability of the physical resource.
-Additionally, the hypervisor view does not know about specific processes running in the guest.  If the VMM performance tools could identify the resource availability, there is not any way to relate that to a specific guest process.  Both the virtual guest administrator and hypervisor administrator would need to monitor resources concurrently and share infomration through an external channel. 
-Additional information is needed immediately from hypervisor about the physical resource so that the administrator, OS, or application can make better decisions about the availability of the resource. 
+Furthermore, the hypervisor view does not know about specific processes running in the guest.  If the VMM performance tools could identify the resource availability, there is not any way to relate that to a specific guest process.  Both the virtual guest administrator and hypervisor administrator would need to monitor resources concurrently and share infomration through an external channel.  Our method collects and relates the usage of resources at both the guest and hypervisor layers to provide immediate information about the usage of the resource.
 
 \begin{table}[h]
   \begin{tabular}{ l p{10cm} }
@@ -91,12 +90,15 @@ Our method will collect, aggregate, and analyze the statistics kept by the guest
 \end{table}
 
 By collecting these statistics at two points in time as in Figure \ref{alg1}, we can infer other data such as the throughput in reads per second \emph{reads/s}.  We can also calculate the average wait time for reads \emph{AvgRdWait}.  
-Since \emph{r\_ms} is the total number of milliseconds spent by all reads, we can divide this by the total number of reads to get the average wait time.  This is very important since external guests may cause I/O delays for a shared disk accessed concurrently by multiple guests.
 \newline\newline
-\Large
-	$AvgRdWait = \frac{r\_ms}{r\_total}$   Average Read Wait Time\\
-	$reads/s = \frac{r\_total}{TotalTime}$  Average Read Throughput \\
-\normalsize
+
+\begin{equation}
+	AvgRdWait = \frac{r\_ms}{r\_total}
+\end{equation}
+
+\begin{equation}
+	reads/s = \frac{r\_total}{TotalTime}
+\end{equation}
 
 % 4 A method to calculate the overhead and theoretical maximum performance using an off-line modeling technique.
 \subsection{I/O Virtualization Overhead}
@@ -110,7 +112,7 @@ We claim that the time spent waiting for an operation to complete in one layer d
 In a physical server the application depends on the kernel and the kernel depends on the hardware.  
 Our overhead calculation finds this additional time for I/O virtualization, by using the $AvgRdWait$ statistic in both the guest and hypervisor without interference to calculate the overhead.
 
-We need to calculate the \emph{overhead} before running a guest virtual machine in production. 
+We need to calculate the overhead before running a guest virtual machine in production. 
 In data centers and cloud systems, templates are usually created before virtual machines are used in production.  A template is a complete snapshot image of a virtual machine that has been built and tested to meet some need.  For example a Redhat 6.2 system with an Apache web server may need to be used on several machines.  A system could be built, tuned, and tested for that environment and then made into a template.  Future users can deploy a new virtual machine from that template.  We suggest to calculate the overhead from virtualization before it is made into a template.  
 
 To calculate the virtualization overhead, create a single virtual machine with dedicated resources on isolated hardware.  
@@ -123,7 +125,7 @@ Since we are measuring from the perspective of the guest OS, we want to discover
 For some statistics such as the \emph{AvgRdWait}, we can approximate the overhead of virtualization, by calculating the average wait time in the hypervisor \emph{AvgRdWait\textsubscript{H}} and the guest \emph{AvgRdWait\textsubscript{G}}.
 
 \begin{equation}
-  Overhead_{IO} = \frac{AgvRdWait_G - AvgRdWait_H}{AvgRdWait_H} 
+  Overhead_{IO} = \frac{AvgRdWait_G - AvgRdWait_H}{AvgRdWait_H} 
 \end{equation}
 
 % Simple method %
@@ -148,13 +150,15 @@ It may seem possible to that we can determine degradation by examining only the 
 \label{tab:guestOnly}
 \end{table}
 
-When an application is running in the virtual guest, the resource may not be available to the guest for some time.  From this information (Table \ref{tab:guestOnly}), it is difficult to determine whether the changes are due to external interference or application changes. We can increase or decrease the $reads/ms$ simply by changing the number of connections to the database.  In our experimental results we show how or calculation for interference can distinguish these cases.  In order to quickly determine if the guest domain is experiencing interference we need to also examine the counters in the hypervisor.  We can examine the throughput of the guest $read/s_G$ and the throughput of the hypervisor $read/s_H$ over the same time period calculate the interference as:
+When an application is running in the virtual guest with interference, the resource may not be available to the guest for some time.  From this information (Table \ref{tab:guestOnly}), it is difficult to determine whether the changes are due to external interference or application changes. We can increase or decrease the $reads/ms$ simply by changing the number of connections to the database.  In our experimental results we show how or calculation for interference can distinguish these cases.  
+
+In order to immediately determine if the guest domain is experiencing interference we need to also examine the counters in the hypervisor.  We can examine the throughput of the guest $read/s_G$ and the throughput of the hypervisor $read/s_H$ over the same time period calculate the interference as:
 
 \begin{equation}
 	Interference_{RPS} = \frac{read/s_H - read/s_G}{read/s_H} 
 \end{equation}
 
-By analyzing the throughput from both the guest view and hypervisor view, we can quickly determine if a guest application is degraded due to external interference from external domains.  
+By analyzing the throughput from both the guest view and hypervisor view, we can help determine if a guest application is degraded due to external interference from external domains.
 
 \begin{figure}[!h]
   \begin{center}
@@ -166,15 +170,15 @@ By analyzing the throughput from both the guest view and hypervisor view, we can
 
 There is a case when this could erroneously tell us there is interference when there is not any interference.  So far we have only examined systems where the application is running at 100\% of possible throughput.  One reason virtualization is successful is that not all guests run at full capacity at all times.  In a theoretically perfect virtualization, a physical resource $R$ would be divided between $n$ guests, and each guest would use $1/n$ of resource $R$ at all time.  For example, if a physical disk could handle a throughput rate of 400 reads per second, and 4 virtual machines each requested data at a rate of 100 reads per second. In this case, our method may inaccurately report 75\% interference.  
 
-Since the guest has previously calculated the read wait time through the hypervisor $AvgRdWait$, we can use that information to determine if the guest is degraded due to interference from external systems.  When external systems are exceeding the I/O throughput, the $AvgRdWait$ time will increase significantly.  We can calculate the interference by using the average wait time (without interference) and the average wait time when run with additional external domains.  Since we are trying to determine if the hypervisor layer is the root cause, we need to use the information from the view of the hypervisor.
+Since the guest has previously calculated the read wait time through the hypervisor $AvgRdWait$, we can use that information to determine if the guest is degraded due to interference from external systems.  When external systems are exceeding the I/O throughput, the wait time time will increase significantly.  We can calculate the interference by using the average wait time (without interference) and the average wait time when run with additional external domains.  Since we are trying to determine if the hypervisor layer is the root cause, we need to use the information from the view of the hypervisor.
 
 \begin{equation}
 	Interference_{ARW} = \frac{AvgRdWait_{Current} - AvgRdWait_{Overhead}}{AvgRdWait_{Current}} 
 \end{equation}
 
-If both of the calculated interference results are positive then we can assume that the hypervisor is waiting for I/O, and there is something in the external layer that is the guest domain is not generating all of the I/O throughput.
+If both of the calculated interference results are positive then we can assume that the hypervisor is waiting for I/O, and there is something in the external layer that is generating some of the I/O throughput.
 Only when both of these values increase, can we accurately determine there is external interference.
-We conclude that the interference from I/O reads is the lower of these two values.
+We found that the best calculation for interference from I/O reads is the lower of these two values.
 
 \subsection{Hypervisor Interference}
 Another option we explored was not consistent between workloads and system architectures.  The idea is to calculate the $Overhead_V$ again during production when calculating interference.  Instead of only using one guest we can calculate the total time spent waiting in all guests, and compare that to the hypervisor.  We call this calculation the $Overhead_{VALL}$ Since for one guest the time in that guest was always greater than the time in the hypervisor, we assume that the total time for all guests would increase.   The problem was that for some tests the hypervisor would generate extra reads and take more time than the guests.  We believe that the $Overhead_{VALL}$ may be a useful statistic for other resources.

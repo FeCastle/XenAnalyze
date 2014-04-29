@@ -1,16 +1,15 @@
-In the following experiments we evaluate the benefits of passing additional information through hypervisor layer to the  guests for detecting interference.  The experiments are performed on a \emph{Personal} and \emph{Business} scale virtualization platform (Table \ref{virtSize}).  Both systems have CentOS and Xen Server installed (Table \ref{softStack}).
+In the following experiments we evaluate the benefits of passing additional information through hypervisor layer to the  guests for detecting interference.  We first validate that our test infrastructure can accurately create I/O interference and we can measure that application throughput.  We find that the application throughput is dependent on the size of the test database.  Then we use our method to calculate the overhead on our \emph{Personal} size server.  We run two different sets experiments in this configuration to detect interference from both external memory pressure as well as external I/O.   Similarly we calculate the interference on our \emph{Business} size server, by adding one domain at a time.  These results show that our method can measure the interference from external systems and account for the performance drop in the application.  Our final test shows that our method does not report interference when our application is degraded from an application workload change.
 
-\subsection{Verify Test Infrastructure}
+\subsection{Validate Test Infrastructure}
 In this experiment we verify that our test framwork can generate a load that degrades the application when run with external interference.  We expect a significant drop in performance from running a single guest test to running multiple guests concurrently.  Monitoring resource counters in only the guest domain provides little information about external systems causing performance problems. 
 
 \subsubsection{Without Interference}
 For I/O intensive workloads, the application tends to perform very well when the entire \emph{working set} can fit into main memory, and the OS will cache reads from disk.  However, when the \emph{working set}  approaches (or exceeds) the size of main memory, the application tends to degrade quickly.  Our initial experiments to find an I/O workload highlight this fact by changing the database size under load in a virtual environment.  Before running the entire test suite we need to create a test database that will exceed the \emph{working set} and increase the probability that a database read will need to fetch the data from disk storage.  With PGbench the "-i" flag \emph{scaling factor} is used to initialize a database at a specified size (prior to running the benchmark) so that our results can show changes between a memory bound system and I/O bound system.  
 
-
 To begin this exercise, we divide the physical memory and CPUs into four equal parts and create four individual guest virtual machines (Dom1 - Dom4).  
 Each virtual machine is given an equal share of the memory and CPU resources so that no guest virtual machine would interfere with another machine if they were on separate physical systems.  
 We start only our Dom1 machine and run our experimental test with PGbench.  
-On our \emph{Business} Dell server, Dom1 is allocated 2GB vRAM and 2 vCPU, while on our \emph{Personal} IBM server Dom1 is given 512MB vRAM and 1 vCPU.  
+On our \emph{Business} Dell server, Dom1 is allocated 2GB vRAM and 2 vCPU, while on our \emph{Personal} server Dom1 is given 512MB vRAM and 1 vCPU.  
 
 The test starts by initializing a very small database and runs PGBench and collect the TPS.  
 Then we increase the DB size slightly and run the benchmark again.  
@@ -71,7 +70,7 @@ Then we create external machine interference by running Dom1 concurrently with D
 \begin{figure}[!h]
   \begin{center}
   \includegraphics[width=4in]{images/MedScale.png}
-  \caption{TPS with and without interference.  Moving from a Medium DB to a Large DB.}
+  \caption{Application performance in transactions per second is degraded with interference.}
   \label{fig:medIO}
   \end{center}
 \end{figure}
@@ -86,14 +85,16 @@ The root cause of the performance drop is due to external interference, which is
 	BytesIn/s & 6,877 & 4,438 & 35\% \\
 	CPU IOwait & 92\% & 93\% & 1\% \\
   \end{tabular}
-\caption{IBM x3650.  Some resource statistics collected with vmstat on Dom1 with a Large database while running alone and with multiple systems.} 
+\caption{Statistics using performance tool \emph{vmstat} on guest Dom1 with a Large database while running alone and with external interference.} 
 \label{fig:vmstat}
 \end{table}
 
 % Section 7.2
-\subsection{Personal Server - IBM}
-In the previous experiment we showed the interference that can occur when external I/O interference is applied to a guest domain, and only looking at the performance counters in the guest does not indicate the problem.  In this experiment, we verify our design to measure interference from external systems, when the system is I/O bound.  The results are from our IBM x3650, where each guest is configured to use 512MB of vRAM.  First, we run the benchmark with a large 640MB database without interference and calcuate the overhead.  Then we start Dom2 - Dom4, while running the benchmark in Dom1, and calculate the interference.  We compare the results of the calculated interference with the performance drop in the application.
+\subsection{Personal Server}
+In the previous experiment we showed the interference that can occur when external I/O interference is applied to a guest domain, and only looking at the performance counters in the guest does not indicate the problem.  In this experiment, we verify our design to measure interference from external systems, when the system is I/O bound.  The results are from our IBM x3650, where each guest is configured to use 512MB of vRAM.  First, we run the benchmark with a large 640MB database without interference and calcuate the overhead.  Then we start Dom2 - Dom4, while running the benchmark in Dom1, and calculate the interference.  We compare the results of the calculated interference with the performance drop in the application.  In all of these results we show the average of at least three test runs.
 
+\begingroup
+    \fontsize{10pt}{12pt}\selectfont
 \begin{Verbatim}
 # xm list
 Name                     ID   Mem VCPUs      State  Time(s)
@@ -103,15 +104,16 @@ Test_VM2                  2   512     1     -b----   5722.0
 Test_VM3                  3   512     1     -b----   5273.0
 Test_VM4                  4   512     1     -b----   5203.5
 \end{Verbatim}
+\endgroup
 
 % Section 7.2.1
 \subsubsection{Overhead}
-We calculate the overhead for the guest OS using the resource counters defined in our design.  While calculating the overhead we also collected the application performance at 415 TPS without any external interfernece.
+We calculate the overhead at $4.7\%$ using the resource counters defined in our design and Equation 3 \ref{tab:OverheadSmall}.  The guest (Dom0) needs to wait about $5\%$ longer than the physical writes take to complete.  While calculating the overhead we also collected the application performance at 415 TPS without any external interfernece.
 
 % See Test7_1Results.xls (Barbaro - Exp7.2(P2))
 \begin{table}[h]
 \begin{tabular}{ l l l p{5cm} }
-  Counter     & Dom0 & Dom1 & $Overhead_V$ \\
+  Counter     & Dom0 & Dom1 & $Overhead_{IO}$ \\
   \hline
 	pgpgin    & 332,504 & 165,901  &  \\
 	pgfault   &  25,648 & 132,691  & \\
@@ -126,15 +128,16 @@ We calculate the overhead for the guest OS using the resource counters defined i
 \label{tab:OverheadSmall}
 \end{table}
 
-One thing to notice is that the pgpgin from the Dom1 is about half of the host in Dom0.  
-We also see in Dom0 that pgpgin is exactly the same as the sectors read.  
-After some research on this we believe that the Dom0 and guest kernels are reporting different units of measurements, and there is not really twice the count of pages in. 
-In the Linux 2.4 and later kernel blocks and sectors were both 512 bytes, and the unit of measurement for pages in were reported in 1K sizes.  Since the Dom0 kernel is version 3.4.54 and the guest kernel is 2.6.32, we believe that the guest is reporting 1KB pages, and the Dom0 is reporting 512 byte pages to match the sector (and block) size.  In order to report an accurate results, we would need to ensure that the unit of measurement for values reported between the guest and hypervisor are consistent.  
+One thing to notice is that the \emph{pgpgin} (count of pages in using \emph{/proc/vmstat}) from the Dom0 is twice as much as Dom1.  We also see in Dom0 that pgpgin is exactly the same as the sectors read, while there is exactly twice as many read sectors in Dom1.
+After much research reviewing the \emph{sar} man page \footnote{We also verified this by looking at the sar code and kernel code for virtual memory}, we found that the pgpgin is reporting 1 Kbyte pages.  The \emph{fdisk -l} command showed the sector size as 512 bytes per sector.  We verified this on physical hardware by examining the statistics while copying files.  There were 2 sectors read for each page in.  We also ran this test on only Dom0 and found the same results:  There were 2 sectors read per page in.  The expected results should be 2 read sectors for each page in, but when reading from Dom1, Dom0 always showed a 1:1 ratio.
+
+After closer examiniation of the method used to pass reads with Xen, we found that there is an additional block device in Dom0 \cite{citrix}.  Although this does not map to a physical device it does explain the strange \emph{pgpgin} between Dom0 and Dom1.  In the virtual guest (Dom1), when it reads from a virtual disk it uses the blkfront driver.  This communicates with the blkback driver in Dom0.  There is an additional virtual disk in Dom0 used to pool requests.  Although this is not a physical device it still uses the virtual memory of the kernel and pages in for Dom0.  So each read sector (from physical disk) in Dom0 results in 2 pages in which is exactly what our data shows.
+
+This additional work in Dom0 is an example of the overhead from virtualization, and partially explains the additional wait time in the guest.  We measure the additional time time waiting in the guest domain to account for all of the overhead the hypervisor must do in order to virtualize the physical device.
 
 % Section 7.2.2 - Test7_1Resultx.xls (Barabaro- Exp7.2(P2))
 \subsubsection{Memory Interference}
-We repeat the previous experiment with 4 guest domains all running at the same time.  Since the DB size in Dom1 is 640MB and there is 512MB of vRAM on Dom1, we can say that Dom1 is bound by disk I/O speed.  We run the experiments with the other 3 guest domains running a memory bound database.  
-We create a Small DB of 128MB in each of the external domains to generate memory interference on Dom1.
+We repeat the previous experiment with 4 guest domains all running at the same time.  Since the DB size in Dom1 is 640MB and there is 512MB of vRAM on Dom1, we can say that Dom1 is bound by disk I/O speed.  We run the experiments with the other 3 guest domains running a memory bound database.  We create a Small DB of 128MB in each of the external domains to generate memory interference on Dom1.
 
 \begin{table}[h]
 \begin{tabular}{ l l l l p{5cm} }
@@ -149,12 +152,12 @@ We create a Small DB of 128MB in each of the external domains to generate memory
     \textbf{AvgRdWait}  & 7.74 & 7.41 & \\ 
   \hline
 \end{tabular}
-\caption{Interference calculated from Small 128MB DB in Dom2 - Dom4.  TPS dropped by 20\%} 
+\caption{Calculated Interference with external interference from small database in Dom2 - Dom4.  TPS dropped by 20\%} 
 \label{fig:InterferenceSm}
 \end{table}
-We calculate the increased wait time using the $AvgRdWait$ we collected previously. We calculate $Interference_{ARW} = 26.6\%$  Since this is slightly less than the interference from througput we calculate the $Interference_{EXT} = 26.6\%$.
+We also need to calculate the increased wait time using the wait time $AvgRdWait$ in the hypervisor without interference ($5.68 ms$) and the new wait time in the hypervisor ($7.74 ms$). We calculate $Interference_{ARW} = 26.6\%$ (Equation 5).  Since this is slightly less than the interference from reads per second ($28.6\%$) we calculate the $Interference_{EXT} = 26.6\%$.
 
-From these tests, Dom1 had 331 TPS, and was degraded from 415 TPS, a performance drop in the application of 20\%.  It is not shown in these results, but Dom2 - Dom4 was able to cache the entire working set in memory and did not issue any read requests.  Dom1 was the only domain to issue read request. The totals from all guests domains for each of the three read counters is exactly the same as Dom1.  
+From these tests, Dom1 had 331 TPS, and was degraded from 415 TPS, a performance drop in the application of 20\%.  It is not shown in these results, but Dom2 - Dom4 was able to cache the entire working set in memory and did not issue any read requests.  Dom1 was the only domain to issue read request, but there was additional read time in the guests and hypervisor. 
 
 % Section 7.2.3 - Test7_1Resultx.xls (Barabaro- Exp7.2(P2))
 \subsubsection{I/O Interference}
@@ -176,7 +179,7 @@ Now we create I/O interference in the three guest domains by creating a 640MB La
 \caption{Interference calculated Large 640MB DB in Dom2 - Dom4.  TPS dropped by 39\%}
 \label{fig:InterferenceLg}
 \end{table}
-We calculate $Interference_{ARW} = 58.7\%$  Since this is less than the interference from througput we calculate the $Interference_{EXT} = 58.7\%$.
+We also need to calculate the additional wait time in the hypervisor (Equation 5).  Without interference the read wait time is $5.68 ms$ and with interference it is $13.8 ms$.  We calculate $Interference_{ARW} = 58.7\%$  Since this is less than the interference from througput we calculate the $Interference_{EXT} = 58.7\%$.
 
 During these tests, the application benchmark in Dom1 decreased to 254 TPS.  This is much less than when run without interference (415 TPS) and with memory interference (331 TPS).  All of the read counters showed significant interference.  Additionally we are showing some interference from page faults.  
 
@@ -193,7 +196,7 @@ During these tests, the application benchmark in Dom1 decreased to 254 TPS.  Thi
 
 In both cases (Figure \ref{fig:perfDrop}) we calculate a higher interference than the application degrades.  At a minimum this implies that there is interference to the guest application.  Although the database is I/O bound there is still a percentage of the application that relies on the CPU speed which is not part of the interference.  
 
-% 7.3 Section - Dell T410
+% 4.3 Section - Dell T410
 \subsection{Business Server - Dell}
 For this experiment we use our Dell server with 12GB of physical RAM. We configure all Dom1 to use 4GB of vRAM and configure Dom2 - Dom4 as noted below.  We assign some different CPUs to the guest machines. We create a medium database of 3.2GB in Dom1.   And create Medium and Large databases in the external guest domains create different workloads in the guests.
 
@@ -207,11 +210,11 @@ TestVM4                     4  2048     2     -b----   1906.1
 \end{Verbatim}
 
 \subsubsection{Overhead}
-We calculate the $Overhead_V$ in Dom1 using the same method as described previously (Table \ref{tab:OverheadDell}).  The overhead from virtualization on this platform (2.4\%).  We also see that our reads/s was decreased, but our database throghput was faster at 1,348 TPS.  In this server the database size is slightly smaller than the available memory.
+We calculate the $Overhead_{IO}$ in Dom1 using equation 3.  The overhead from virtualization on this platform (2.4\%).   When comparing the these results on this size platform to the overhead in the previous size platform \ref{tab:OverheadSmall} we can see that our reads/s  decreased, but our database throghput is faster at 1,348 TPS.  In this server the database size is slightly smaller than the available memory (Table \ref{tab:OverheadDell}).
 
 \begin{table}[h]
 \begin{tabular}{ l l l p{5cm} }
-  Counter     & Dom0 & Dom1 & $Overhead_V$ \\
+  Counter     & Dom0 & Dom1 & $Overhead_{IO}$ \\
   \hline
     \textbf{reads/s}    & 275  & 281 & \\
     \textbf{AvgRdWait}  & 13.6 & 13.9 & 2.4\% \\ 
