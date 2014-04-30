@@ -18,7 +18,7 @@
 % Install package: texlive-generic-extra
 \usepackage[font=small,labelfont=bf, singlelinecheck=false, skip=0pt]{caption}
 \usepackage{subcaption}
-
+\usepackage{setspace}
 
 %Remove hyphens
 \usepackage[none]{hyphenat}
@@ -26,6 +26,8 @@
 \begin{document}
 % Turn of page numbering for now
 \pagenumbering{gobble}
+
+\begin{comment}
 \title{System-wide Performance Analysis for Virtualization}
 \author{Deron Jensen\\
 \\
@@ -35,13 +37,17 @@ Portland, OR \\
 deron@cs.pdx.edu \\
 }
 \date{\today}
-% \onecolumn[
-% \begin{@twocolumnfalse}
   \maketitle
+\end{comment}
+
+% Make my own title page liKe: http://www.pdx.edu/sites/www.pdx.edu.ogs/files/ETD.thesis.titlepg.example.pdf
+\input{title}
 \newpage
 
 \begin{abstract}
+% \doublespacing
 \input{abstract}
+\singlespacing
 \end{abstract}
 
 \newpage
@@ -64,6 +70,8 @@ deron@cs.pdx.edu \\
 
 \onecolumn
 
+% TODO Set up Double Space
+% \doublespacing
 \setcounter{page}{1}
 \pagenumbering{arabic}
 % 1.  This is a comment
