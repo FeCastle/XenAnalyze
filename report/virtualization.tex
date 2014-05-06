@@ -100,4 +100,6 @@ Mem: 4182752k total, 4182236k used, 516k free    CPUs: 4 @ 2133MHz
 \subsubsection{Steal Time - Complete View}
 Due to the fact that the hypervisor has one view of the system, and the virtualized guests have a different view of the system, the Xen Hypervisor has added a \emph{steal time} statistic and made it available to the guest operating systems.  New Linux distributions have implemented this new kernel option as \emph{steal: involuntary wait} \cite{proc}.  Additionally, administrative tools top, sar, and vmstat have all implemented this new counter.  
 On most systems top will show as '0.0\%st' (Figure ~\ref{fig:top}), but if it is running on a Xen Hypervisor the paravirtualized guest will communicate with the hypervisor and collect information. Amazon cloud uses Xen and this has become a valuable tool for guests to determine if they are having performance problems from external interference \cite{netflix}.
+ We did not know about the CPU \emph{steal time} when we started this work, but it has shown to be a valuable metric for applications running in the cloud. 
+Our work is different from this in that \emph{steal time} is a specific implementation for the CPU resource on a Xen hypervisor with a Linux Guest.  Our method is a general approach that can be used on other platforms.  We use I/O as an example for our approach.
 
