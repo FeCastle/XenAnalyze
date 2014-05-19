@@ -229,9 +229,9 @@ We calculate the $Overhead_{IO}$ in Dom1 using equation 3.  The overhead from vi
 In the previous experiment for calculating interference we used 3 external guest domains, and changed the workload in the guest domains.  In this experiment, we create interference adding 1 external domain at a time.  The first result is a single guest domain Dom1 without external interference.  Then we run Dom1 with Dom2 and calculate the interference with one external domain.  We continue to add guest domains and calculate the interference and application performance drop in TPS (Table \ref{tab:domains}).
 
 \begin{table}[!h]
-\begin{tabular}{ l l l l l l p{9cm} }
-                   & TPS   & reads/s & reads/s & AvgRdWait & $Interference_{RPS}$ & $Inteference_{AWR}$ \\
-	Experiment     & Dom 1 & Dom0     & Dom1     & Dom0      & $Interference_{EXT}$ &             \\
+\begin{tabular}{ l l l l l l p{2cm} }
+                   & TPS   & reads/s & reads/s & AvgRdWait & $Inter_{RPS}$ & $Inter_{AWR}$ \\
+	Experiment     & Dom 1 & Dom0     & Dom1     & Dom0      & $Inter_{EXT}$ &             \\
 	\hline
     Dom1 (Only)     &1,348 & 275      & 281      & 13.6     &  -2.1\%  &   0.0\%   \\
     Dom1 + 1 guest  &  703 & 214      & 137      & 33.2     &  35.8\%  &   56.0\%  \\
@@ -245,12 +245,62 @@ In the previous experiment for calculating interference we used 3 external guest
 By examining these results (Figure \ref{fig:perfDropDell}) as more external domains are added, the application TPS performance degrades as expected.  We are also able to measure the interference which increases as more domains are added.  The interference increases similar to the rate at which domains are added and the performance drop.
 
 \subsubsection{Results Analysis}
+First we examine the results of three tests in each configuration with external interference.  
 % Test7_1Results.xls 7.3(Deux)
 \begin{figure}[!h]
   \begin{center}
   \includegraphics[width=4in]{images/Dell_PerfDrop_Int.png}
   \caption{\emph{Business} size application performance drop compared to calculated interference, for one, two and three external domains.}
   \label{fig:perfDropDell}
+  \end{center}
+\end{figure}
+
+Now we run this experiment 30 times in each configuration to see how much change is occuring in each test.  We receive similar results as when only with 3 tests, but we can see that the standard deviation increases in both our application measurement and measured intereference as more external domains are added (Figure \ref{fig:box2}).
+
+\begin{table}[!h]
+\begin{tabular}{ l l l l p{3cm} }
+	Experiment  & TPS        & reads/s  & AvgRdWait   & $Inter_{RPS}$ \\ 
+	\hline
+    Dom1 (Only)     &1,247 (55)  & 317 (15.9) & 14.7 (0.5)  &  N/A   \\
+    Dom1 + 1 guest  & 585 (28)   & 163 (8.3)  & 37.3 (2.1)  & 36.6\% (3.3\%)  \\
+    Dom1 + 2 guests & 537 (43)   & 148 (12.3) & 43.1 (5.0)  & 40.9\% (4.6\%) \\
+    Dom1 + 3 guests & 430 (61)   & 118 (16.5) & 55.6 (9.7)  & 51.8\% (5.8\%) \\
+\end{tabular}
+\caption{Mean (Standard Deviation) from 30 runs of 0, 1, 2, and 3 external guest domains.}
+\label{tab:domains}
+\end{table}
+
+% Stats_30runs.ods
+\begin{figure}[!h]
+        \centering
+        \begin{subfigure}[b]{0.3\textwidth}
+                \includegraphics[width=\textwidth]{images/stats2Guest.png}
+                \caption{1 external domain}
+  		\label{fig:box2}
+        \end{subfigure}%
+         %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
+         %(or a blank line to force the subfigure onto a new line)
+        \begin{subfigure}[b]{0.3\textwidth}
+                \includegraphics[width=\textwidth]{images/stats3Guest.png}
+                \caption{2 external domains}
+                \label{fig:box3}
+        \end{subfigure}
+         %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
+         %(or a blank line to force the subfigure onto a new line)
+        \begin{subfigure}[b]{0.3\textwidth}
+                \includegraphics[width=\textwidth]{images/stats4Guest.png}
+                \caption{3 external domains}
+                \label{fig:box4}
+        \end{subfigure}
+        \caption{Statistics of external interference}
+	\label{fig:stats}
+\end{figure}
+
+% Stats_30runs.ods
+\begin{figure}[!h]
+  \begin{center}
+  \includegraphics[width=4in]{images/scatterPlot.png}
+  \caption{Calculated performance drop and interference for 90 test runs.}
   \end{center}
 \end{figure}
 
