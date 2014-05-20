@@ -93,8 +93,8 @@ The root cause of the performance drop is due to external interference, which is
 \subsection{Personal Server}
 In the previous experiment we showed the interference that can occur when external I/O interference is applied to a guest domain, and only looking at the performance counters in the guest does not indicate the problem.  In this experiment, we verify our design to measure interference from external systems, when the system is I/O bound.  The results are from our IBM x3650, where each guest is configured to use 512MB of vRAM.  First, we run the benchmark with a large 640MB database without interference and calculate the overhead.  Then we start Dom2 - Dom4, while running the benchmark in Dom1, and calculate the interference.  We compare the results of the calculated interference with the performance drop in the application.  In all of these results we show the average of at least three test runs.
 
-\begingroup
-    \fontsize{10pt}{12pt}\selectfont
+%\begingroup
+%    \fontsize{10pt}{12pt}\selectfont
 \begin{Verbatim}
 # xm list
 Name                     ID   Mem VCPUs      State  Time(s)
@@ -104,7 +104,7 @@ Test_VM2                  2   512     1     -b----   5722.0
 Test_VM3                  3   512     1     -b----   5273.0
 Test_VM4                  4   512     1     -b----   5203.5
 \end{Verbatim}
-\endgroup
+%\endgroup
 
 % Section 7.2.1
 \subsubsection{Overhead}
@@ -242,10 +242,11 @@ In the previous experiment for calculating interference we used 3 external guest
 \label{tab:domains}
 \end{table}
 
-By examining these results (Figure \ref{fig:perfDropDell}) as more external domains are added, the application TPS performance degrades as expected.  We are also able to measure the interference which increases as more domains are added.  The interference increases similar to the rate at which domains are added and the performance drop.
+By examining these results as more external domains are added, the application TPS performance degrades as expected.  We are also able to measure the interference which increases as more domains are added.  The interference increases similar to the rate at which domains are added and the performance drop.
 
 \subsubsection{Results Analysis}
-First we examine the results of three tests in each configuration with external interference.  
+First we examine the results of three tests in each configuration with external interference.  In this test we can see how the calculated interference relates to the performance drop in each experiment.  As more domains are added, the application performance drop increases similar to the measured interference (Figure \ref{fig:perfDropDell}).
+
 % Test7_1Results.xls 7.3(Deux)
 \begin{figure}[!h]
   \begin{center}
@@ -255,7 +256,8 @@ First we examine the results of three tests in each configuration with external 
   \end{center}
 \end{figure}
 
-Now we run this experiment 30 times in each configuration to see how much change is occuring in each test.  We receive similar results as when only with 3 tests, but we can see that the standard deviation increases in both our application measurement and measured intereference as more external domains are added (Figure \ref{fig:box2}).
+\subsubsection{Statistical Analysis}
+In the previous experiments, we only had a sample size of 3 runs.  Although each run was for 30 seconds, we need to see how each run changes.  Now we run this experiment 30 times in each configuration to see how much change is occurring in each test.  We receive similar results as when only with 3 tests, but we can see that the standard deviation increases in both our application measurement and measured interference as more external domains are added (Table \ref{tab:stats}) (Figure \ref{fig:stats1}).
 
 \begin{table}[!h]
 \begin{tabular}{ l l l l p{3cm} }
@@ -267,7 +269,7 @@ Now we run this experiment 30 times in each configuration to see how much change
     Dom1 + 3 guests & 430 (61)   & 118 (16.5) & 55.6 (9.7)  & 51.8\% (5.8\%) \\
 \end{tabular}
 \caption{Mean (Standard Deviation) from 30 runs of 0, 1, 2, and 3 external guest domains.}
-\label{tab:domains}
+\label{tab:stats}
 \end{table}
 
 % Stats_30runs.ods
@@ -292,15 +294,18 @@ Now we run this experiment 30 times in each configuration to see how much change
                 \caption{3 external domains}
                 \label{fig:box4}
         \end{subfigure}
-        \caption{Statistics of external interference}
-	\label{fig:stats}
+  	\caption{Box plot with quartiles and outliers for application performance and calculated interference for 90 test runs.}        
+	\label{fig:stats1}
 \end{figure}
+
+Finally, we need to show that the calculated interference relates to the application performance drop.  We use a linear regression over the 90 runs.  Although one and two external domains were similar, each test run would have different calculated interference and application performance.  We show that the calculated interference can explain the application performance drop (Figure \ref{fig:regression}).
 
 % Stats_30runs.ods
 \begin{figure}[!h]
   \begin{center}
   \includegraphics[width=4in]{images/scatterPlot.png}
-  \caption{Calculated performance drop and interference for 90 test runs.}
+  \caption{Linear regression of interference. }
+  \label{fig:regression}
   \end{center}
 \end{figure}
 

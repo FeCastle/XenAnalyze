@@ -1,7 +1,8 @@
 % \documentclass[10pt,twocolumn,oneside]{article}
 \documentclass[12pt,onecolumn,oneside]{article}
 % \usepackage{simpleConference}
-\usepackage{times}
+% \usepackage{times}
+\usepackage{mathptmx}
 \usepackage{graphicx}
 \usepackage{colortbl}
 \usepackage{todonotes}
@@ -44,12 +45,16 @@ deron@cs.pdx.edu \\
 \input{title}
 \newpage
 
+% Force the margin requirements!!!
+\sloppy
+
 \begin{abstract}
-\doublespacing
-\input{abstract}
-\singlespacing
+  \doublespacing
+  \normalsize
+  \input{abstract}
 \end{abstract}
 
+\singlespacing
 \newpage
 % \end{@twocolumnfalse}
 

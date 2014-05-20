@@ -67,9 +67,9 @@ To monitor applications and the kernel, administration tools will read kernel st
 Our method will collect, aggregate, and analyze the statistics kept by the guest OS and hypervisor layers in order to measure interference from external domains and the hypervisor.  We find that there are statistics that will show the interference from external machines, when collected from all layers.  For our examples we choose disk read and virtual memory statistics to analyze I/O read bottlenecks.  However, this method could be used for identifying other types of performance problems if the data was available to the guest.
 
 \begin{table}[h]
-\begin{subtable}[h]{0.45\textwidth}
+\begin{subtable}[h]{0.40\textwidth}
 \caption{Virtual memory paging performance counters \cite{memory}}
-\begin{tabular}{ l l }
+\begin{tabular}{ l p{4cm} }
        pgpgin  &  count of memory pages in. \\
        pgpgout  & count of memory pages out. \\
        pgfault  & count minor (or soft) page faults. \\
@@ -77,9 +77,9 @@ Our method will collect, aggregate, and analyze the statistics kept by the guest
 \label{fig:memory}
 \end{subtable}
 \hfill
-\begin{subtable}[h]{0.45\textwidth}
+\begin{subtable}[h]{0.40\textwidth}
 \caption{I/O read performance counters \cite{iostats}}
-\begin{tabular}{ l l }
+\begin{tabular}{ l p{4cm} }
        r\_sectors & number of sectors read successfully. \\
        r\_ms & number of milliseconds spent by all reads. \\
        r\_total & number of reads completed successfully. \\
