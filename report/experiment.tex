@@ -321,7 +321,7 @@ We have previously demonstrated that the database performance can become degrade
 \begingroup
     \fontsize{10pt}{12pt}\selectfont
 \begin{tabular}{ l l l l l l p{9cm} }
-                   & reads/s & reads/s & AvgRdWait & $Interference_{RPS}$ & $Inteference_{AWR}$ \\
+                   & reads/s & reads/s & AvgRdWait & $Interfer_{RPS}$ & $Interfer_{AWR}$ \\
 	Experiment     & Dom0     & Dom1     & Dom0      &                &             \\
 
     Test & Guest & Hypervisor  & $Interference_{RPS}$ \\
@@ -344,7 +344,7 @@ By analyzing the throughput from both the guest layer and hypervisor layer, we c
 
 
 \subsection{Results Analysis}
-We completed several different experiments on two different virtualization platforms.  In section 5.1 we verified our test method and showed how performance can decrease without interference by increasing the size of the database.  We also showed that for each database size when external guest domains run concurrently they cause interference and degrade the guest application.  In section 5.2 we looked at our \emph{Personal} size server which had 2 GB ram and 4 CPUs.  We were able to calculate the interference from external domains that only used memory, and external domains that were also I/O bound.  Our calculations for interference increased as the application performance decreased.  In section 5.3 we used our \emph{Business} server and calculated the overhead and interference from virtualization.  We created external interference from different numbers of guest domains, and found as more external guests are added our calculated interference increased similar to the application performance drop.  Finally, in section 5.5 we validated that when the application degrades due to internal changes, our method does not report it as external interference from virtualization.
+We completed several different experiments on two different virtualization platforms.  In section 4.1 we verified our test method and showed how performance can decrease without interference by increasing the size of the database.  We also showed that for each database size when external guest domains run concurrently they cause interference and degrade the guest application.  In section 4.2 we looked at our \emph{Personal} size server which had 2 GB ram and 4 CPUs.  We were able to calculate the interference from external domains that only used memory, and external domains that were also I/O bound.  Our calculations for interference increased as the application performance decreased.  In section 4.3 we used our \emph{Business} server and calculated the overhead and interference from virtualization.  We created external interference from different numbers of guest domains, and found as more external guests are added our calculated interference increased similar to the application performance drop.  Finally, in section 4.4 we validated that when the application degrades due to internal changes, our method does not report it as external interference from virtualization.
 
 
 
