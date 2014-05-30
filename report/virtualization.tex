@@ -39,23 +39,38 @@ By running a test load and examining the /proc file system, one can reasonably d
 Without virtualization, these tools can quickly narrow the scope of possible problems for a degraded system. 
 
 \begin{figure}[h]
-\begingroup
-    \fontsize{10pt}{12pt}\selectfont
+% \begingroup
+%    \fontsize{10pt}{12pt}\selectfont
+% \begin{Verbatim}
+% top - 15:57:05 up 109 days, 23:54,  6 users,  load average: 0.12, 0.17, 0.11
+% Tasks: 164 total,   1 running, 163 sleeping,   0 stopped,   0 zombie
+% Cpu(s):  6.0%us,  0.7%sy,  0.0%ni, 93.3%id,  0.0%wa,  0.0%hi,  0.0%si,  0.0%st
+% Mem:   2062348k total,  1868648k used,   193700k free,   185776k buffers
+% Swap:  2095100k total,   389996k used,  1705104k free,   699236k cached
+
+% PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND            
+%  999 root      20   0 94876  52m 4900 S  4.0  2.6 373:01.16 Xorg               
+% 5362 deron     20   0  317m  92m  62m S  2.0  4.6 300:20.40 soffice.bin        
+%25333 deron     20   0  140m  15m 5684 S  1.0  0.8   3:33.53 gnome-terminal     
+% 1859 deron     20   0  166m 5820 4028 S  0.3  0.3   3:15.13 metacity           
+%\end{Verbatim}
+% \endgroup
+
+%% Removing to fit...
 \begin{Verbatim}
-top - 15:57:05 up 109 days, 23:54,  6 users,  load average: 0.12, 0.17, 0.11
+top - 15:57:05 up 109 days,  6 users, load average: 0.12, 0.17, 0.11
 Tasks: 164 total,   1 running, 163 sleeping,   0 stopped,   0 zombie
-Cpu(s):  6.0%us,  0.7%sy,  0.0%ni, 93.3%id,  0.0%wa,  0.0%hi,  0.0%si,  0.0%st
-Mem:   2062348k total,  1868648k used,   193700k free,   185776k buffers
-Swap:  2095100k total,   389996k used,  1705104k free,   699236k cached
+Cpu(s):  6.0%us,  0.7%sy,  93.3%id, 0.0%wa,  0.0%hi,  0.0%si,  0.0%st
+Mem:  2062348k total, 1868648k used,  193700k free, 185776k buffers
+Swap: 2095100k total,  389996k used, 1705104k free, 699236k cached
 
   PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND            
   999 root      20   0 94876  52m 4900 S  4.0  2.6 373:01.16 Xorg               
- 5362 deron     20   0  317m  92m  62m S  2.0  4.6 300:20.40 soffice.bin        
-25333 deron     20   0  140m  15m 5684 S  1.0  0.8   3:33.53 gnome-terminal     
+ 5362 deron     20   0  317m  92m  62m S  2.0  4.6 300:20.40 soffice        
+25333 deron     20   0  140m  15m 5684 S  1.0  0.8   3:33.53 gnome     
  1859 deron     20   0  166m 5820 4028 S  0.3  0.3   3:15.13 metacity           
 \end{Verbatim}
-\endgroup
-
+%
 \caption{\emph{top} collects information from Linux kernel through \emph{proc} and displays information about CPU, Memory, and processes}
 \label{fig:top}
 \end{figure}
@@ -78,21 +93,21 @@ From this view we can see the guest machines, and the hypervisor, but we can't e
 Even if the these could show everything running in the guest machines, the administrator for the hypervisor and guest machines are different people or even completely different organizations. 
 
 \begin{figure}[h]
-\begingroup
-    \fontsize{10pt}{12pt}\selectfont
+% \begingroup
+% \fontsize{10pt}{12pt}\selectfont
 \begin{Verbatim}
 
 xentop - 17:07:00   Xen 4.2.2-23.el6
-5 domains: 3 running, 2 blocked, 0 paused, 0 crashed, 0 dying, 0 shutdown
+5 domains: 3 running, 2 blocked, 0 paused, 0 crashed, 0 dying, 
 Mem: 4182752k total, 4182236k used, 516k free    CPUs: 4 @ 2133MHz
-      NAME  STATE   CPU(sec) CPU(%)     MEM(k) MEM(%)  MAXMEM(k) MAXMEM(%) 
-  Domain-0 -----r      78969   16.9    2035712   48.7    2097152      50.1    
-  Test_VM1 -----r       6474   11.5     524288   12.5     524288      12.5     
-  Test_VM2 -----r       4642   12.7     524288   12.5     524288      12.5 
-  Test_VM3 --b---       4210    0.1     524288   12.5     524288      12.5     
-  Test_VM4 --b---       4137    0.1     524288   12.5     524288      12.5  
+      NAME  STATE   CPU(sec) CPU(%)     MEM(k) MEM(%)  MAXMEM(k)  
+  Domain-0 -----r      78969   16.9    2035712   48.7    2097152      
+  Test_VM1 -----r       6474   11.5     524288   12.5     524288        
+  Test_VM2 -----r       4642   12.7     524288   12.5     524288    
+  Test_VM3 --b---       4210    0.1     524288   12.5     524288       
+  Test_VM4 --b---       4137    0.1     524288   12.5     524288    
 \end{Verbatim}
-\endgroup
+% \endgroup
 \caption{\emph{xentop} 4 Guest domains. Hypervisor does not get information about guest applications.}
 \label{fig:xentop}
 \end{figure}

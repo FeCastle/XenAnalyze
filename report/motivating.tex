@@ -5,9 +5,8 @@ A large corporation, with over 10,000 employees, used a suite of applications wh
 \indent The symptom was that sometimes the system would go into a state where all 32 virtual CPUs \footnote{The virtualization platform was limited to 32 virtual cores} would run at 100\% CPU time, multiple threads would go to a “D state”, \footnote{According to the man page for 'ps':  A process in the D state is neither running nor sleeping.  It is "Uninterruptible sleep (usually IO)"} and multiple processes would fail to complete.  The additional CPU time in the virtualized guest was shown to be in \emph{System Time} and multiple tools confirmed this.  Memory and I/O used on the guest and host server were consistent, and engineers monitoring the SAN did not see any latencies or problems measuring disk IO.  Sometimes this would only last a few seconds and sometimes it would last for hours.  Tracing system calls with \emph{strace} showed some process would wait for several seconds on \emph{open}, \emph{lseek}, and \emph{write} (Figure \ref{fig:syscall}).
 
 \begin{figure}[h]
-%\begin{Verbatim}[frame=single]
-\begingroup
-    \fontsize{10pt}{12pt}\selectfont
+% \begingroup
+%     \fontsize{10pt}{12pt}\selectfont
 \begin{Verbatim}
 12:46:02 open("…", O_WRONLY|O_CREAT|O_
 12:46:16 fstat64(61, {st_mode=S_IFREG| 
@@ -20,7 +19,7 @@ A large corporation, with over 10,000 employees, used a suite of applications wh
 12:46:31 write(61, "7:for "..., 3288)  
 12:46:31 close(61) = 0
 \end{Verbatim}
-\endgroup
+% \endgroup
 \caption{\emph{strace} shows system calls to open, lseek, and write take up to 14 seconds to complete}
 \label{fig:syscall}
 \end{figure}

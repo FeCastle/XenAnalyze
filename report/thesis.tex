@@ -10,7 +10,7 @@
 \hypersetup{colorlinks=true, linkcolor=blue, citecolor=black}
 \usepackage{fancyvrb}
 \usepackage{verbatim}
-\usepackage[top=1in, bottom=1in, left=1.5in, right=1in]{geometry}
+\usepackage[top=1in, bottom=1.0in, left=1.5in, right=1in, includefoot]{geometry}
 \usepackage{fixltx2e}
 % Install package: texlive-science
 \usepackage{algorithmic} 
@@ -45,8 +45,15 @@ deron@cs.pdx.edu \\
 \input{title}
 \newpage
 
+% Reset the geometry to include footer so that pages are added
+% \newgeometry{top=1in, bottom=1.0in, left=1.5in, right=1in, includefoot}
+
 % Force the margin requirements!!!
 \sloppy
+
+% prefatory pages - According to PSU reviewer abstract should be page (i)
+\setcounter{page}{1}
+\pagenumbering{roman}
 
 \begin{abstract}
   \doublespacing
@@ -57,10 +64,6 @@ deron@cs.pdx.edu \\
 \singlespacing
 \newpage
 % \end{@twocolumnfalse}
-
-% prefatory pages
-\setcounter{page}{1}
-\pagenumbering{roman}
 
 \tableofcontents    % Table of Contents
 \newpage
