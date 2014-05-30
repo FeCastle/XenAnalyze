@@ -11,9 +11,9 @@ Each virtual machine is given an equal share of the memory and CPU resources so 
 We start only our Dom1 machine and run our experimental test with PGbench.  
 On our \emph{Business} size server, Dom1 is allocated 2GB vRAM and 2 vCPU, while on our \emph{Personal} server Dom1 is given 512MB vRAM and 1 vCPU.  
 
-The test starts by initializing a very small database and runs PGBench and collect the TPS.  
+The test starts by initializing a very small database then runs PGBench and collects the TPS.  
 Then we increase the DB size slightly and run the benchmark again.  
-After repeating this process several times, we can determine when the DB size changes to an I/O bound system its performance drops significantly (Figure \ref{smallIO}).  
+After repeating this process several times, we can determine when the DB size changes to an I/O bound system when its performance drops significantly (Figure \ref{smallIO}).  
 This is due to the fact that it must fetch database rows from the disk and it is much slower.  
 
 \begin{figure}[!h]
@@ -33,7 +33,7 @@ From these tests we can now see the size of the database needed on each system t
 
 % Section 7.1.2
 \subsubsection{With Interference}
-Then we create external machine interference by running Dom1 concurrently with Dom2, Dom3, and Dom4. Each of the Dom2 - Dom4 systems are configured the same as Dom1.  We create a Large 2GB database on each guest of the Dell, and a Large 1GB database on each guest of the IBM.  We run PGBench in a loop to continuously create I/O interference on each external guest machine (Dom2 - Dom4). Concurrently we run our benchmark, and collect performance statistics only from Dom-1.  When the system is not I/O bound (Small DB) there is about a 28\% drop in performance (4434 TPS - 3208 TPS) on the \emph{Personal} server and little change in the \emph{Business} server (Table \ref{fig:tps1}).  On both servers the guest becomes an I/O bound system quicker with external interference.
+We create external machine interference by running Dom1 concurrently with Dom2, Dom3, and Dom4. Each of the Dom2 - Dom4 systems are configured the same as Dom1.  We create a Large 2GB database on each guest of the Dell, and a Large 1GB database on each guest of the IBM.  We run PGBench in a loop to continuously create I/O interference on each external guest machine (Dom2 - Dom4). Concurrently we run our benchmark, and collect performance statistics only from Dom-1.  When the system is not I/O bound (Small DB) there is about a 28\% drop in performance (4434 TPS - 3208 TPS) on the \emph{Personal} server and little change in the \emph{Business} server (Table \ref{fig:tps1}).  On both servers the guest becomes an I/O bound system quicker with external interference.
 
 \begin{table}[h]
 \begingroup
@@ -108,7 +108,7 @@ Test_VM4                  4   512     1     -b----   5203.5
 
 % Section 7.2.1
 \subsubsection{Overhead}
-We calculate the overhead at $4.7\%$ using the resource counters defined in our design and Equation 3 \ref{tab:OverheadSmall}.  The guest (Dom0) needs to wait about $5\%$ longer than the physical writes take to complete.  While calculating the overhead we also collected the application performance at 415 TPS without any external interference.
+We calculate the overhead at $4.7\%$ using the resource counters defined in our design and Equation 3 (Table \ref{tab:OverheadSmall}).  The guest (Dom0) needs to wait about $5\%$ longer than the physical writes take to complete.  While calculating the overhead we also collected the application performance at 415 TPS without any external interference.
 
 % See Test7_1Results.xls (Barbaro - Exp7.2(P2))
 \begin{table}[h]
